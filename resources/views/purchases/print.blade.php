@@ -21,7 +21,7 @@
     <div class="border p-4 rounded-3">
         <div class="row align-items-center mb-4">
             <div class="col-6">
-                <h3 class="fw-bold mb-0">NexERP Enterprise</h3>
+                <h3 class="fw-bold mb-0">ERP SYSTEM</h3>
                 <span class="text-muted">Procurement Receipt</span>
             </div>
             <div class="col-6 text-end">

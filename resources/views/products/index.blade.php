@@ -51,11 +51,13 @@
             <thead class="table-light">
                 <tr>
                     <th class="ps-4">Product Name / SKU</th>
-                    <th>Category</th>
+                    <th>Category / Brand</th>
+                    <th>HSN Code</th>
+                    <th>Unit</th>
                     <th>Cost Price</th>
                     <th>Selling Price</th>
+                    <th>Tax (%)</th>
                     <th>In Stock</th>
-                    <th>Alert Limit</th>
                     <th>Status</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
@@ -78,9 +80,27 @@
                         </td>
                         <td>
                             <span class="badge bg-light text-dark border rounded-pill px-3">{{ $product->category->name }}</span>
+                            @if($product->brand)
+                                <div class="mt-1"><span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1 small"><i class="bi bi-award-fill me-1"></i>{{ $product->brand->name }}</span></div>
+                            @endif
+                        </td>
+                        <td class="small font-monospace">
+                            @if($product->hsn_code)
+                                <span class="badge bg-light text-dark border font-monospace">{{ $product->hsn_code }}</span>
+                            @else
+                                <span class="text-muted">N/A</span>
+                            @endif
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">{{ $product->unit }}</span>
                         </td>
                         <td class="text-muted small">${{ number_format($product->cost_price, 2) }}</td>
                         <td class="fw-bold text-dark">${{ number_format($product->selling_price, 2) }}</td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle rounded-pill px-3 py-1 fw-semibold">
+                                {{ number_format($product->tax_percent, 2) }}%
+                            </span>
+                        </td>
                         <td>
                             @if($product->isLowStock())
                                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-bold">
@@ -120,7 +140,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
+                        <td colspan="10" class="text-center py-5 text-muted">
                             <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary"></i>
                             No products found in catalog. Click "Add Product" to add stock items.
                         </td>

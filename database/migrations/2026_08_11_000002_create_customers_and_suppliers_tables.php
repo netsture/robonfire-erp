@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('firm_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
@@ -17,8 +18,6 @@ return new class extends Migration
             $table->string('tax_number')->nullable();
             $table->text('address')->nullable();
             $table->string('city')->nullable();
-            $table->decimal('credit_limit', 12, 2)->default(0.00);
-            $table->decimal('opening_balance', 12, 2)->default(0.00);
             $table->decimal('current_balance', 12, 2)->default(0.00);
             $table->string('status')->default('active');
             $table->timestamps();
@@ -26,6 +25,7 @@ return new class extends Migration
 
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('firm_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
@@ -33,7 +33,6 @@ return new class extends Migration
             $table->string('tax_number')->nullable();
             $table->text('address')->nullable();
             $table->string('city')->nullable();
-            $table->decimal('opening_balance', 12, 2)->default(0.00);
             $table->decimal('current_balance', 12, 2)->default(0.00);
             $table->string('status')->default('active');
             $table->timestamps();

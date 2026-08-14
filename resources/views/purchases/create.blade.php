@@ -21,7 +21,7 @@
                 <h5 class="fw-bold font-outfit text-dark mb-3">Purchase Details</h5>
 
                 <div class="row g-3 mb-4">
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <label for="supplier_id" class="form-label fw-semibold text-dark">Supplier / Vendor <span class="text-danger">*</span></label>
                         <select class="form-select @error('supplier_id') is-invalid @enderror" id="supplier_id" name="supplier_id" required>
                             <option value="">Select Supplier</option>
@@ -34,10 +34,17 @@
 
                     <div class="col-12 col-md-3">
                         <label for="reference_no" class="form-label fw-semibold text-dark">Reference # <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control font-monospace" id="reference_no" name="reference_no" value="{{ old('reference_no', $autoRef) }}" required>
+                        <input type="text" class="form-control font-monospace @error('reference_no') is-invalid @enderror" id="reference_no" name="reference_no" value="{{ old('reference_no', $autoRef) }}" required>
+                        @error('reference_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-3">
+                        <label for="invoice_number" class="form-label fw-semibold text-dark">Invoice # <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control font-monospace @error('invoice_number') is-invalid @enderror" id="invoice_number" name="invoice_number" value="{{ old('invoice_number', $autoInv) }}" required>
+                        @error('invoice_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12 col-md-2">
                         <label for="purchase_date" class="form-label fw-semibold text-dark">Date <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="purchase_date" name="purchase_date" value="{{ old('purchase_date', date('Y-m-d')) }}" required>
                     </div>

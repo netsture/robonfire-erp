@@ -151,7 +151,7 @@
                         </div>
                         <div>
                             <div class="fw-semibold text-dark">Manage Customers</div>
-                            <div class="text-muted small">View client ledgers & credit limits</div>
+                            <div class="text-muted small">View client ledgers & directory</div>
                         </div>
                     </div>
                     <i class="bi bi-chevron-right text-muted"></i>
@@ -175,7 +175,7 @@
 </div>
 
 <!-- System Status Bar -->
-<div class="card card-custom border-0 p-3 bg-white">
+<!--<div class="card card-custom border-0 p-3 bg-white">
     <div class="row align-items-center text-center text-md-start">
         <div class="col-md-3 mb-2 mb-md-0 border-end border-light-subtle">
             <div class="text-muted small">Active User Session</div>
@@ -187,14 +187,14 @@
         </div>
         <div class="col-md-3 mb-2 mb-md-0 border-end border-light-subtle">
             <div class="text-muted small">Database Engine</div>
-            <div class="fw-bold text-dark"><i class="bi bi-database me-1 text-primary"></i>SQLite / Laravel 12</div>
+            <div class="fw-bold text-dark"><i class="bi bi-database me-1 text-primary"></i>Mysql / Laravel 12</div>
         </div>
         <div class="col-md-3">
             <div class="text-muted small">System Health</div>
             <div class="fw-bold text-success"><i class="bi bi-check-circle-fill me-1"></i>100% Operational</div>
         </div>
     </div>
-</div>
+</div>-->
 
 @endsection
 

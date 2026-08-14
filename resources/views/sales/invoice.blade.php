@@ -24,7 +24,7 @@
     <div class="invoice-card">
         <div class="invoice-header-bg d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="fw-bold mb-0">NexERP Solution</h2>
+                <h2 class="fw-bold mb-0">ERP Solution</h2>
                 <span class="small opacity-75">Enterprise Sales Invoice</span>
             </div>
             <div class="text-end">
@@ -107,7 +107,7 @@
         </div>
 
         <div class="mt-5 text-center text-muted small border-top pt-3">
-            Thank you for your business! | NexERP Enterprise Solutions
+            Thank you for your business! | ERP Enterprise Solutions
         </div>
     </div>
 </body>

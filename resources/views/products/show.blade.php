@@ -26,6 +26,9 @@
                 <div>
                     <h5 class="fw-bold font-outfit text-dark mb-0">{{ $product->name }}</h5>
                     <span class="badge bg-light text-dark border">{{ $product->category->name }}</span>
+                    @if($product->brand)
+                        <span class="badge bg-info-subtle text-info border border-info-subtle ms-1"><i class="bi bi-award-fill me-1"></i>{{ $product->brand->name }}</span>
+                    @endif
                 </div>
             </div>
 
@@ -34,8 +37,9 @@
             <div class="d-flex flex-column gap-2 my-2">
                 <div class="small"><i class="bi bi-barcode me-2 text-muted"></i>SKU: <span class="font-monospace fw-bold">{{ $product->sku }}</span></div>
                 <div class="small"><i class="bi bi-qr-code me-2 text-muted"></i>Barcode: <span class="font-monospace">{{ $product->barcode ?? 'N/A' }}</span></div>
-                <div class="small"><i class="bi bi-tag me-2 text-muted"></i>Tax Rate: {{ $product->tax_percent }}%</div>
-                <div class="small"><i class="bi bi-rulers me-2 text-muted"></i>Unit: {{ $product->unit }}</div>
+                <div class="small"><i class="bi bi-hash me-2 text-muted"></i>HSN / SAC: <span class="font-monospace fw-bold text-dark">{{ $product->hsn_code ?? 'N/A' }}</span></div>
+                <div class="small"><i class="bi bi-percent me-2 text-muted"></i>Tax Rate: <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle rounded-pill px-2 py-1 ms-1 fw-bold">{{ number_format($product->tax_percent, 2) }}%</span></div>
+                <div class="small"><i class="bi bi-rulers me-2 text-muted"></i>Measurement Unit: <span class="fw-semibold text-dark">{{ $product->unit }}</span></div>
             </div>
         </div>
     </div>
@@ -44,9 +48,9 @@
     <div class="col-12 col-md-8">
         <div class="row g-3 h-100">
             <div class="col-6 col-sm-4">
-                <div class="card card-custom border-0 p-3 bg-light text-center h-100 justify-content-center">
-                    <span class="text-muted small fw-semibold">COST PRICE</span>
-                    <h3 class="fw-bold font-outfit text-dark mt-2 mb-0">${{ number_format($product->cost_price, 2) }}</h3>
+                <div class="card card-custom border-0 p-3 bg-info text-white text-center h-100 justify-content-center">
+                    <span class="text-white-50 small fw-semibold">COST PRICE</span>
+                    <h3 class="fw-bold font-outfit text-white mt-2 mb-0">${{ number_format($product->cost_price, 2) }}</h3>
                 </div>
             </div>
             <div class="col-6 col-sm-4">
@@ -69,7 +73,7 @@
 </div>
 
 <!-- Stock Adjustments Audit Trail -->
-<div class="card card-custom border-0 p-4">
+<!--<div class="card card-custom border-0 p-4">
     <h5 class="fw-bold font-outfit mb-3 text-dark">Stock Adjustment Audit Log</h5>
 
     <div class="table-responsive">
@@ -106,6 +110,6 @@
             </tbody>
         </table>
     </div>
-</div>
-
+</div>-->
+    
 @endsection

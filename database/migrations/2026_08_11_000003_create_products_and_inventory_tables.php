@@ -10,17 +10,21 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('firm_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug');
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->unique(['firm_id', 'slug']);
         });
 
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('firm_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('sku')->unique();
+            $table->string('sku');
             $table->string('barcode')->nullable();
+            $table->string('hsn_code', 50)->nullable();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->string('unit')->default('Pcs');
             $table->decimal('cost_price', 12, 2)->default(0.00);
@@ -32,10 +36,12 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->string('status')->default('active');
             $table->timestamps();
+            $table->unique(['firm_id', 'sku']);
         });
 
         Schema::create('stock_adjustments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('firm_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('type', ['add', 'subtract']);

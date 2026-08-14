@@ -36,9 +36,8 @@
                 <tr>
                     <th class="ps-4">Supplier / Vendor</th>
                     <th>Contact Info</th>
-                    <th>City</th>
+                    <th>Full Address</th>
                     <th>Tax ID</th>
-                    <th>Current Balance</th>
                     <th>Status</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
@@ -68,17 +67,17 @@
                             @endif
                         </td>
                         <td class="small text-muted">
-                            {{ $supplier->city ?? 'N/A' }}
+                            @if($supplier->address)
+                                <div class="fw-medium text-dark"><i class="bi bi-geo-alt text-muted me-1"></i>{{ $supplier->address }}</div>
+                            @endif
+                            @if($supplier->city)
+                                <div class="text-muted small">{{ $supplier->city }}</div>
+                            @elseif(!$supplier->address)
+                                N/A
+                            @endif
                         </td>
                         <td class="small font-monospace">
                             {{ $supplier->tax_number ?? 'N/A' }}
-                        </td>
-                        <td>
-                            @if($supplier->current_balance > 0)
-                                <span class="fw-bold text-danger">${{ number_format($supplier->current_balance, 2) }} Payable</span>
-                            @else
-                                <span class="fw-bold text-success">${{ number_format(abs($supplier->current_balance), 2) }} Settled</span>
-                            @endif
                         </td>
                         <td>
                             @if($supplier->status === 'active')
@@ -107,7 +106,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="6" class="text-center py-5 text-muted">
                             <i class="bi bi-truck fs-1 d-block mb-2 text-secondary"></i>
                             No supplier records found. Click "Add New Supplier" to add a vendor.
                         </td>

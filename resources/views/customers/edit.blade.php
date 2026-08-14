@@ -62,12 +62,6 @@
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <label for="credit_limit" class="form-label fw-semibold text-dark">Credit Limit ($)</label>
-                        <input type="number" step="0.01" class="form-control @error('credit_limit') is-invalid @enderror" id="credit_limit" name="credit_limit" value="{{ old('credit_limit', $customer->credit_limit) }}">
-                        @error('credit_limit') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
                         <label for="status" class="form-label fw-semibold text-dark">Status <span class="text-danger">*</span></label>
                         <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
                             <option value="active" {{ old('status', $customer->status) == 'active' ? 'selected' : '' }}>Active</option>

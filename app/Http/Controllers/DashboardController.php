@@ -18,19 +18,50 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Safe checks for models created in subsequent phases
-        $totalUsersCount = User::count();
-        $totalCustomersCount = Schema::hasTable('customers') ? Customer::count() : 0;
-        $totalSuppliersCount = Schema::hasTable('suppliers') ? Supplier::count() : 0;
-        $totalProductsCount = Schema::hasTable('products') ? Product::count() : 0;
-        
-        $totalSalesAmount = Schema::hasTable('sales') ? Sale::sum('grand_total') : 0;
-        $totalPurchasesAmount = Schema::hasTable('purchases') ? Purchase::sum('grand_total') : 0;
-        
-        $lowStockCount = Schema::hasTable('products') ? Product::whereColumn('stock_quantity', '<=', 'alert_quantity')->count() : 0;
+        $user = auth()->user();
+        $isSuper = $user->isSuperAdmin();
+        $firmId = $user->firm_id;
 
-        $recentSales = Schema::hasTable('sales') ? Sale::with('customer')->latest()->take(5)->get() : collect();
-        $recentPurchases = Schema::hasTable('purchases') ? Purchase::with('supplier')->latest()->take(5)->get() : collect();
+        // Safe checks for models created in subsequent phases
+        $usersQuery = User::query();
+        $customersQuery = Customer::query();
+        $suppliersQuery = Supplier::query();
+        $productsQuery = Product::query();
+        $salesQuery = Sale::query();
+        $purchasesQuery = Purchase::query();
+
+        if (!$isSuper) {
+            $usersQuery->where('firm_id', $firmId);
+            $customersQuery->where('firm_id', $firmId);
+            $suppliersQuery->where('firm_id', $firmId);
+            $productsQuery->where('firm_id', $firmId);
+            $salesQuery->where('firm_id', $firmId);
+            $purchasesQuery->where('firm_id', $firmId);
+        }
+
+        $totalUsersCount = $usersQuery->count();
+        $totalCustomersCount = Schema::hasTable('customers') ? $customersQuery->count() : 0;
+        $totalSuppliersCount = Schema::hasTable('suppliers') ? $suppliersQuery->count() : 0;
+        $totalProductsCount = Schema::hasTable('products') ? $productsQuery->count() : 0;
+        
+        $totalSalesAmount = Schema::hasTable('sales') ? $salesQuery->sum('grand_total') : 0;
+        $totalPurchasesAmount = Schema::hasTable('purchases') ? $purchasesQuery->sum('grand_total') : 0;
+        
+        $lowStockQuery = Product::whereColumn('stock_quantity', '<=', 'alert_quantity');
+        if (!$isSuper) {
+            $lowStockQuery->where('firm_id', $firmId);
+        }
+        $lowStockCount = Schema::hasTable('products') ? $lowStockQuery->count() : 0;
+
+        $recentSalesQuery = Sale::with('customer');
+        $recentPurchasesQuery = Purchase::with('supplier');
+        if (!$isSuper) {
+            $recentSalesQuery->where('firm_id', $firmId);
+            $recentPurchasesQuery->where('firm_id', $firmId);
+        }
+
+        $recentSales = Schema::hasTable('sales') ? $recentSalesQuery->latest()->take(5)->get() : collect();
+        $recentPurchases = Schema::hasTable('purchases') ? $recentPurchasesQuery->latest()->take(5)->get() : collect();
 
         // Chart Data (Last 6 Months)
         $chartLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];

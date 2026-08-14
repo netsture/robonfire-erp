@@ -2,7 +2,7 @@
 
 @section('title', 'Customers Directory')
 @section('page_title', 'Customer Management')
-@section('page_subtitle', 'Maintain client directory, credit terms, and financial ledgers')
+@section('page_subtitle', 'Maintain client directory and financial ledgers')
 
 @section('header_actions')
     <a href="{{ route('customers.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
@@ -36,9 +36,8 @@
                 <tr>
                     <th class="ps-4">Customer / Company</th>
                     <th>Contact Details</th>
-                    <th>Location</th>
-                    <th>Credit Limit</th>
-                    <th>Current Balance</th>
+                    <th>Full Address</th>
+                    <th>Tax / VAT ID</th>
                     <th>Status</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
@@ -68,17 +67,17 @@
                             @endif
                         </td>
                         <td class="small text-muted">
-                            {{ $customer->city ?? 'N/A' }}
-                        </td>
-                        <td class="fw-semibold text-dark">
-                            ${{ number_format($customer->credit_limit, 2) }}
-                        </td>
-                        <td>
-                            @if($customer->current_balance > 0)
-                                <span class="fw-bold text-danger">${{ number_format($customer->current_balance, 2) }} Due</span>
-                            @else
-                                <span class="fw-bold text-success">${{ number_format(abs($customer->current_balance), 2) }} Clear</span>
+                            @if($customer->address)
+                                <div class="fw-medium text-dark"><i class="bi bi-geo-alt text-muted me-1"></i>{{ $customer->address }}</div>
                             @endif
+                            @if($customer->city)
+                                <div class="text-muted small">{{ $customer->city }}</div>
+                            @elseif(!$customer->address)
+                                N/A
+                            @endif
+                        </td>
+                        <td class="small font-monospace">
+                            {{ $customer->tax_number ?? 'N/A' }}
                         </td>
                         <td>
                             @if($customer->status === 'active')
@@ -107,7 +106,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="6" class="text-center py-5 text-muted">
                             <i class="bi bi-people fs-1 d-block mb-2 text-secondary"></i>
                             No customer records found. Click "Add Customer" to create one.
                         </td>

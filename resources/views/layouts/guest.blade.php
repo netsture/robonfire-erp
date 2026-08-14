@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Authentication') - NexERP</title>
+    <title>@yield('title', 'Authentication') - ERP SYSTEM</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,13 +69,37 @@
         .input-group-text {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            border-right: none;
             color: #94a3b8;
+        }
+        .input-group > :first-child.input-group-text {
+            border-right: none;
             border-radius: 0.75rem 0 0 0.75rem;
         }
-        .input-group .form-control {
+        .input-group > .form-control:not(:first-child):not(:last-child) {
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+        }
+        .input-group > .form-control:last-child {
             border-left: none;
             border-radius: 0 0.75rem 0.75rem 0;
+        }
+        .btn-toggle-password {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: none;
+            color: #94a3b8;
+            border-radius: 0 0.75rem 0.75rem 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-toggle-password:hover, .btn-toggle-password:focus {
+            background: rgba(30, 41, 59, 0.8);
+            color: #818cf8;
+            box-shadow: none;
         }
         .btn-gradient {
             background: var(--primary-gradient);
@@ -105,7 +129,7 @@
         <div class="brand-logo">
             <i class="bi bi-box-seam-fill"></i>
         </div>
-        <h4 class="text-center font-outfit fw-bold text-white mb-1">NexERP Enterprise</h4>
+        <h4 class="text-center font-outfit fw-bold text-white mb-1">ERP Enterprise</h4>
         <p class="text-center text-muted small mb-4">Complete Business Management Suite</p>
 
         @if(session('success'))
@@ -134,5 +158,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @stack('scripts')
 </body>
 </html>

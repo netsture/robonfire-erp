@@ -4,12 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Supplier extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'firm_id',
         'name',
         'email',
         'phone',
@@ -17,12 +20,16 @@ class Supplier extends Model
         'tax_number',
         'address',
         'city',
-        'opening_balance',
         'current_balance',
         'status',
     ];
 
-    public function purchases()
+    public function firm(): BelongsTo
+    {
+        return $this->belongsTo(Firm::class);
+    }
+
+    public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class);
     }

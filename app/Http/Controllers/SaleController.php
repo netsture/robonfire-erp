@@ -13,7 +13,14 @@ class SaleController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Sale::with('customer', 'user');
+        $user = auth()->user();
+        $query = Sale::with('customer', 'user', 'firm');
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -30,18 +37,34 @@ class SaleController extends Controller
 
     public function create()
     {
-        $customers = Customer::where('status', 'active')->get();
-        $products = Product::where('status', 'active')->where('stock_quantity', '>', 0)->get();
-        $autoInvoice = 'INV-' . date('Ymd') . '-' . rand(1000, 9999);
+        $user = auth()->user();
+        $firmId = $user->firm_id ?? 1;
+
+        $customersQuery = Customer::where('status', 'active');
+        $productsQuery = Product::where('status', 'active')->where('stock_quantity', '>', 0);
+
+        if (!$user->isSuperAdmin()) {
+            $customersQuery->where('firm_id', $firmId);
+            $productsQuery->where('firm_id', $firmId);
+        }
+
+        $customers = $customersQuery->get();
+        $products = $productsQuery->get();
+
+        $firmSeq = Sale::where('firm_id', $firmId)->count() + 1;
+        $autoInvoice = 'INV-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
 
         return view('sales.create', compact('customers', 'products', 'autoInvoice'));
     }
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $firmId = $user->isSuperAdmin() ? ($request->input('firm_id') ?? 1) : $user->firm_id;
+
         $validated = $request->validate([
             'customer_id'     => ['required', 'exists:customers,id'],
-            'invoice_number'  => ['required', 'string', 'unique:sales'],
+            'invoice_number'  => ['required', 'string'],
             'sale_date'       => ['required', 'date'],
             'products'        => ['required', 'array', 'min:1'],
             'products.*.id'   => ['required', 'exists:products,id'],
@@ -62,7 +85,7 @@ class SaleController extends Controller
             }
         }
 
-        DB::transaction(function () use ($validated, &$sale) {
+        DB::transaction(function () use ($validated, $firmId, $user, &$sale) {
             $subtotal = 0;
             $itemsData = [];
 
@@ -90,9 +113,10 @@ class SaleController extends Controller
             }
 
             $sale = Sale::create([
+                'firm_id'         => $firmId,
                 'invoice_number'  => $validated['invoice_number'],
                 'customer_id'     => $validated['customer_id'],
-                'user_id'         => auth()->id(),
+                'user_id'         => $user->id,
                 'sale_date'       => $validated['sale_date'],
                 'subtotal'        => $subtotal,
                 'tax_amount'      => $tax,
@@ -123,18 +147,33 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
-        $sale->load('customer', 'user', 'items.product');
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && $sale->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to firm record.');
+        }
+
+        $sale->load('customer', 'user', 'items.product', 'firm');
         return view('sales.show', compact('sale'));
     }
 
     public function printInvoice(Sale $sale)
     {
-        $sale->load('customer', 'user', 'items.product');
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && $sale->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to firm record.');
+        }
+
+        $sale->load('customer', 'user', 'items.product', 'firm');
         return view('sales.invoice', compact('sale'));
     }
 
     public function destroy(Sale $sale)
     {
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && $sale->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to firm record.');
+        }
+
         DB::transaction(function () use ($sale) {
             foreach ($sale->items as $item) {
                 Product::where('id', $item->product_id)->increment('stock_quantity', $item->quantity);

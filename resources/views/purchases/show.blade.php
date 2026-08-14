@@ -19,7 +19,7 @@
         <div class="card card-custom border-0 p-4">
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
-                    <h4 class="fw-bold font-outfit text-dark mb-0">NexERP Procurement Order</h4>
+                    <h4 class="fw-bold font-outfit text-dark mb-0">ERP Procurement Order</h4>
                     <span class="text-muted small font-monospace">Ref: #{{ $purchase->reference_no }}</span>
                 </div>
                 <div>

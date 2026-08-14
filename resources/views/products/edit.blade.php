@@ -19,13 +19,13 @@
                 @method('PUT')
                 
                 <div class="row g-3">
-                    <div class="col-12 col-md-8">
+                    <div class="col-12">
                         <label for="name" class="form-label fw-semibold text-dark">Product Title <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $product->name) }}" required>
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-6">
                         <label for="category_id" class="form-label fw-semibold text-dark">Category <span class="text-danger">*</span></label>
                         <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
                             @foreach($categories as $category)
@@ -35,25 +35,43 @@
                         @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-6">
+                        <label for="brand_id" class="form-label fw-semibold text-dark">Brand <span class="text-danger">*</span></label>
+                        <select class="form-select @error('brand_id') is-invalid @enderror" id="brand_id" name="brand_id" required>
+                            <option value="">Select Brand</option>
+                            @foreach($brands as $brand)
+                                <option value="{{ $brand->id }}" {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('brand_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12 col-md-3">
                         <label for="sku" class="form-label fw-semibold text-dark">SKU Code <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('sku') is-invalid @enderror" id="sku" name="sku" value="{{ old('sku', $product->sku) }}" required>
                         @error('sku') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label for="barcode" class="form-label fw-semibold text-dark">Barcode</label>
                         <input type="text" class="form-control @error('barcode') is-invalid @enderror" id="barcode" name="barcode" value="{{ old('barcode', $product->barcode) }}">
                         @error('barcode') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
+                        <label for="hsn_code" class="form-label fw-semibold text-dark">HSN Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('hsn_code') is-invalid @enderror" id="hsn_code" name="hsn_code" value="{{ old('hsn_code', $product->hsn_code) }}" required placeholder="e.g. 84713010">
+                        @error('hsn_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12 col-md-3">
                         <label for="unit" class="form-label fw-semibold text-dark">Measurement Unit <span class="text-danger">*</span></label>
                         <select class="form-select @error('unit') is-invalid @enderror" id="unit" name="unit" required>
                             <option value="Pcs" {{ old('unit', $product->unit) == 'Pcs' ? 'selected' : '' }}>Pcs (Pieces)</option>
                             <option value="Box" {{ old('unit', $product->unit) == 'Box' ? 'selected' : '' }}>Box</option>
                             <option value="Kg" {{ old('unit', $product->unit) == 'Kg' ? 'selected' : '' }}>Kg (Kilograms)</option>
                             <option value="Ltr" {{ old('unit', $product->unit) == 'Ltr' ? 'selected' : '' }}>Ltr (Liters)</option>
+                            <option value="Mtr" {{ old('unit', $product->unit) == 'Mtr' ? 'selected' : '' }}>Mtr (Meters)</option>
                             <option value="Set" {{ old('unit', $product->unit) == 'Set' ? 'selected' : '' }}>Set</option>
                         </select>
                         @error('unit') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -72,8 +90,8 @@
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="tax_percent" class="form-label fw-semibold text-dark">Tax Rate (%)</label>
-                        <input type="number" step="0.01" class="form-control @error('tax_percent') is-invalid @enderror" id="tax_percent" name="tax_percent" value="{{ old('tax_percent', $product->tax_percent) }}">
+                        <label for="tax_percent" class="form-label fw-semibold text-dark">Tax Rate (%) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" class="form-control @error('tax_percent') is-invalid @enderror" id="tax_percent" name="tax_percent" value="{{ old('tax_percent', $product->tax_percent) }}" required>
                         @error('tax_percent') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 

@@ -2,7 +2,7 @@
 
 @section('title', 'Customer Ledger')
 @section('page_title', 'Customer Ledger: ' . $customer->name)
-@section('page_subtitle', 'Customer summary, credit limits, and sales order history')
+@section('page_subtitle', 'Customer summary and sales order history')
 
 @section('header_actions')
     <a href="{{ route('customers.edit', $customer) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
@@ -42,21 +42,10 @@
 
     <!-- Balance Metrics -->
     <div class="col-12 col-md-8">
-        <div class="row g-3 h-100">
-            <div class="col-6">
-                <div class="card card-custom border-0 p-4 bg-primary text-white h-100">
-                    <span class="text-white-50 small fw-semibold">CREDIT LIMIT</span>
-                    <h2 class="fw-bold font-outfit mt-2 mb-0">${{ number_format($customer->credit_limit, 2) }}</h2>
-                    <span class="small mt-2 text-white-50">Allowed credit ceiling</span>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="card card-custom border-0 p-4 bg-dark text-white h-100">
-                    <span class="text-white-50 small fw-semibold">CURRENT BALANCE DUE</span>
-                    <h2 class="fw-bold font-outfit mt-2 mb-0 text-warning">${{ number_format($customer->current_balance, 2) }}</h2>
-                    <span class="small mt-2 text-white-50">Outstanding total</span>
-                </div>
-            </div>
+        <div class="card card-custom border-0 p-4 bg-dark text-white h-100">
+            <span class="text-white-50 small fw-semibold">CURRENT BALANCE DUE</span>
+            <h2 class="fw-bold font-outfit mt-2 mb-0 text-warning">${{ number_format($customer->current_balance, 2) }}</h2>
+            <span class="small mt-2 text-white-50">Outstanding total</span>
         </div>
     </div>
 </div>

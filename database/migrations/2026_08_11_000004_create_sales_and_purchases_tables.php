@@ -11,7 +11,9 @@ return new class extends Migration
         // Purchases
         Schema::create('purchases', function (Blueprint $table) {
             $table->id();
-            $table->string('reference_no')->unique();
+            $table->foreignId('firm_id')->constrained()->onDelete('cascade');
+            $table->string('reference_no');
+            $table->string('invoice_number')->nullable();
             $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->date('purchase_date');
@@ -24,6 +26,8 @@ return new class extends Migration
             $table->enum('payment_status', ['paid', 'partial', 'due'])->default('paid');
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->unique(['firm_id', 'reference_no']);
+            $table->unique(['firm_id', 'invoice_number']);
         });
 
         Schema::create('purchase_items', function (Blueprint $table) {
@@ -39,7 +43,8 @@ return new class extends Migration
         // Sales
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->string('invoice_number')->unique();
+            $table->foreignId('firm_id')->constrained()->onDelete('cascade');
+            $table->string('invoice_number');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->date('sale_date');
@@ -52,6 +57,7 @@ return new class extends Migration
             $table->enum('payment_status', ['paid', 'partial', 'due'])->default('paid');
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->unique(['firm_id', 'invoice_number']);
         });
 
         Schema::create('sale_items', function (Blueprint $table) {

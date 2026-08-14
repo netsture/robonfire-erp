@@ -66,31 +66,25 @@ class RoleAndPermissionSeeder extends Seeder
             }
         }
 
-        // Roles Definition
+        // Roles Definition (Strictly 3 roles)
         $rolesData = [
             [
-                'name' => 'Admin',
-                'slug' => 'admin',
-                'description' => 'Full administrative access to all modules and system settings.',
+                'name' => 'Superadmin',
+                'slug' => 'superadmin',
+                'description' => 'Global system administrator. Manages all tenants, global configurations, and cross-tenant data.',
                 'perms' => array_keys($permissionModels)
             ],
             [
-                'name' => 'Store Manager',
-                'slug' => 'store-manager',
-                'description' => 'Manages inventory, suppliers, purchases, products and sales.',
-                'perms' => ['products.view', 'products.create', 'products.edit', 'customers.view', 'suppliers.view', 'suppliers.create', 'purchases.view', 'purchases.create', 'sales.view', 'sales.create', 'reports.view']
+                'name' => 'Admin',
+                'slug' => 'admin',
+                'description' => 'Tenant administrator. Full operational and administrative access within assigned tenant firm.',
+                'perms' => array_keys($permissionModels)
             ],
             [
-                'name' => 'Sales Executive',
-                'slug' => 'sales-executive',
-                'description' => 'Handles POS sales, customer management and inventory view.',
-                'perms' => ['customers.view', 'customers.create', 'products.view', 'sales.view', 'sales.create']
-            ],
-            [
-                'name' => 'Accountant',
-                'slug' => 'accountant',
-                'description' => 'Access to sales ledgers, purchase receipts and financial reporting.',
-                'perms' => ['sales.view', 'purchases.view', 'customers.view', 'suppliers.view', 'reports.view']
+                'name' => 'User',
+                'slug' => 'user',
+                'description' => 'Standard tenant user. Standard operational access for day-to-day sales, purchases, and catalog viewing.',
+                'perms' => ['products.view', 'customers.view', 'suppliers.view', 'sales.view', 'sales.create', 'purchases.view', 'purchases.create']
             ]
         ];
 

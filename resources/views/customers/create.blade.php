@@ -60,19 +60,7 @@
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label for="credit_limit" class="form-label fw-semibold text-dark">Credit Limit ($)</label>
-                        <input type="number" step="0.01" class="form-control @error('credit_limit') is-invalid @enderror" id="credit_limit" name="credit_limit" value="{{ old('credit_limit', '5000.00') }}">
-                        @error('credit_limit') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-4">
-                        <label for="opening_balance" class="form-label fw-semibold text-dark">Opening Balance ($)</label>
-                        <input type="number" step="0.01" class="form-control @error('opening_balance') is-invalid @enderror" id="opening_balance" name="opening_balance" value="{{ old('opening_balance', '0.00') }}">
-                        @error('opening_balance') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-4">
+                    <div class="col-12">
                         <label for="status" class="form-label fw-semibold text-dark">Status <span class="text-danger">*</span></label>
                         <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
                             <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>Active</option>

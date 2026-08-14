@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') - NexERP</title>
+    <title>@yield('title', 'Dashboard') - ERP SYSTEM</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -230,8 +230,8 @@
                 <i class="bi bi-box-seam-fill"></i>
             </div>
             <div>
-                <h5 class="mb-0 text-white font-outfit fw-bold">NexERP</h5>
-                <span class="text-muted small" style="font-size: 0.7rem;">v1.0 Enterprise</span>
+                <h5 class="mb-0 text-white font-outfit fw-bold">ERP SYSTEM</h5>
+                <!--<span class="text-muted small" style="font-size: 0.7rem;">v1.0 Enterprise</span>-->
             </div>
         </div>
 
@@ -257,14 +257,18 @@
                 <i class="bi bi-tags-fill"></i>
                 <span>Categories</span>
             </a>
+            <a href="{{ route('brands.index') }}" class="nav-link-custom {{ request()->routeIs('brands*') ? 'active' : '' }}">
+                <i class="bi bi-award-fill"></i>
+                <span>Brands</span>
+            </a>
             <a href="{{ route('products.index') }}" class="nav-link-custom {{ request()->routeIs('products*') ? 'active' : '' }}">
                 <i class="bi bi-box-seam"></i>
                 <span>Products</span>
             </a>
-            <a href="{{ route('inventory.index') }}" class="nav-link-custom {{ request()->routeIs('inventory*') ? 'active' : '' }}">
+            <!--<a href="{{ route('inventory.index') }}" class="nav-link-custom {{ request()->routeIs('inventory*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-repeat"></i>
                 <span>Stock Adjustments</span>
-            </a>
+            </a>-->
 
             <div class="sidebar-heading">Transactions</div>
             <a href="{{ route('purchases.index') }}" class="nav-link-custom {{ request()->routeIs('purchases*') ? 'active' : '' }}">
@@ -277,6 +281,12 @@
             </a>
 
             <div class="sidebar-heading">Administration</div>
+            @if(Auth::user()->isSuperAdmin())
+                <a href="{{ route('firms.index') }}" class="nav-link-custom {{ request()->routeIs('firms*') ? 'active' : '' }}">
+                    <i class="bi bi-building-fill text-warning"></i>
+                    <span>Firms</span>
+                </a>
+            @endif
             <a href="{{ route('users.index') }}" class="nav-link-custom {{ request()->routeIs('users*') ? 'active' : '' }}">
                 <i class="bi bi-person-gear"></i>
                 <span>User Accounts</span>
@@ -302,10 +312,15 @@
             <button id="sidebarToggle" class="btn btn-light btn-sm rounded-circle p-2 border">
                 <i class="bi bi-list fs-5"></i>
             </button>
-            <div class="d-none d-md-flex align-items-center bg-light rounded-pill px-3 py-1 border" style="width: 280px;">
-                <i class="bi bi-search text-muted me-2"></i>
-                <input type="text" class="form-control form-control-sm border-0 bg-transparent shadow-none" placeholder="Search orders, SKU, customers...">
-            </div>
+            @if(Auth::user()->firm)
+                <div class="d-none d-md-flex align-items-center bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 border border-primary border-opacity-20 small font-outfit fw-semibold">
+                    <i class="bi bi-building me-2"></i>{{ Auth::user()->firm->name }}
+                </div>
+            @elseif(Auth::user()->isSuperAdmin())
+                <div class="d-none d-md-flex align-items-center bg-dark text-white rounded-pill px-3 py-1 small font-outfit fw-semibold">
+                    <i class="bi bi-globe me-2 text-warning"></i>Global Superadmin Context
+                </div>
+            @endif
         </div>
 
         <div class="d-flex align-items-center gap-3">

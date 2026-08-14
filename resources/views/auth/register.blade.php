@@ -43,6 +43,9 @@
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-lock"></i></span>
             <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required placeholder="Minimum 8 characters">
+            <button type="button" class="btn btn-toggle-password toggle-pwd-btn" data-target="password" title="Show/Hide Password" aria-label="Toggle password visibility">
+                <i class="bi bi-eye"></i>
+            </button>
         </div>
         @error('password')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -54,6 +57,9 @@
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
             <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required placeholder="Repeat password">
+            <button type="button" class="btn btn-toggle-password toggle-pwd-btn" data-target="password_confirmation" title="Show/Hide Password" aria-label="Toggle password confirmation visibility">
+                <i class="bi bi-eye"></i>
+            </button>
         </div>
     </div>
 
@@ -67,3 +73,23 @@
     <a href="{{ route('login') }}" class="text-indigo text-decoration-none fw-semibold small ms-1 text-primary">Sign In</a>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.toggle-pwd-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                if (input && icon) {
+                    const isPassword = input.getAttribute('type') === 'password';
+                    input.setAttribute('type', isPassword ? 'text' : 'password');
+                    icon.classList.toggle('bi-eye', !isPassword);
+                    icon.classList.toggle('bi-eye-slash', isPassword);
+                }
+            });
+        });
+    });
+</script>
+@endpush

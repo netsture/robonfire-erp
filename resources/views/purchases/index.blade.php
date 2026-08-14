@@ -34,8 +34,11 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Reference #</th>
+                    <th class="ps-4">Reference # / Invoice #</th>
                     <th>Supplier</th>
+                    @if(auth()->user()->isSuperAdmin())
+                        <th>Firm</th>
+                    @endif
                     <th>Date</th>
                     <th>Grand Total</th>
                     <th>Paid Amount</th>
@@ -46,11 +49,21 @@
             <tbody>
                 @forelse($purchases as $purchase)
                     <tr>
-                        <td class="ps-4 fw-bold font-monospace text-dark">#{{ $purchase->reference_no }}</td>
+                        <td class="ps-4">
+                            <div class="fw-bold font-monospace text-dark">#{{ $purchase->reference_no }}</div>
+                            @if($purchase->invoice_number)
+                                <div class="small text-muted font-monospace"><i class="bi bi-receipt me-1"></i>{{ $purchase->invoice_number }}</div>
+                            @endif
+                        </td>
                         <td>
                             <div class="fw-semibold text-dark">{{ $purchase->supplier->name ?? 'N/A' }}</div>
                             <div class="small text-muted">{{ $purchase->supplier->company_name ?? '' }}</div>
                         </td>
+                        @if(auth()->user()->isSuperAdmin())
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ $purchase->firm->name ?? 'N/A' }}</span>
+                            </td>
+                        @endif
                         <td class="small text-muted">{{ $purchase->purchase_date }}</td>
                         <td class="fw-bold text-dark">${{ number_format($purchase->grand_total, 2) }}</td>
                         <td class="text-muted small">${{ number_format($purchase->paid_amount, 2) }}</td>

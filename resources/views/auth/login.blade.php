@@ -23,6 +23,9 @@
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-lock"></i></span>
             <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required placeholder="••••••••">
+            <button type="button" class="btn btn-toggle-password" id="togglePassword" title="Show/Hide Password" aria-label="Toggle password visibility">
+                <i class="bi bi-eye" id="togglePasswordIcon"></i>
+            </button>
         </div>
         @error('password')
             <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div>
@@ -41,7 +44,7 @@
     </button>
 </form>
 
-<div class="demo-box mb-3 text-center text-light">
+<!--<div class="demo-box mb-3 text-center text-light">
     <div class="fw-semibold mb-1"><i class="bi bi-key-fill text-warning me-1"></i> Quick Seeder Credentials</div>
     <div class="small text-muted">Email: <span class="text-info font-monospace">admin@erp.com</span></div>
     <div class="small text-muted">Password: <span class="text-info font-monospace">password</span></div>
@@ -50,5 +53,24 @@
 <div class="text-center">
     <span class="text-muted small">Don't have an account?</span>
     <a href="{{ route('register') }}" class="text-indigo text-decoration-none fw-semibold small ms-1 text-primary">Create Account</a>
-</div>
+</div>-->
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('togglePasswordIcon');
+
+        if (togglePasswordBtn && passwordInput && toggleIcon) {
+            togglePasswordBtn.addEventListener('click', function () {
+                const isPassword = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                toggleIcon.classList.toggle('bi-eye', !isPassword);
+                toggleIcon.classList.toggle('bi-eye-slash', isPassword);
+            });
+        }
+    });
+</script>
+@endpush
