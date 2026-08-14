@@ -11,7 +11,12 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::withCount('permissions', 'users')->get();
+        $query = Role::query();
+        if (!auth()->user()->isSuperAdmin()) {
+            $query->where('slug', '!=', 'superadmin');
+        }
+
+        $roles = $query->withCount('permissions', 'users')->get();
         return view('roles.index', compact('roles'));
     }
 
@@ -45,6 +50,10 @@ class RoleController extends Controller
 
     public function edit(Role $role)
     {
+        if (!auth()->user()->isSuperAdmin() && $role->slug === 'superadmin') {
+            abort(403, 'Unauthorized access to Superadmin role.');
+        }
+
         $permissionsByModule = Permission::all()->groupBy('module');
         $rolePermissions = $role->permissions->pluck('id')->toArray();
         return view('roles.edit', compact('role', 'permissionsByModule', 'rolePermissions'));
@@ -52,6 +61,10 @@ class RoleController extends Controller
 
     public function update(Request $request, Role $role)
     {
+        if (!auth()->user()->isSuperAdmin() && $role->slug === 'superadmin') {
+            abort(403, 'Unauthorized access to Superadmin role.');
+        }
+
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:255', 'unique:roles,name,' . $role->id],
             'description' => ['nullable', 'string'],
@@ -72,8 +85,12 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
-        if ($role->slug === 'admin') {
-            return back()->with('error', 'The Admin role cannot be deleted.');
+        if (!auth()->user()->isSuperAdmin() && $role->slug === 'superadmin') {
+            abort(403, 'Unauthorized access to Superadmin role.');
+        }
+
+        if ($role->slug === 'admin' || $role->slug === 'superadmin') {
+            return back()->with('error', 'System roles cannot be deleted.');
         }
 
         $role->delete();

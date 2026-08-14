@@ -83,8 +83,8 @@ class RoleAndPermissionSeeder extends Seeder
             [
                 'name' => 'User',
                 'slug' => 'user',
-                'description' => 'Standard tenant user. Standard operational access for day-to-day sales, purchases, and catalog viewing.',
-                'perms' => ['products.view', 'customers.view', 'suppliers.view', 'sales.view', 'sales.create', 'purchases.view', 'purchases.create']
+                'description' => 'Standard tenant user. Full operational and administrative access within assigned tenant firm.',
+                'perms' => array_keys($permissionModels)
             ]
         ];
 

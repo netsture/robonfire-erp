@@ -31,7 +31,17 @@ class DashboardController extends Controller
         $purchasesQuery = Purchase::query();
 
         if (!$isSuper) {
-            $usersQuery->where('firm_id', $firmId);
+            $usersQuery->where('firm_id', $firmId)
+                       ->where(function ($q) {
+                           $q->whereNull('role')
+                             ->orWhere(function ($subQ) {
+                                 $subQ->where('role', '!=', 'superadmin')
+                                      ->where('role', '!=', 'Superadmin');
+                             });
+                       })
+                       ->whereDoesntHave('roles', function ($q) {
+                           $q->where('slug', 'superadmin');
+                       });
             $customersQuery->where('firm_id', $firmId);
             $suppliersQuery->where('firm_id', $firmId);
             $productsQuery->where('firm_id', $firmId);

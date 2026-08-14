@@ -49,7 +49,7 @@
 
                     <div class="col-12 col-md-6">
                         <label for="password" class="form-label fw-semibold text-dark">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required placeholder="Minimum 8 characters">
+                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required placeholder="Minimum 6 characters">
                         @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 

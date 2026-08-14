@@ -44,7 +44,7 @@
                         <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                             <i class="bi bi-pencil me-1"></i> Edit Permissions
                         </a>
-                        @if($role->slug !== 'admin')
+                        @if(!in_array($role->slug, ['admin', 'superadmin']))
                             <form action="{{ route('roles.destroy', $role) }}" method="POST" class="d-inline ms-1" onsubmit="return confirm('Are you sure you want to delete this role?')">
                                 @csrf
                                 @method('DELETE')
