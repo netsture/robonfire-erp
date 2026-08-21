@@ -13,7 +13,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $authUser = auth()->user();
-        $query = User::with('roles');
+        $query = User::with(['roles', 'firm']);
 
         if (!$authUser->isSuperAdmin()) {
             $query->where('firm_id', $authUser->firm_id)
@@ -27,6 +27,8 @@ class UserController extends Controller
                   ->whereDoesntHave('roles', function ($q) {
                       $q->where('slug', 'superadmin');
                   });
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
         }
 
         if ($request->filled('search')) {
@@ -49,8 +51,9 @@ class UserController extends Controller
             $rolesQuery->where('slug', '!=', 'superadmin');
         }
         $roles = $rolesQuery->get();
+        $firms = $authUser->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
-        return view('users.index', compact('users', 'roles'));
+        return view('users.index', compact('users', 'roles', 'firms'));
     }
 
     public function create()
@@ -58,7 +61,7 @@ class UserController extends Controller
         $authUser = auth()->user();
         $rolesQuery = Role::query();
         if (!$authUser->isSuperAdmin()) {
-            $rolesQuery->where('slug', '!=', 'superadmin');
+            $rolesQuery->where('slug', 'user');
         }
         $roles = $rolesQuery->get();
 
@@ -72,7 +75,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone'    => ['nullable', 'string', 'max:20'],
+            'phone'    => ['required', 'string', 'min:10', 'max:10'],
             'password' => ['required', 'confirmed', Password::min(6)],
             'role_id'  => ['required', 'exists:roles,id'],
             'status'   => ['required', 'in:active,inactive'],
@@ -80,8 +83,8 @@ class UserController extends Controller
 
         $role = Role::findOrFail($validated['role_id']);
 
-        if (!$authUser->isSuperAdmin() && $role->slug === 'superadmin') {
-            abort(403, 'Unauthorized action.');
+        if (!$authUser->isSuperAdmin() && $role->slug !== 'user') {
+            return back()->withErrors(['role_id' => 'Admins can only assign the User role.'])->withInput();
         }
 
         $user = User::create([
@@ -110,7 +113,7 @@ class UserController extends Controller
 
         $rolesQuery = Role::query();
         if (!$authUser->isSuperAdmin()) {
-            $rolesQuery->where('slug', '!=', 'superadmin');
+            $rolesQuery->where('slug', 'user');
         }
         $roles = $rolesQuery->get();
 
@@ -129,15 +132,15 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'    => ['required', 'string', 'max:255'],
             'email'   => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'phone'   => ['nullable', 'string', 'max:20'],
+            'phone'   => ['required', 'string', 'min:10', 'max:10'],
             'role_id' => ['required', 'exists:roles,id'],
             'status'  => ['required', 'in:active,inactive'],
         ]);
 
         $role = Role::findOrFail($validated['role_id']);
 
-        if (!$authUser->isSuperAdmin() && $role->slug === 'superadmin') {
-            abort(403, 'Unauthorized action.');
+        if (!$authUser->isSuperAdmin() && $role->slug !== 'user') {
+            return back()->withErrors(['role_id' => 'Admins can only assign the User role.'])->withInput();
         }
 
         if ($request->filled('password')) {

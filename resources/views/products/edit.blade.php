@@ -60,7 +60,7 @@
 
                     <div class="col-12 col-md-3">
                         <label for="hsn_code" class="form-label fw-semibold text-dark">HSN Code <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('hsn_code') is-invalid @enderror" id="hsn_code" name="hsn_code" value="{{ old('hsn_code', $product->hsn_code) }}" required placeholder="e.g. 84713010">
+                        <input type="text" class="form-control @error('hsn_code') is-invalid @enderror" id="hsn_code" name="hsn_code" value="{{ old('hsn_code', $product->hsn_code) }}" required placeholder="e.g. 84241000">
                         @error('hsn_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -78,13 +78,13 @@
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="cost_price" class="form-label fw-semibold text-dark">Purchase Cost ($) <span class="text-danger">*</span></label>
+                        <label for="cost_price" class="form-label fw-semibold text-dark">Purchase Cost (₹) <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" class="form-control @error('cost_price') is-invalid @enderror" id="cost_price" name="cost_price" value="{{ old('cost_price', $product->cost_price) }}" required>
                         @error('cost_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="selling_price" class="form-label fw-semibold text-dark">Selling Retail Price ($) <span class="text-danger">*</span></label>
+                        <label for="selling_price" class="form-label fw-semibold text-dark">Selling Retail Price (₹) <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}" required>
                         @error('selling_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>

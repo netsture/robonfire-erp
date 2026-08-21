@@ -32,8 +32,8 @@
                 </div>
 
                 <div class="col-12 col-md-6">
-                    <label for="phone" class="form-label fw-semibold text-dark">Phone Number</label>
-                    <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone', $firm->phone) }}">
+                    <label for="phone" class="form-label fw-semibold text-dark">Phone Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone', $firm->phone) }}" required minlength="10" maxlength="10" placeholder="e.g. 9876543210">
                     @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 

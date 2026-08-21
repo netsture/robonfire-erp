@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
 @section('title', 'Sales Orders')
-@section('page_title', 'Sales & POS Invoicing')
+@section('page_title', 'Sales Invoicing')
 @section('page_subtitle', 'Customer sales transactions, POS billing, and invoice generation')
 
 @section('header_actions')
     <a href="{{ route('sales.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-bag-plus-fill me-1"></i> New Sales Order / POS
+        <i class="bi bi-bag-plus-fill me-1"></i> New Sales Order
     </a>
 @endsection
 
@@ -18,7 +18,7 @@
         <div class="col-12 col-md-9">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search invoice # or customer name..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search invoice #, project, vehicle #, or customer name..." value="{{ request('search') }}">
             </div>
         </div>
         <div class="col-12 col-md-3 d-flex gap-2">
@@ -34,7 +34,7 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Invoice #</th>
+                    <th class="ps-4">Invoice No #</th>
                     <th>Customer Name</th>
                     <th>Sale Date</th>
                     <th>Grand Total</th>
@@ -46,14 +46,22 @@
             <tbody>
                 @forelse($sales as $sale)
                     <tr>
-                        <td class="ps-4 fw-bold font-monospace text-dark">#{{ $sale->invoice_number }}</td>
+                        <td class="ps-4">
+                            <div class="fw-bold font-monospace text-dark">#{{ $sale->invoice_number }}</div>
+                            @if($sale->project_name)
+                                <div class="small text-muted"><i class="bi bi-folder2-open me-1"></i>{{ $sale->project_name }}</div>
+                            @endif
+                            @if($sale->vehicle_number)
+                                <div class="small text-muted"><i class="bi bi-truck me-1"></i>{{ $sale->vehicle_number }}</div>
+                            @endif
+                        </td>
                         <td>
                             <div class="fw-semibold text-dark">{{ $sale->customer->name ?? 'N/A' }}</div>
                             <div class="small text-muted">{{ $sale->customer->phone ?? '' }}</div>
                         </td>
                         <td class="small text-muted">{{ $sale->sale_date }}</td>
-                        <td class="fw-bold text-dark">${{ number_format($sale->grand_total, 2) }}</td>
-                        <td class="text-muted small">${{ number_format($sale->paid_amount, 2) }}</td>
+                        <td class="fw-bold text-dark">₹{{ number_format($sale->grand_total, 2) }}</td>
+                        <td class="text-muted small">₹{{ number_format($sale->paid_amount, 2) }}</td>
                         <td>
                             @if($sale->payment_status === 'paid')
                                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">PAID</span>

@@ -97,12 +97,12 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Quantity <span class="text-danger">*</span></label>
-                        <input type="number" name="quantity" class="form-control" min="1" required placeholder="e.g. 5">
+                        <input type="number" name="quantity" class="form-control" min="1" required placeholder="e.g. 10">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Reason for Adjustment <span class="text-danger">*</span></label>
-                        <input type="text" name="reason" class="form-control" placeholder="e.g. Stock count audit / Damaged item writeoff" required>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Annual fire safety audit / Refill expired cylinder / Hose pressure replacement" required>
                     </div>
                 </div>
                 <div class="modal-footer border-top">

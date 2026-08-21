@@ -122,6 +122,15 @@
             padding: 0.85rem;
             font-size: 0.85rem;
         }
+        .text-danger-custom {
+            color: #f87171 !important;
+        }
+        .form-control.is-invalid, .input-group.is-invalid .form-control, .input-group.is-invalid .input-group-text {
+            border-color: #f87171 !important;
+        }
+        .form-control.is-invalid:focus {
+            box-shadow: 0 0 0 0.25rem rgba(248, 113, 113, 0.25) !important;
+        }
     </style>
 </head>
 <body>
@@ -133,23 +142,42 @@
         <p class="text-center text-muted small mb-4">Complete Business Management Suite</p>
 
         @if(session('success'))
-            <div class="alert alert-success bg-success bg-opacity-20 border-success text-success-emphasis border-opacity-20 alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-success bg-success bg-opacity-20 border border-success border-opacity-30 text-white alert-dismissible fade show mb-4 small" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
+                    <div>{{ session('success') }}</div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 
         @if(session('info'))
-            <div class="alert alert-info bg-info bg-opacity-20 border-info text-info-emphasis border-opacity-20 alert-dismissible fade show" role="alert">
-                <i class="bi bi-info-circle-fill me-2"></i>{{ session('info') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-info bg-info bg-opacity-20 border border-info border-opacity-30 text-white alert-dismissible fade show mb-4 small" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill text-info fs-5 me-2"></i>
+                    <div>{{ session('info') }}</div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 
         @if($errors->any())
-            <div class="alert alert-danger bg-danger bg-opacity-20 border-danger text-danger border-opacity-20 alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>Please fix the errors below.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-danger bg-danger bg-opacity-25 border border-danger border-opacity-40 text-white alert-dismissible fade show mb-4 small" role="alert">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-exclamation-triangle-fill text-danger-custom fs-5 me-2"></i>
+                    <div>
+                        @if($errors->count() === 1)
+                            <span>{{ $errors->first() }}</span>
+                        @else
+                            <ul class="mb-0 ps-3">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 

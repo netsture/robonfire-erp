@@ -18,7 +18,7 @@
         <div class="col-12 col-md-9">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search reference # or supplier name..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search project name, invoice #, or supplier..." value="{{ request('search') }}">
             </div>
         </div>
         <div class="col-12 col-md-3 d-flex gap-2">
@@ -34,12 +34,12 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Reference # / Invoice #</th>
+                    <th class="ps-4">Invoice No / Project Name</th>
                     <th>Supplier</th>
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
-                    <th>Date</th>
+                    <th>Purchase Date</th>
                     <th>Grand Total</th>
                     <th>Paid Amount</th>
                     <th>Payment Status</th>
@@ -50,9 +50,9 @@
                 @forelse($purchases as $purchase)
                     <tr>
                         <td class="ps-4">
-                            <div class="fw-bold font-monospace text-dark">#{{ $purchase->reference_no }}</div>
-                            @if($purchase->invoice_number)
-                                <div class="small text-muted font-monospace"><i class="bi bi-receipt me-1"></i>{{ $purchase->invoice_number }}</div>
+                            <div class="fw-bold font-monospace text-dark">{{ $purchase->invoice_number ?? 'N/A' }}</div>
+                            @if($purchase->project_name)
+                                <div class="small text-muted"><i class="bi bi-folder2-open me-1"></i>{{ $purchase->project_name }}</div>
                             @endif
                         </td>
                         <td>
@@ -65,8 +65,8 @@
                             </td>
                         @endif
                         <td class="small text-muted">{{ $purchase->purchase_date }}</td>
-                        <td class="fw-bold text-dark">${{ number_format($purchase->grand_total, 2) }}</td>
-                        <td class="text-muted small">${{ number_format($purchase->paid_amount, 2) }}</td>
+                        <td class="fw-bold text-dark">₹{{ number_format($purchase->grand_total, 2) }}</td>
+                        <td class="text-muted small">₹{{ number_format($purchase->paid_amount, 2) }}</td>
                         <td>
                             @if($purchase->payment_status === 'paid')
                                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">PAID</span>

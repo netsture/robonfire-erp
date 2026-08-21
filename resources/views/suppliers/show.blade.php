@@ -44,7 +44,7 @@
     <div class="col-12 col-md-7">
         <div class="card card-custom border-0 p-4 bg-dark text-white h-100 justify-content-center">
             <span class="text-white-50 small fw-semibold uppercase tracking-wider">TOTAL OUTSTANDING PAYABLE</span>
-            <h1 class="fw-bold font-outfit mt-2 mb-1 text-warning">${{ number_format($supplier->current_balance, 2) }}</h1>
+            <h1 class="fw-bold font-outfit mt-2 mb-1 text-warning">₹{{ number_format($supplier->current_balance, 2) }}</h1>
             <span class="small text-white-50">Current balance owed to vendor for purchase orders</span>
         </div>
     </div>
@@ -58,7 +58,7 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>Reference #</th>
+                    <th>Project Name</th>
                     <th>Date</th>
                     <th>Payment Status</th>
                     <th>Total Amount</th>
@@ -68,12 +68,12 @@
             <tbody>
                 @forelse($supplier->purchases as $purchase)
                     <tr>
-                        <td class="fw-bold text-dark">#{{ $purchase->reference_no }}</td>
+                        <td class="fw-bold text-dark">{{ $purchase->project_name }}</td>
                         <td class="small text-muted">{{ $purchase->created_at->format('M d, Y') }}</td>
                         <td>
                             <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3">{{ strtoupper($purchase->payment_status) }}</span>
                         </td>
-                        <td class="fw-bold text-dark">${{ number_format($purchase->grand_total, 2) }}</td>
+                        <td class="fw-bold text-dark">₹{{ number_format($purchase->grand_total, 2) }}</td>
                         <td class="text-end">
                             <a href="{{ route('purchases.print', $purchase) }}" class="btn btn-sm btn-light border" target="_blank">
                                 <i class="bi bi-printer"></i> Receipt

@@ -46,6 +46,12 @@
             <div class="col-6 text-end">
                 <span class="text-muted small fw-bold uppercase">INVOICE SUMMARY</span>
                 <div class="mt-1">Date: <strong>{{ $sale->sale_date }}</strong></div>
+                @if($sale->project_name)
+                    <div>Project: <strong>{{ $sale->project_name }}</strong></div>
+                @endif
+                @if($sale->vehicle_number)
+                    <div>Vehicle No: <strong>{{ $sale->vehicle_number }}</strong></div>
+                @endif
                 <div>Payment Status: <span class="badge bg-dark text-uppercase px-3">{{ $sale->payment_status }}</span></div>
                 <div>Issuer: {{ $sale->user->name ?? 'System' }}</div>
             </div>
@@ -54,21 +60,35 @@
         <table class="table table-bordered align-middle mb-4">
             <thead class="table-light">
                 <tr>
-                    <th>Item Description</th>
-                    <th>SKU</th>
+                    <th>Category</th>
+                    <th>Product Item (Brand)</th>
+                    <th>HSN Code</th>
+                    <th>Unit</th>
                     <th class="text-center">Qty</th>
-                    <th class="text-end">Unit Price</th>
-                    <th class="text-end">Total ($)</th>
+                    <th class="text-end">Selling Price (₹)</th>
+                    <th class="text-center">Tax (%)</th>
+                    <th class="text-end">Total (₹)</th>
+                    <th class="text-end">Total w/ Tax</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($sale->items as $item)
+                    @php
+                        $prod = $item->product;
+                        $taxPct = $prod->tax_percent ?? 0;
+                        $lineTax = ($item->subtotal * $taxPct) / 100;
+                        $totalWithTax = $item->subtotal + $lineTax;
+                    @endphp
                     <tr>
-                        <td class="fw-semibold">{{ $item->product->name ?? 'Product' }}</td>
-                        <td class="font-monospace small">{{ $item->product->sku ?? '' }}</td>
+                        <td>{{ $prod->category->name ?? 'N/A' }}</td>
+                        <td class="fw-semibold">{{ $prod->name ?? 'Product' }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}</td>
+                        <td class="font-monospace small">{{ $prod->hsn_code ?? 'N/A' }}</td>
+                        <td>{{ $prod->unit ?? 'Pcs' }}</td>
                         <td class="text-center fw-bold">{{ $item->quantity }}</td>
-                        <td class="text-end">${{ number_format($item->unit_price, 2) }}</td>
-                        <td class="text-end fw-bold">${{ number_format($item->subtotal, 2) }}</td>
+                        <td class="text-end">₹{{ number_format($item->unit_price, 2) }}</td>
+                        <td class="text-center">{{ number_format($taxPct, 2) }}%</td>
+                        <td class="text-end">₹{{ number_format($item->subtotal, 2) }}</td>
+                        <td class="text-end fw-bold">₹{{ number_format($totalWithTax, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -79,28 +99,28 @@
                 <div class="border rounded-3 p-3 bg-light">
                     <div class="d-flex justify-content-between mb-1">
                         <span>Subtotal:</span>
-                        <strong>${{ number_format($sale->subtotal, 2) }}</strong>
+                        <strong>₹{{ number_format($sale->subtotal, 2) }}</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-1">
                         <span>Discount:</span>
-                        <span>-${{ number_format($sale->discount_amount, 2) }}</span>
+                        <span>-₹{{ number_format($sale->discount_amount, 2) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-1">
                         <span>Tax:</span>
-                        <span>+${{ number_format($sale->tax_amount, 2) }}</span>
+                        <span>+₹{{ number_format($sale->tax_amount, 2) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-1">
                         <span>Shipping:</span>
-                        <span>+${{ number_format($sale->shipping_cost, 2) }}</span>
+                        <span>+₹{{ number_format($sale->shipping_cost, 2) }}</span>
                     </div>
                     <hr class="my-2">
                     <div class="d-flex justify-content-between fs-5">
                         <strong>Grand Total:</strong>
-                        <strong class="text-primary">${{ number_format($sale->grand_total, 2) }}</strong>
+                        <strong class="text-primary">₹{{ number_format($sale->grand_total, 2) }}</strong>
                     </div>
                     <div class="d-flex justify-content-between">
                         <span>Amount Paid:</span>
-                        <strong class="text-success">${{ number_format($sale->paid_amount, 2) }}</strong>
+                        <strong class="text-success">₹{{ number_format($sale->paid_amount, 2) }}</strong>
                     </div>
                 </div>
             </div>

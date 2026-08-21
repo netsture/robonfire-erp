@@ -16,13 +16,13 @@
     <div class="col-6">
         <div class="card card-custom border-0 p-3 bg-dark text-white">
             <span class="text-white-50 small fw-semibold">TOTAL STOCK COST ASSET VALUE</span>
-            <h2 class="fw-bold font-outfit mt-1 mb-0">${{ number_format($totalCostValue, 2) }}</h2>
+            <h2 class="fw-bold font-outfit mt-1 mb-0">₹{{ number_format($totalCostValue, 2) }}</h2>
         </div>
     </div>
     <div class="col-6">
         <div class="card card-custom border-0 p-3 bg-primary text-white">
             <span class="text-white-50 small fw-semibold">RETAIL MARGIN TURNOVER</span>
-            <h2 class="fw-bold font-outfit mt-1 mb-0">${{ number_format($totalRetailValue, 2) }}</h2>
+            <h2 class="fw-bold font-outfit mt-1 mb-0">₹{{ number_format($totalRetailValue, 2) }}</h2>
         </div>
     </div>
 </div>
@@ -54,10 +54,10 @@
                         </td>
                         <td><span class="badge bg-light text-dark border">{{ $product->category->name }}</span></td>
                         <td class="fw-bold">{{ $product->stock_quantity }} {{ $product->unit }}</td>
-                        <td>${{ number_format($product->cost_price, 2) }}</td>
-                        <td>${{ number_format($product->selling_price, 2) }}</td>
-                        <td class="fw-semibold text-dark">${{ number_format($itemCostVal, 2) }}</td>
-                        <td class="text-end pe-4 fw-bold text-primary">${{ number_format($itemRetailVal, 2) }}</td>
+                        <td>₹{{ number_format($product->cost_price, 2) }}</td>
+                        <td>₹{{ number_format($product->selling_price, 2) }}</td>
+                        <td class="fw-semibold text-dark">₹{{ number_format($itemCostVal, 2) }}</td>
+                        <td class="text-end pe-4 fw-bold text-primary">₹{{ number_format($itemRetailVal, 2) }}</td>
                     </tr>
                 @empty
                     <tr>

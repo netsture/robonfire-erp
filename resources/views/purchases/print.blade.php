@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Purchase Receipt - {{ $purchase->reference_no }}</title>
+    <title>Purchase Receipt - {{ $purchase->project_name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { font-family: sans-serif; padding: 2rem; background: #fff; color: #000; }
@@ -25,7 +25,7 @@
                 <span class="text-muted">Procurement Receipt</span>
             </div>
             <div class="col-6 text-end">
-                <h4 class="fw-bold text-uppercase">#{{ $purchase->reference_no }}</h4>
+                <h4 class="fw-bold text-uppercase">{{ $purchase->project_name }}</h4>
                 <div class="small">Date: {{ $purchase->purchase_date }}</div>
             </div>
         </div>
@@ -48,21 +48,35 @@
         <table class="table table-bordered mb-4">
             <thead>
                 <tr>
-                    <th>Item Description</th>
-                    <th>SKU</th>
+                    <th>Category</th>
+                    <th>Product Item (Brand)</th>
+                    <th>HSN Code</th>
+                    <th>Unit</th>
                     <th class="text-center">Qty</th>
-                    <th class="text-end">Unit Cost</th>
-                    <th class="text-end">Total</th>
+                    <th class="text-end">Unit Cost (₹)</th>
+                    <th class="text-center">Tax (%)</th>
+                    <th class="text-end">Total (₹)</th>
+                    <th class="text-end">Total w/ Tax</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($purchase->items as $item)
+                    @php
+                        $prod = $item->product;
+                        $taxPct = $prod->tax_percent ?? 0;
+                        $lineTax = ($item->subtotal * $taxPct) / 100;
+                        $totalWithTax = $item->subtotal + $lineTax;
+                    @endphp
                     <tr>
-                        <td>{{ $item->product->name ?? 'N/A' }}</td>
-                        <td>{{ $item->product->sku ?? '' }}</td>
+                        <td>{{ $prod->category->name ?? 'N/A' }}</td>
+                        <td class="fw-semibold">{{ $prod->name ?? 'N/A' }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}</td>
+                        <td>{{ $prod->hsn_code ?? 'N/A' }}</td>
+                        <td>{{ $prod->unit ?? 'Pcs' }}</td>
                         <td class="text-center">{{ $item->quantity }}</td>
-                        <td class="text-end">${{ number_format($item->unit_cost, 2) }}</td>
-                        <td class="text-end">${{ number_format($item->subtotal, 2) }}</td>
+                        <td class="text-end">₹{{ number_format($item->unit_cost, 2) }}</td>
+                        <td class="text-center">{{ number_format($taxPct, 2) }}%</td>
+                        <td class="text-end">₹{{ number_format($item->subtotal, 2) }}</td>
+                        <td class="text-end fw-bold">₹{{ number_format($totalWithTax, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -72,24 +86,28 @@
             <div class="col-5">
                 <div class="d-flex justify-content-between">
                     <span>Subtotal:</span>
-                    <strong>${{ number_format($purchase->subtotal, 2) }}</strong>
+                    <strong>₹{{ number_format($purchase->subtotal, 2) }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Total Tax:</span>
+                    <span>+₹{{ number_format($purchase->tax_amount ?? 0, 2) }}</span>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span>Discount:</span>
-                    <span>-${{ number_format($purchase->discount_amount, 2) }}</span>
+                    <span>-₹{{ number_format($purchase->discount_amount, 2) }}</span>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span>Shipping Cost:</span>
-                    <span>+${{ number_format($purchase->shipping_cost, 2) }}</span>
+                    <span>+₹{{ number_format($purchase->shipping_cost, 2) }}</span>
                 </div>
                 <hr>
                 <div class="d-flex justify-content-between fs-5">
                     <strong>Grand Total:</strong>
-                    <strong>${{ number_format($purchase->grand_total, 2) }}</strong>
+                    <strong>₹{{ number_format($purchase->grand_total, 2) }}</strong>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span>Amount Paid:</span>
-                    <strong>${{ number_format($purchase->paid_amount, 2) }}</strong>
+                    <strong>₹{{ number_format($purchase->paid_amount, 2) }}</strong>
                 </div>
             </div>
         </div>

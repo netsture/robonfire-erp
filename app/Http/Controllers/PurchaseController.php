@@ -6,6 +6,7 @@ use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -26,7 +27,7 @@ class PurchaseController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('reference_no', 'like', "%{$search}%")
+                $q->where('project_name', 'like', "%{$search}%")
                   ->orWhere('invoice_number', 'like', "%{$search}%")
                   ->orWhereHas('supplier', function ($sq) use ($search) {
                       $sq->where('name', 'like', "%{$search}%");
@@ -45,22 +46,24 @@ class PurchaseController extends Controller
         $firmId = $user->firm_id ?? 1;
 
         $suppliersQuery = Supplier::where('status', 'active');
-        $productsQuery = Product::where('status', 'active');
+        $productsQuery = Product::with(['category', 'brand'])->where('status', 'active');
+        $categoriesQuery = Category::query();
 
         if (!$user->isSuperAdmin()) {
             $suppliersQuery->where('firm_id', $firmId);
             $productsQuery->where('firm_id', $firmId);
+            $categoriesQuery->where('firm_id', $firmId);
         }
 
         $suppliers = $suppliersQuery->get();
         $products = $productsQuery->get();
+        $categories = $categoriesQuery->get();
 
         // Calculate next firm-wise sequence for auto IDs
         $firmSeq = Purchase::where('firm_id', $firmId)->count() + 1;
-        $autoRef = 'REF-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
         $autoInv = 'PINV-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
 
-        return view('purchases.create', compact('suppliers', 'products', 'autoRef', 'autoInv', 'firmId'));
+        return view('purchases.create', compact('suppliers', 'products', 'categories', 'autoInv', 'firmId'));
     }
 
     public function store(Request $request)
@@ -69,24 +72,30 @@ class PurchaseController extends Controller
         $firmId = $user->isSuperAdmin() ? ($request->input('firm_id') ?? 1) : $user->firm_id;
 
         $validated = $request->validate([
-            'supplier_id'     => ['required', 'exists:suppliers,id'],
-            'reference_no'    => ['required', 'string'],
-            'invoice_number'  => ['required', 'string'],
-            'purchase_date'   => ['required', 'date'],
-            'products'        => ['required', 'array', 'min:1'],
-            'products.*.id'   => ['required', 'exists:products,id'],
-            'products.*.qty'  => ['required', 'integer', 'min:1'],
-            'products.*.cost' => ['required', 'numeric', 'min:0'],
-            'discount_amount' => ['nullable', 'numeric', 'min:0'],
-            'shipping_cost'   => ['nullable', 'numeric', 'min:0'],
-            'paid_amount'     => ['required', 'numeric', 'min:0'],
-            'notes'           => ['nullable', 'string'],
+            'supplier_id'          => ['required', 'exists:suppliers,id'],
+            'project_name'         => ['required', 'string'],
+            'invoice_number'       => ['nullable', 'string'],
+            'purchase_date'        => ['required', 'date'],
+            'products'             => ['required', 'array', 'min:1'],
+            'products.*.id'        => ['required', 'exists:products,id'],
+            'products.*.qty'       => ['required', 'integer', 'min:1'],
+            'products.*.cost'      => ['required', 'numeric', 'min:0'],
+            'products.*.tax_percent' => ['nullable', 'numeric', 'min:0'],
+            'discount_amount'      => ['nullable', 'numeric', 'min:0'],
+            'shipping_cost'        => ['nullable', 'numeric', 'min:0'],
+            'paid_amount'          => ['required', 'numeric', 'min:0'],
+            'notes'                => ['nullable', 'string'],
         ]);
 
+        if (empty($validated['invoice_number'])) {
+            $firmSeq = Purchase::where('firm_id', $firmId)->count() + 1;
+            $validated['invoice_number'] = 'PINV-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
+        }
+
         // Firm-wise uniqueness check
-        $existsRef = Purchase::where('firm_id', $firmId)->where('reference_no', $validated['reference_no'])->exists();
-        if ($existsRef) {
-            return back()->withErrors(['reference_no' => 'Reference number already exists for this firm.'])->withInput();
+        $existsProj = Purchase::where('firm_id', $firmId)->where('project_name', $validated['project_name'])->exists();
+        if ($existsProj) {
+            return back()->withErrors(['project_name' => 'Project Name already exists for this firm.'])->withInput();
         }
 
         $existsInv = Purchase::where('firm_id', $firmId)->where('invoice_number', $validated['invoice_number'])->exists();
@@ -96,11 +105,16 @@ class PurchaseController extends Controller
 
         DB::transaction(function () use ($validated, $firmId, $user, &$purchase) {
             $subtotal = 0;
+            $totalTax = 0;
             $itemsData = [];
 
             foreach ($validated['products'] as $item) {
                 $itemSubtotal = $item['qty'] * $item['cost'];
+                $taxPercent = $item['tax_percent'] ?? 0;
+                $itemTax = ($itemSubtotal * $taxPercent) / 100;
+
                 $subtotal += $itemSubtotal;
+                $totalTax += $itemTax;
 
                 $itemsData[] = [
                     'product_id' => $item['id'],
@@ -112,7 +126,7 @@ class PurchaseController extends Controller
 
             $discount = $validated['discount_amount'] ?? 0;
             $shipping = $validated['shipping_cost'] ?? 0;
-            $grandTotal = $subtotal - $discount + $shipping;
+            $grandTotal = $subtotal + $totalTax - $discount + $shipping;
 
             $paid = $validated['paid_amount'];
             $paymentStatus = 'paid';
@@ -122,12 +136,13 @@ class PurchaseController extends Controller
 
             $purchase = Purchase::create([
                 'firm_id'         => $firmId,
-                'reference_no'    => $validated['reference_no'],
+                'project_name'    => $validated['project_name'],
                 'invoice_number'  => $validated['invoice_number'],
                 'supplier_id'     => $validated['supplier_id'],
                 'user_id'         => $user->id,
                 'purchase_date'   => $validated['purchase_date'],
                 'subtotal'        => $subtotal,
+                'tax_amount'      => $totalTax,
                 'discount_amount' => $discount,
                 'shipping_cost'   => $shipping,
                 'grand_total'     => $grandTotal,
@@ -162,7 +177,7 @@ class PurchaseController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        $purchase->load('supplier', 'user', 'items.product', 'firm');
+        $purchase->load('supplier', 'user', 'items.product.category', 'items.product.brand', 'firm');
         return view('purchases.show', compact('purchase'));
     }
 
@@ -173,7 +188,7 @@ class PurchaseController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        $purchase->load('supplier', 'user', 'items.product', 'firm');
+        $purchase->load('supplier', 'user', 'items.product.category', 'items.product.brand', 'firm');
         return view('purchases.print', compact('purchase'));
     }
 

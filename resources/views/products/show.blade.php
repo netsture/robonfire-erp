@@ -50,13 +50,13 @@
             <div class="col-6 col-sm-4">
                 <div class="card card-custom border-0 p-3 bg-info text-white text-center h-100 justify-content-center">
                     <span class="text-white-50 small fw-semibold">COST PRICE</span>
-                    <h3 class="fw-bold font-outfit text-white mt-2 mb-0">${{ number_format($product->cost_price, 2) }}</h3>
+                    <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($product->cost_price, 2) }}</h3>
                 </div>
             </div>
             <div class="col-6 col-sm-4">
                 <div class="card card-custom border-0 p-3 bg-primary text-white text-center h-100 justify-content-center">
                     <span class="text-white-50 small fw-semibold">SELLING RETAIL PRICE</span>
-                    <h3 class="fw-bold font-outfit mt-2 mb-0">${{ number_format($product->selling_price, 2) }}</h3>
+                    <h3 class="fw-bold font-outfit mt-2 mb-0">₹{{ number_format($product->selling_price, 2) }}</h3>
                 </div>
             </div>
             <div class="col-12 col-sm-4">

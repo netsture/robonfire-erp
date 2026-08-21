@@ -61,15 +61,15 @@
     <div class="row align-items-center text-center text-md-start">
         <div class="col-md-4 mb-3 mb-md-0 border-end border-secondary border-opacity-20">
             <span class="text-white-50 small fw-semibold">CURRENT INVENTORY COST VALUE</span>
-            <h2 class="fw-bold font-outfit mt-1 mb-0">${{ number_format($inventoryCostValue, 2) }}</h2>
+            <h2 class="fw-bold font-outfit mt-1 mb-0">₹{{ number_format($inventoryCostValue, 2) }}</h2>
         </div>
         <div class="col-md-4 mb-3 mb-md-0 border-end border-secondary border-opacity-20">
             <span class="text-white-50 small fw-semibold">RETAIL TURNOVER POTENTIAL</span>
-            <h2 class="fw-bold font-outfit mt-1 mb-0 text-info">${{ number_format($inventoryRetailValue, 2) }}</h2>
+            <h2 class="fw-bold font-outfit mt-1 mb-0 text-info">₹{{ number_format($inventoryRetailValue, 2) }}</h2>
         </div>
         <div class="col-md-4">
             <span class="text-white-50 small fw-semibold">POTENTIAL GROSS MARGIN</span>
-            <h2 class="fw-bold font-outfit mt-1 mb-0 text-success">${{ number_format($potentialProfit, 2) }}</h2>
+            <h2 class="fw-bold font-outfit mt-1 mb-0 text-success">₹{{ number_format($potentialProfit, 2) }}</h2>
         </div>
     </div>
 </div>

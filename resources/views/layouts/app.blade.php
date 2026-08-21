@@ -241,15 +241,21 @@
                 <i class="bi bi-grid-1x2-fill"></i>
                 <span>Dashboard</span>
             </a>
+            @if(Auth::user()->isSuperAdmin())
+                <a href="{{ route('firms.index') }}" class="nav-link-custom {{ request()->routeIs('firms*') ? 'active' : '' }}">
+                    <i class="bi bi-building-fill text-warning"></i>
+                    <span>Firms</span>
+                </a>
+            @endif
 
-            <div class="sidebar-heading">Parties</div>
-            <a href="{{ route('customers.index') }}" class="nav-link-custom {{ request()->routeIs('customers*') ? 'active' : '' }}">
-                <i class="bi bi-people-fill"></i>
-                <span>Customers</span>
-            </a>
+            <div class="sidebar-heading">Parties</div>            
             <a href="{{ route('suppliers.index') }}" class="nav-link-custom {{ request()->routeIs('suppliers*') ? 'active' : '' }}">
                 <i class="bi bi-truck"></i>
                 <span>Suppliers</span>
+            </a>
+            <a href="{{ route('customers.index') }}" class="nav-link-custom {{ request()->routeIs('customers*') ? 'active' : '' }}">
+                <i class="bi bi-people-fill"></i>
+                <span>Customers</span>
             </a>
 
             <div class="sidebar-heading">Inventory & Catalog</div>
@@ -281,12 +287,6 @@
             </a>
 
             <div class="sidebar-heading">Administration</div>
-            @if(Auth::user()->isSuperAdmin())
-                <a href="{{ route('firms.index') }}" class="nav-link-custom {{ request()->routeIs('firms*') ? 'active' : '' }}">
-                    <i class="bi bi-building-fill text-warning"></i>
-                    <span>Firms</span>
-                </a>
-            @endif
             <a href="{{ route('users.index') }}" class="nav-link-custom {{ request()->routeIs('users*') ? 'active' : '' }}">
                 <i class="bi bi-person-gear"></i>
                 <span>User Accounts</span>
@@ -295,10 +295,10 @@
                 <i class="bi bi-shield-lock-fill"></i>
                 <span>Roles & Permissions</span>
             </a>
-            <a href="{{ route('reports.index') }}" class="nav-link-custom {{ request()->routeIs('reports*') ? 'active' : '' }}">
+            <!--<a href="{{ route('reports.index') }}" class="nav-link-custom {{ request()->routeIs('reports*') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-line-fill"></i>
                 <span>Analytics & Reports</span>
-            </a>
+            </a>-->
         </div>
 
         <div class="p-3 border-top border-secondary border-opacity-20 text-center">

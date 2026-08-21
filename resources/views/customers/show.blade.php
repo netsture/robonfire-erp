@@ -44,7 +44,7 @@
     <div class="col-12 col-md-8">
         <div class="card card-custom border-0 p-4 bg-dark text-white h-100">
             <span class="text-white-50 small fw-semibold">CURRENT BALANCE DUE</span>
-            <h2 class="fw-bold font-outfit mt-2 mb-0 text-warning">${{ number_format($customer->current_balance, 2) }}</h2>
+            <h2 class="fw-bold font-outfit mt-2 mb-0 text-warning">₹{{ number_format($customer->current_balance, 2) }}</h2>
             <span class="small mt-2 text-white-50">Outstanding total</span>
         </div>
     </div>
@@ -73,7 +73,7 @@
                         <td>
                             <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">{{ strtoupper($sale->payment_status) }}</span>
                         </td>
-                        <td class="fw-bold text-dark">${{ number_format($sale->grand_total, 2) }}</td>
+                        <td class="fw-bold text-dark">₹{{ number_format($sale->grand_total, 2) }}</td>
                         <td class="text-end">
                             <a href="{{ route('sales.invoice', $sale) }}" class="btn btn-sm btn-light border" target="_blank">
                                 <i class="bi bi-printer"></i> Invoice

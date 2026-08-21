@@ -15,13 +15,23 @@
 <!-- Filter Bar -->
 <div class="card card-custom border-0 p-3 mb-4">
     <form method="GET" action="{{ route('users.index') }}" class="row g-2 align-items-center">
-        <div class="col-12 col-md-5">
+        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-4' : 'col-md-5' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search by name, email, phone..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search fire officer by name, email, phone..." value="{{ request('search') }}">
             </div>
         </div>
-        <div class="col-12 col-md-4">
+        @if(auth()->user()->isSuperAdmin())
+        <div class="col-12 col-md-3">
+            <select name="firm_id" class="form-select bg-light">
+                <option value="">All Firms</option>
+                @foreach($firms as $firm)
+                    <option value="{{ $firm->id }}" {{ request('firm_id') == $firm->id ? 'selected' : '' }}>{{ $firm->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
+        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-3' : 'col-md-4' }}">
             <select name="role" class="form-select bg-light">
                 <option value="">All Roles</option>
                 @foreach($roles as $role)
@@ -29,7 +39,7 @@
                 @endforeach
             </select>
         </div>
-        <div class="col-12 col-md-3 d-flex gap-2">
+        <div class="col-12 col-md-2 d-flex gap-2">
             <button type="submit" class="btn btn-dark w-100 rounded-3">Filter</button>
             <a href="{{ route('users.index') }}" class="btn btn-light border w-100 rounded-3">Reset</a>
         </div>
@@ -43,6 +53,7 @@
             <thead class="table-light">
                 <tr>
                     <th class="ps-4">User</th>
+                    <th>Firm / Organization</th>
                     <th>Contact Info</th>
                     <th>Assigned Role</th>
                     <th>Status</th>
@@ -63,6 +74,15 @@
                                     <div class="text-muted small">ID: #USR-{{ str_pad($user->id, 4, '0', STR_PAD_LEFT) }}</div>
                                 </div>
                             </div>
+                        </td>
+                        <td>
+                            @if($user->firm)
+                                <div class="fw-semibold text-dark"><i class="bi bi-building text-primary me-1"></i>{{ $user->firm->name }}</div>
+                            @else
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">
+                                    Global / Superadmin
+                                </span>
+                            @endif
                         </td>
                         <td>
                             <div class="small"><i class="bi bi-envelope text-muted me-1"></i>{{ $user->email }}</div>
@@ -107,7 +127,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
+                        <td colspan="7" class="text-center py-5 text-muted">
                             <i class="bi bi-people fs-1 d-block mb-2 text-secondary"></i>
                             No users found. Try searching with different keywords.
                         </td>

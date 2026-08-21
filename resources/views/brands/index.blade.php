@@ -96,11 +96,11 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Brand Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g. Dell, Samsung, Cisco" required>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Minimax, Ceasefire, Kidde, Kanex" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Description</label>
-                        <textarea name="description" class="form-control" rows="2" placeholder="Brief brand line description"></textarea>
+                        <textarea name="description" class="form-control" rows="2" placeholder="e.g. Certified fire safety extinguishers, hydrants & alarms"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top">

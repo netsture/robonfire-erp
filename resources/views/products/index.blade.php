@@ -18,7 +18,7 @@
         <div class="col-12 col-md-5">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search product title, SKU, barcode..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search fire equipment product title, SKU, barcode..." value="{{ request('search') }}">
             </div>
         </div>
         <div class="col-12 col-md-3">
@@ -94,8 +94,8 @@
                         <td>
                             <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">{{ $product->unit }}</span>
                         </td>
-                        <td class="text-muted small">${{ number_format($product->cost_price, 2) }}</td>
-                        <td class="fw-bold text-dark">${{ number_format($product->selling_price, 2) }}</td>
+                        <td class="text-muted small">₹{{ number_format($product->cost_price, 2) }}</td>
+                        <td class="fw-bold text-dark">₹{{ number_format($product->selling_price, 2) }}</td>
                         <td>
                             <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle rounded-pill px-3 py-1 fw-semibold">
                                 {{ number_format($product->tax_percent, 2) }}%

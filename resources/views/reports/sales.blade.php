@@ -44,13 +44,13 @@
     <div class="col-6">
         <div class="card card-custom border-0 p-3 bg-primary text-white">
             <span class="text-white-50 small fw-semibold">TOTAL SALES REVENUE</span>
-            <h3 class="fw-bold font-outfit mt-1 mb-0">${{ number_format($totalRevenue, 2) }}</h3>
+            <h3 class="fw-bold font-outfit mt-1 mb-0">₹{{ number_format($totalRevenue, 2) }}</h3>
         </div>
     </div>
     <div class="col-6">
         <div class="card card-custom border-0 p-3 bg-success text-white">
             <span class="text-white-50 small fw-semibold">TOTAL AMOUNT RECEIVED</span>
-            <h3 class="fw-bold font-outfit mt-1 mb-0">${{ number_format($totalPaid, 2) }}</h3>
+            <h3 class="fw-bold font-outfit mt-1 mb-0">₹{{ number_format($totalPaid, 2) }}</h3>
         </div>
     </div>
 </div>
@@ -77,7 +77,7 @@
                         <td>
                             <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">{{ strtoupper($sale->payment_status) }}</span>
                         </td>
-                        <td class="text-end pe-4 fw-bold text-dark">${{ number_format($sale->grand_total, 2) }}</td>
+                        <td class="text-end pe-4 fw-bold text-dark">₹{{ number_format($sale->grand_total, 2) }}</td>
                     </tr>
                 @empty
                     <tr>

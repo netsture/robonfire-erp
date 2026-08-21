@@ -46,7 +46,7 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'name'         => ['required', 'string', 'max:255'],
             'email'        => ['nullable', 'email', 'max:255'],
-            'phone'        => ['required', 'string', 'max:20'],
+            'phone'        => ['required', 'string', 'min:10', 'max:10'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'tax_number'   => ['nullable', 'string', 'max:50'],
             'address'      => ['nullable', 'string'],
@@ -101,7 +101,7 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'name'         => ['required', 'string', 'max:255'],
             'email'        => ['nullable', 'email', 'max:255'],
-            'phone'        => ['required', 'string', 'max:20'],
+            'phone'        => ['required', 'string', 'min:10', 'max:10'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'tax_number'   => ['nullable', 'string', 'max:50'],
             'address'      => ['nullable', 'string'],

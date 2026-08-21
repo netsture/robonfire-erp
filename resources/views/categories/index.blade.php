@@ -96,11 +96,11 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Category Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g. Industrial Electronics" required>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Fire Extinguishers & Suppression" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Description</label>
-                        <textarea name="description" class="form-control" rows="2" placeholder="Brief category description"></textarea>
+                        <textarea name="description" class="form-control" rows="2" placeholder="e.g. Fire extinguishers, hydrants, alarm panels & safety gear"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top">

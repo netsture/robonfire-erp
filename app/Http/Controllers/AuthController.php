@@ -26,30 +26,53 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+        $loginInput = trim($request->input('login', $request->input('email', '')));
+
+        if (empty($loginInput)) {
+            return back()->withErrors([
+                'login' => 'The email or phone number field is required.',
+            ])->onlyInput('login');
+        }
+
+        $request->validate([
             'password' => ['required'],
         ]);
 
         $remember = $request->boolean('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
+        $digitsOnly = preg_replace('/[^0-9]/', '', $loginInput);
 
-            if (Auth::user()->status !== 'active') {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                return back()->withErrors(['email' => 'Your account is deactivated. Please contact administrator.']);
+        $user = User::where(function ($query) use ($loginInput, $digitsOnly) {
+            $query->where('email', $loginInput)
+                  ->orWhere('phone', $loginInput);
+
+            if (!empty($digitsOnly)) {
+                $query->orWhere('phone', $digitsOnly);
+                if (strlen($digitsOnly) >= 10) {
+                    $last10 = substr($digitsOnly, -10);
+                    $query->orWhere('phone', $last10)
+                          ->orWhere('phone', 'like', "%{$last10}");
+                }
+            }
+        })->first();
+
+        if ($user && Hash::check($request->password, $user->password)) {
+            if ($user->status !== 'active') {
+                return back()->withErrors([
+                    'login' => 'Your account is deactivated. Please contact administrator.',
+                ])->onlyInput('login');
             }
 
+            Auth::login($user, $remember);
+            $request->session()->regenerate();
+
             return redirect()->intended(route('dashboard'))
-                ->with('success', 'Welcome back, ' . Auth::user()->name . '!');
+                ->with('success', 'Welcome back, ' . $user->name . '!');
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+            'login' => 'The provided credentials do not match our records.',
+        ])->onlyInput('login');
     }
 
     /**
@@ -71,7 +94,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone'    => ['nullable', 'string', 'max:20'],
+            'phone'    => ['required', 'string', 'min:10', 'max:10'],
             'password' => ['required', 'confirmed', Password::min(6)],
         ]);
 

@@ -9,7 +9,7 @@
         <label for="name" class="form-label text-light small fw-medium">Full Name</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-person"></i></span>
-            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required autofocus placeholder="John Doe">
+            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required autofocus placeholder="e.g. Inspector John Doe">
         </div>
         @error('name')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -20,7 +20,7 @@
         <label for="email" class="form-label text-light small fw-medium">Email Address</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required placeholder="name@company.com">
+            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required placeholder="officer@robonfire.com">
         </div>
         @error('email')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -28,10 +28,10 @@
     </div>
 
     <div class="mb-3">
-        <label for="phone" class="form-label text-light small fw-medium">Phone Number (Optional)</label>
+        <label for="phone" class="form-label text-light small fw-medium">Phone Number <span class="text-danger">*</span></label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-            <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" placeholder="+1 234 567 890">
+            <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" required minlength="10" maxlength="10" placeholder="e.g. 9876543210">
         </div>
         @error('phone')
             <div class="text-danger small mt-1">{{ $message }}</div>

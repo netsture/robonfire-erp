@@ -6,29 +6,31 @@
 <form action="{{ route('login.submit') }}" method="POST">
     @csrf
     <div class="mb-3">
-        <label for="email" class="form-label text-light small fw-medium">Email Address</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', 'admin@erp.com') }}" required autofocus placeholder="name@company.com">
+        <label for="login" class="form-label text-light small fw-medium">Email or Phone Number</label>
+        <div class="input-group @if($errors->has('login') || $errors->has('email')) is-invalid @endif">
+            <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+            <input type="text" class="form-control @if($errors->has('login') || $errors->has('email')) is-invalid @endif" id="login" name="login" value="{{ old('login', old('email')) }}" required autofocus>
         </div>
-        @error('email')
-            <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div>
-        @enderror
+        @if($errors->has('login'))
+            <div class="text-danger-custom small mt-1 font-outfit fw-medium"><i class="bi bi-exclamation-circle me-1"></i>{{ $errors->first('login') }}</div>
+        @elseif($errors->has('email'))
+            <div class="text-danger-custom small mt-1 font-outfit fw-medium"><i class="bi bi-exclamation-circle me-1"></i>{{ $errors->first('email') }}</div>
+        @endif
     </div>
 
     <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
             <label for="password" class="form-label text-light small fw-medium mb-0">Password</label>
         </div>
-        <div class="input-group">
+        <div class="input-group @error('password') is-invalid @enderror">
             <span class="input-group-text"><i class="bi bi-lock"></i></span>
-            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required placeholder="••••••••">
+            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required placeholder="">
             <button type="button" class="btn btn-toggle-password" id="togglePassword" title="Show/Hide Password" aria-label="Toggle password visibility">
                 <i class="bi bi-eye" id="togglePasswordIcon"></i>
             </button>
         </div>
         @error('password')
-            <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div>
+            <div class="text-danger-custom small mt-1 font-outfit fw-medium"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div>
         @enderror
     </div>
 

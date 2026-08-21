@@ -73,10 +73,32 @@ class DashboardController extends Controller
         $recentSales = Schema::hasTable('sales') ? $recentSalesQuery->latest()->take(5)->get() : collect();
         $recentPurchases = Schema::hasTable('purchases') ? $recentPurchasesQuery->latest()->take(5)->get() : collect();
 
-        // Chart Data (Last 6 Months)
-        $chartLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        $salesData = [12500, 19200, 15400, 22100, 28500, 34200];
-        $purchaseData = [8000, 12000, 9500, 14000, 18000, 21000];
+        // Chart Data (Last 6 Months Dynamic Aggregation)
+        $chartLabels = [];
+        $salesData = [];
+        $purchaseData = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $monthName = $date->format('M');
+            $year = $date->year;
+            $month = $date->month;
+
+            $chartLabels[] = $monthName;
+
+            $mSales = Schema::hasTable('sales') ? (clone $salesQuery)
+                ->whereYear('sale_date', $year)
+                ->whereMonth('sale_date', $month)
+                ->sum('grand_total') : 0;
+
+            $mPurchases = Schema::hasTable('purchases') ? (clone $purchasesQuery)
+                ->whereYear('purchase_date', $year)
+                ->whereMonth('purchase_date', $month)
+                ->sum('grand_total') : 0;
+
+            $salesData[] = round((float) $mSales, 2);
+            $purchaseData[] = round((float) $mPurchases, 2);
+        }
 
         return view('dashboard', compact(
             'totalUsersCount',

@@ -54,7 +54,7 @@ class FirmController extends Controller
         $validated = $request->validate([
             'name'           => ['required', 'string', 'max:255', 'unique:firms'],
             'email'          => ['nullable', 'email', 'max:255'],
-            'phone'          => ['nullable', 'string', 'max:50'],
+            'phone'          => ['required', 'string', 'min:10', 'max:10'],
             'address'        => ['nullable', 'string'],
             'status'         => ['required', 'in:active,inactive'],
             'admin_name'     => ['required', 'string', 'max:255'],
@@ -120,7 +120,7 @@ class FirmController extends Controller
         $validated = $request->validate([
             'name'    => ['required', 'string', 'max:255', 'unique:firms,name,' . $firm->id],
             'email'   => ['nullable', 'email', 'max:255'],
-            'phone'   => ['nullable', 'string', 'max:50'],
+            'phone'   => ['required', 'string', 'min:10', 'max:10'],
             'address' => ['nullable', 'string'],
             'status'  => ['required', 'in:active,inactive'],
         ]);

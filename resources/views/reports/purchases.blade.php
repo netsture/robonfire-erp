@@ -44,13 +44,13 @@
     <div class="col-6">
         <div class="card card-custom border-0 p-3 bg-info text-white">
             <span class="text-white-50 small fw-semibold">TOTAL PROCUREMENT EXPENSE</span>
-            <h3 class="fw-bold font-outfit mt-1 mb-0">${{ number_format($totalCost, 2) }}</h3>
+            <h3 class="fw-bold font-outfit mt-1 mb-0">₹{{ number_format($totalCost, 2) }}</h3>
         </div>
     </div>
     <div class="col-6">
         <div class="card card-custom border-0 p-3 bg-dark text-white">
             <span class="text-white-50 small fw-semibold">TOTAL PAID TO VENDORS</span>
-            <h3 class="fw-bold font-outfit mt-1 mb-0 text-success">${{ number_format($totalPaid, 2) }}</h3>
+            <h3 class="fw-bold font-outfit mt-1 mb-0 text-success">₹{{ number_format($totalPaid, 2) }}</h3>
         </div>
     </div>
 </div>
@@ -61,7 +61,7 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Reference #</th>
+                    <th class="ps-4">Project Name</th>
                     <th>Supplier</th>
                     <th>Date</th>
                     <th>Status</th>
@@ -71,13 +71,13 @@
             <tbody>
                 @forelse($purchases as $purchase)
                     <tr>
-                        <td class="ps-4 fw-bold font-monospace">#{{ $purchase->reference_no }}</td>
+                        <td class="ps-4 fw-bold">{{ $purchase->project_name }}</td>
                         <td class="fw-semibold text-dark">{{ $purchase->supplier->name ?? 'N/A' }}</td>
                         <td class="small text-muted">{{ $purchase->purchase_date }}</td>
                         <td>
                             <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3">{{ strtoupper($purchase->payment_status) }}</span>
                         </td>
-                        <td class="text-end pe-4 fw-bold text-dark">${{ number_format($purchase->grand_total, 2) }}</td>
+                        <td class="text-end pe-4 fw-bold text-dark">₹{{ number_format($purchase->grand_total, 2) }}</td>
                     </tr>
                 @empty
                     <tr>

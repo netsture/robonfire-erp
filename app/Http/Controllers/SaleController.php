@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -25,6 +26,8 @@ class SaleController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhere('project_name', 'like', "%{$search}%")
+                  ->orWhere('vehicle_number', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($q) use ($search) {
                       $q->where('name', 'like', "%{$search}%");
                   });
@@ -41,20 +44,23 @@ class SaleController extends Controller
         $firmId = $user->firm_id ?? 1;
 
         $customersQuery = Customer::where('status', 'active');
-        $productsQuery = Product::where('status', 'active')->where('stock_quantity', '>', 0);
+        $productsQuery = Product::with(['category', 'brand'])->where('status', 'active')->where('stock_quantity', '>', 0);
+        $categoriesQuery = Category::query();
 
         if (!$user->isSuperAdmin()) {
             $customersQuery->where('firm_id', $firmId);
             $productsQuery->where('firm_id', $firmId);
+            $categoriesQuery->where('firm_id', $firmId);
         }
 
         $customers = $customersQuery->get();
         $products = $productsQuery->get();
+        $categories = $categoriesQuery->get();
 
         $firmSeq = Sale::where('firm_id', $firmId)->count() + 1;
         $autoInvoice = 'INV-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
 
-        return view('sales.create', compact('customers', 'products', 'autoInvoice'));
+        return view('sales.create', compact('customers', 'products', 'categories', 'autoInvoice'));
     }
 
     public function store(Request $request)
@@ -65,11 +71,14 @@ class SaleController extends Controller
         $validated = $request->validate([
             'customer_id'     => ['required', 'exists:customers,id'],
             'invoice_number'  => ['required', 'string'],
+            'project_name'    => ['required', 'string'],
+            'vehicle_number'  => ['required', 'string'],
             'sale_date'       => ['required', 'date'],
             'products'        => ['required', 'array', 'min:1'],
             'products.*.id'   => ['required', 'exists:products,id'],
             'products.*.qty'  => ['required', 'integer', 'min:1'],
             'products.*.price'=> ['required', 'numeric', 'min:0'],
+            'products.*.tax_percent' => ['nullable', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'tax_amount'      => ['nullable', 'numeric', 'min:0'],
             'shipping_cost'   => ['nullable', 'numeric', 'min:0'],
@@ -79,19 +88,37 @@ class SaleController extends Controller
 
         // Check stock availability first
         foreach ($validated['products'] as $item) {
-            $product = Product::find($item['id']);
+            $product = Product::with(['category', 'brand'])->find($item['id']);
             if ($product->stock_quantity < $item['qty']) {
-                return back()->with('error', 'Insufficient stock for "' . $product->name . '". Only ' . $product->stock_quantity . ' available.');
+                $details = $product->name;
+                $meta = [];
+                if ($product->category) {
+                    $meta[] = 'Category: ' . $product->category->name;
+                }
+                if ($product->brand) {
+                    $meta[] = 'Brand: ' . $product->brand->name;
+                }
+                if (!empty($meta)) {
+                    $details .= ' (' . implode(', ', $meta) . ')';
+                }
+                $unitStr = $product->unit ? ' ' . $product->unit : '';
+
+                return back()->withInput()->with('error', 'Insufficient stock for "' . $details . '". Only ' . $product->stock_quantity . $unitStr . ' available.');
             }
         }
 
         DB::transaction(function () use ($validated, $firmId, $user, &$sale) {
             $subtotal = 0;
+            $totalTax = 0;
             $itemsData = [];
 
             foreach ($validated['products'] as $item) {
                 $itemSubtotal = $item['qty'] * $item['price'];
+                $taxPercent = $item['tax_percent'] ?? 0;
+                $itemTax = ($itemSubtotal * $taxPercent) / 100;
+
                 $subtotal += $itemSubtotal;
+                $totalTax += $itemTax;
 
                 $itemsData[] = [
                     'product_id' => $item['id'],
@@ -102,7 +129,7 @@ class SaleController extends Controller
             }
 
             $discount = $validated['discount_amount'] ?? 0;
-            $tax = $validated['tax_amount'] ?? 0;
+            $tax = $validated['tax_amount'] ?? $totalTax;
             $shipping = $validated['shipping_cost'] ?? 0;
             $grandTotal = $subtotal - $discount + $tax + $shipping;
 
@@ -115,6 +142,8 @@ class SaleController extends Controller
             $sale = Sale::create([
                 'firm_id'         => $firmId,
                 'invoice_number'  => $validated['invoice_number'],
+                'project_name'    => $validated['project_name'] ?? null,
+                'vehicle_number'  => $validated['vehicle_number'] ?? null,
                 'customer_id'     => $validated['customer_id'],
                 'user_id'         => $user->id,
                 'sale_date'       => $validated['sale_date'],
@@ -152,7 +181,7 @@ class SaleController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        $sale->load('customer', 'user', 'items.product', 'firm');
+        $sale->load('customer', 'user', 'items.product.category', 'items.product.brand', 'firm');
         return view('sales.show', compact('sale'));
     }
 
@@ -163,7 +192,7 @@ class SaleController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        $sale->load('customer', 'user', 'items.product', 'firm');
+        $sale->load('customer', 'user', 'items.product.category', 'items.product.brand', 'firm');
         return view('sales.invoice', compact('sale'));
     }
 

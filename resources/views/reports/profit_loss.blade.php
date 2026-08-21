@@ -35,7 +35,7 @@
     <div class="d-flex align-items-center justify-content-between">
         <div>
             <span class="text-white-50 small fw-semibold uppercase tracking-wider">NET OPERATING PROFIT / LOSS</span>
-            <h1 class="fw-bold font-outfit mt-2 mb-0">${{ number_format($netProfit, 2) }}</h1>
+            <h1 class="fw-bold font-outfit mt-2 mb-0">₹{{ number_format($netProfit, 2) }}</h1>
             <span class="small text-white-50">Net earnings after deducting cost of sales</span>
         </div>
         <div class="fs-1 text-white-50">
@@ -57,15 +57,15 @@
                 </tr>
                 <tr>
                     <td class="ps-4">Gross Sales Revenue</td>
-                    <td class="text-end fw-semibold text-dark">${{ number_format($grossSales, 2) }}</td>
+                    <td class="text-end fw-semibold text-dark">₹{{ number_format($grossSales, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="ps-4 text-muted">Less: Sales Discounts Allowed</td>
-                    <td class="text-end text-danger">-${{ number_format($salesDiscounts, 2) }}</td>
+                    <td class="text-end text-danger">-₹{{ number_format($salesDiscounts, 2) }}</td>
                 </tr>
                 <tr class="fw-bold bg-light-subtle">
                     <td class="ps-4">Net Operating Sales Revenue</td>
-                    <td class="text-end text-success">${{ number_format($netSales, 2) }}</td>
+                    <td class="text-end text-success">₹{{ number_format($netSales, 2) }}</td>
                 </tr>
 
                 <!-- Expenses Group -->
@@ -74,22 +74,22 @@
                 </tr>
                 <tr>
                     <td class="ps-4">Gross Purchases Expense</td>
-                    <td class="text-end text-dark">${{ number_format($grossPurchases, 2) }}</td>
+                    <td class="text-end text-dark">₹{{ number_format($grossPurchases, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="ps-4 text-muted">Less: Purchase Discounts Received</td>
-                    <td class="text-end text-success">-${{ number_format($purchaseDiscounts, 2) }}</td>
+                    <td class="text-end text-success">-₹{{ number_format($purchaseDiscounts, 2) }}</td>
                 </tr>
                 <tr class="fw-bold bg-light-subtle">
                     <td class="ps-4">Net Procurement Cost</td>
-                    <td class="text-end text-danger">${{ number_format($netPurchases, 2) }}</td>
+                    <td class="text-end text-danger">₹{{ number_format($netPurchases, 2) }}</td>
                 </tr>
 
                 <!-- Final Net Profit Summary -->
                 <tr class="table-dark fs-5 fw-bold">
                     <td>NET OPERATING PROFIT / (LOSS)</td>
                     <td class="text-end {{ $netProfit >= 0 ? 'text-success' : 'text-danger' }}">
-                        ${{ number_format($netProfit, 2) }}
+                        ₹{{ number_format($netProfit, 2) }}
                     </td>
                 </tr>
             </tbody>

@@ -20,7 +20,7 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <label for="name" class="form-label fw-semibold text-dark">Product Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required placeholder="e.g. Wireless Ergonomic Keyboard X1">
+                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required placeholder="e.g. ABC Dry Powder Fire Extinguisher 5kg">
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -54,13 +54,13 @@
 
                     <div class="col-12 col-md-3">
                         <label for="barcode" class="form-label fw-semibold text-dark">Barcode (Optional)</label>
-                        <input type="text" class="form-control @error('barcode') is-invalid @enderror" id="barcode" name="barcode" value="{{ old('barcode') }}" placeholder="EAN-13 / UPC">
+                        <input type="text" class="form-control @error('barcode') is-invalid @enderror" id="barcode" name="barcode" value="{{ old('barcode') }}" placeholder="IS:15683 / EAN-13">
                         @error('barcode') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-3">
                         <label for="hsn_code" class="form-label fw-semibold text-dark">HSN Code <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('hsn_code') is-invalid @enderror" id="hsn_code" name="hsn_code" value="{{ old('hsn_code') }}" required placeholder="e.g. 84713010">
+                        <input type="text" class="form-control @error('hsn_code') is-invalid @enderror" id="hsn_code" name="hsn_code" value="{{ old('hsn_code') }}" required placeholder="e.g. 84241000">
                         @error('hsn_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -78,13 +78,13 @@
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="cost_price" class="form-label fw-semibold text-dark">Purchase Cost ($) <span class="text-danger">*</span></label>
+                        <label for="cost_price" class="form-label fw-semibold text-dark">Purchase Cost (₹) <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" class="form-control @error('cost_price') is-invalid @enderror" id="cost_price" name="cost_price" value="{{ old('cost_price', '0.00') }}" required>
                         @error('cost_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="selling_price" class="form-label fw-semibold text-dark">Selling Retail Price ($) <span class="text-danger">*</span></label>
+                        <label for="selling_price" class="form-label fw-semibold text-dark">Selling Retail Price (₹) <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" name="selling_price" value="{{ old('selling_price', '0.00') }}" required>
                         @error('selling_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -118,7 +118,7 @@
 
                     <div class="col-12">
                         <label for="description" class="form-label fw-semibold text-dark">Product Description & Specifications</label>
-                        <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" placeholder="Technical details, warranty terms, features"></textarea>
+                        <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" placeholder="e.g. 5kg ABC powder fire extinguisher, 15 bar pressure, 34A 233B rating, IS certified"></textarea>
                         @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
