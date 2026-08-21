@@ -74,11 +74,14 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone'    => ['required', 'string', 'min:10', 'max:10'],
+            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'phone'    => ['required', 'string', 'min:10', 'max:10', 'unique:users,phone'],
             'password' => ['required', 'confirmed', Password::min(6)],
             'role_id'  => ['required', 'exists:roles,id'],
             'status'   => ['required', 'in:active,inactive'],
+        ], [
+            'email.unique' => 'This email address is already registered to another user.',
+            'phone.unique' => 'This phone number is already registered to another user.',
         ]);
 
         $role = Role::findOrFail($validated['role_id']);
@@ -132,9 +135,12 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'    => ['required', 'string', 'max:255'],
             'email'   => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'phone'   => ['required', 'string', 'min:10', 'max:10'],
+            'phone'   => ['required', 'string', 'min:10', 'max:10', 'unique:users,phone,' . $user->id],
             'role_id' => ['required', 'exists:roles,id'],
             'status'  => ['required', 'in:active,inactive'],
+        ], [
+            'email.unique' => 'This email address is already registered to another user.',
+            'phone.unique' => 'This phone number is already registered to another user.',
         ]);
 
         $role = Role::findOrFail($validated['role_id']);
