@@ -22,8 +22,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('firm_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('sku');
-            $table->string('barcode')->nullable();
             $table->string('hsn_code', 50)->nullable();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->string('unit')->default('Pcs');
@@ -36,7 +34,6 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->string('status')->default('active');
             $table->timestamps();
-            $table->unique(['firm_id', 'sku']);
         });
 
         Schema::create('stock_adjustments', function (Blueprint $table) {

@@ -5,9 +5,11 @@
 @section('page_subtitle', 'Master item list, prices, cost margins, and real-time stock levels')
 
 @section('header_actions')
-    <a href="{{ route('products.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-box-seam-fill me-1"></i> Add Product
-    </a>
+    @if(!auth()->user()->isSuperAdmin())
+        <a href="{{ route('products.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-box-seam-fill me-1"></i> Add Product
+        </a>
+    @endif
 @endsection
 
 @section('content')
@@ -15,13 +17,23 @@
 <!-- Search & Filter Bar -->
 <div class="card card-custom border-0 p-3 mb-4">
     <form method="GET" action="{{ route('products.index') }}" class="row g-2 align-items-center">
-        <div class="col-12 col-md-5">
+        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-3' : 'col-md-5' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search fire equipment product title, SKU, barcode..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search product title, HSN code..." value="{{ request('search') }}">
             </div>
         </div>
+        @if(auth()->user()->isSuperAdmin())
         <div class="col-12 col-md-3">
+            <select name="firm_id" class="form-select bg-light">
+                <option value="">All Firms</option>
+                @foreach($firms as $firm)
+                    <option value="{{ $firm->id }}" {{ request('firm_id') == $firm->id ? 'selected' : '' }}>{{ $firm->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
+        <div class="col-12 col-md-2">
             <select name="category_id" class="form-select bg-light">
                 <option value="">All Categories</option>
                 @foreach($categories as $category)
@@ -50,10 +62,13 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Product Name / SKU</th>
+                    <th class="ps-4">Product Name</th>
+                    @if(auth()->user()->isSuperAdmin())
+                        <th>Firm</th>
+                    @endif
                     <th>Category / Brand</th>
                     <th>HSN Code</th>
-                    <th>Unit</th>
+                    <th>Measurement Type</th>
                     <th>Cost Price</th>
                     <th>Selling Price</th>
                     <th>Tax (%)</th>
@@ -74,10 +89,14 @@
                                     <a href="{{ route('products.show', $product) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
                                         {{ $product->name }}
                                     </a>
-                                    <div class="small text-muted font-monospace"><i class="bi bi-barcode me-1"></i>{{ $product->sku }}</div>
                                 </div>
                             </div>
                         </td>
+                        @if(auth()->user()->isSuperAdmin())
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ $product->firm->name ?? 'N/A' }}</span>
+                            </td>
+                        @endif
                         <td>
                             <span class="badge bg-light text-dark border rounded-pill px-3">{{ $product->category->name }}</span>
                             @if($product->brand)
@@ -125,16 +144,18 @@
                                 <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-light border" title="View Audit Trail">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-light border" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete product from inventory?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                @if(!auth()->user()->isSuperAdmin())
+                                    <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-light border" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete product from inventory?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -5,9 +5,11 @@
 @section('page_subtitle', 'Configure system roles and fine-grained module permissions')
 
 @section('header_actions')
-    <a href="{{ route('roles.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-shield-plus me-1"></i> Create New Role
-    </a>
+    @if(!auth()->user()->isSuperAdmin())
+        <a href="{{ route('roles.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-shield-plus me-1"></i> Create New Role
+        </a>
+    @endif
 @endsection
 
 @section('content')
@@ -40,20 +42,22 @@
 
                 <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
                     <span class="text-muted small font-monospace">slug: {{ $role->slug }}</span>
-                    <div class="btn-group">
-                        <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                            <i class="bi bi-pencil me-1"></i> Edit Permissions
-                        </a>
-                        @if(!in_array($role->slug, ['admin', 'superadmin']))
-                            <form action="{{ route('roles.destroy', $role) }}" method="POST" class="d-inline ms-1" onsubmit="return confirm('Are you sure you want to delete this role?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        @endif
-                    </div>
+                    @if(!auth()->user()->isSuperAdmin())
+                        <div class="btn-group">
+                            <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <i class="bi bi-pencil me-1"></i> Edit Permissions
+                            </a>
+                            @if(!in_array($role->slug, ['admin', 'superadmin']))
+                                <form action="{{ route('roles.destroy', $role) }}" method="POST" class="d-inline ms-1" onsubmit="return confirm('Are you sure you want to delete this role?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

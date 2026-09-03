@@ -1,10 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Sales Report')
-@section('page_title', 'Sales Performance Report')
-@section('page_subtitle', 'Filter revenue by custom date range, customer, and payment status')
+@section('title', 'Detailed Sales Report')
+@section('page_title', 'Detailed Sales & Revenue Report')
+@section('page_subtitle', 'Comprehensive analysis of sales revenue, collections, outstanding balances, and order performance')
 
 @section('header_actions')
+    <button onclick="window.print()" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2">
+        <i class="bi bi-printer me-1"></i> Print Report
+    </button>
     <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Reports
     </a>
@@ -12,86 +15,220 @@
 
 @section('content')
 
+<!-- Print Header Branding -->
+<div class="d-none d-print-block mb-4 text-center">
+    <h3 class="fw-bold font-outfit mb-1">{{ auth()->user()->firm->name ?? 'ERP Solution' }}</h3>
+    <h5 class="text-muted font-outfit mb-0">Detailed Sales Performance & Revenue Report</h5>
+    <span class="small text-muted font-monospace">Generated on: {{ now()->format('d M Y, h:i A') }}</span>
+    <hr class="my-3">
+</div>
+
+<!-- KPI Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-2">
+        <div class="card card-custom border-0 p-3 bg-light">
+            <span class="text-muted small fw-semibold text-uppercase">Total Sales Orders</span>
+            <h3 class="fw-bold font-outfit text-dark mt-2 mb-0">{{ number_format($totalOrdersCount) }}</h3>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <div class="card card-custom border-0 p-3 bg-light">
+            <span class="text-muted small fw-semibold text-uppercase">Gross Sales (Subtotal)</span>
+            <h3 class="fw-bold font-outfit text-dark mt-2 mb-0">₹{{ number_format($totalSubtotal, 2) }}</h3>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <div class="card card-custom border-0 p-3 bg-light">
+            <span class="text-muted small fw-semibold text-uppercase">Tax Collected</span>
+            <h3 class="fw-bold font-outfit text-info mt-2 mb-0">+₹{{ number_format($totalTaxAmount, 2) }}</h3>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <div class="card card-custom border-0 p-3 bg-primary text-white">
+            <span class="text-white-50 small fw-semibold text-uppercase">Grand Total Revenue</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalGrandTotal, 2) }}</h3>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <div class="card card-custom border-0 p-3 bg-success text-white">
+            <span class="text-white-50 small fw-semibold text-uppercase">Amount Received</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalPaidAmount, 2) }}</h3>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <div class="card card-custom border-0 p-3 bg-danger text-white">
+            <span class="text-white-50 small fw-semibold text-uppercase">Balance Due</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalPendingAmount, 2) }}</h3>
+        </div>
+    </div>
+</div>
+
 <!-- Filter Bar -->
-<div class="card card-custom border-0 p-3 mb-4">
-    <form method="GET" action="{{ route('reports.sales') }}" class="row g-2 align-items-center">
-        <div class="col-12 col-md-3">
-            <label class="form-label small mb-1 fw-semibold">Start Date</label>
+<div class="card card-custom border-0 p-3 mb-4 no-print">
+    <form method="GET" action="{{ route('reports.sales') }}" class="row g-2 align-items-end">
+        @if(auth()->user()->isSuperAdmin() && count($firms) > 0)
+            <div class="col-12 col-md-2">
+                <label class="form-label small fw-semibold text-muted mb-1">Firm</label>
+                <select name="firm_id" class="form-select form-select-sm">
+                    <option value="">All Firms</option>
+                    @foreach($firms as $firm)
+                        <option value="{{ $firm->id }}" {{ request('firm_id') == $firm->id ? 'selected' : '' }}>{{ $firm->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+
+        <div class="col-12 col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">Search Challan No/ Customer</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}">
+            </div>
+        </div>
+
+        <div class="col-12 col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">Start Date</label>
             <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}">
         </div>
-        <div class="col-12 col-md-3">
-            <label class="form-label small mb-1 fw-semibold">End Date</label>
+
+        <div class="col-12 col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">End Date</label>
             <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}">
         </div>
-        <div class="col-12 col-md-3">
-            <label class="form-label small mb-1 fw-semibold">Customer</label>
+
+        <div class="col-12 col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">Customer</label>
             <select name="customer_id" class="form-select form-select-sm">
                 <option value="">All Customers</option>
                 @foreach($customers as $c)
-                    <option value="{{ $c->id }}" {{ request('customer_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                    <option value="{{ $c->id }}" {{ request('customer_id') == $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="col-12 col-md-3 d-flex align-items-end gap-2 pt-4">
-            <button type="submit" class="btn btn-primary btn-sm w-100 rounded-3">Apply Filter</button>
-            <a href="{{ route('reports.sales') }}" class="btn btn-light btn-sm border w-100 rounded-3">Reset</a>
+
+        <div class="col-12 col-md-1">
+            <label class="form-label small fw-semibold text-muted mb-1">Status</label>
+            <select name="payment_status" class="form-select form-select-sm">
+                <option value="">All</option>
+                <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Pending</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-md-1 d-flex gap-1">
+            <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel me-1"></i> Filter</button>
+            <a href="{{ route('reports.sales') }}" class="btn btn-sm btn-light border" title="Reset Filters"><i class="bi bi-arrow-counterclockwise"></i></a>
         </div>
     </form>
 </div>
 
-<!-- Summary Metrics -->
-<div class="row g-3 mb-4">
-    <div class="col-6">
-        <div class="card card-custom border-0 p-3 bg-primary text-white">
-            <span class="text-white-50 small fw-semibold">TOTAL SALES REVENUE</span>
-            <h3 class="fw-bold font-outfit mt-1 mb-0">₹{{ number_format($totalRevenue, 2) }}</h3>
-        </div>
-    </div>
-    <div class="col-6">
-        <div class="card card-custom border-0 p-3 bg-success text-white">
-            <span class="text-white-50 small fw-semibold">TOTAL AMOUNT RECEIVED</span>
-            <h3 class="fw-bold font-outfit mt-1 mb-0">₹{{ number_format($totalPaid, 2) }}</h3>
-        </div>
-    </div>
-</div>
-
-<!-- Table -->
+<!-- Detailed Sales Table -->
 <div class="card card-custom border-0 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Invoice #</th>
-                    <th>Customer</th>
+                    @if(auth()->user()->isSuperAdmin())
+                        <th>Firm</th>
+                    @endif
+                    <th class="ps-4">Challan No#</th>
                     <th>Date</th>
+                    <th>Customer Name</th>
+                    <th>Project Name</th>
                     <th>Status</th>
-                    <th class="text-end pe-4">Total Revenue</th>
+                    <th class="text-end">Subtotal (₹)</th>
+                    <th class="text-end">Tax (₹)</th>
+                    <th class="text-end">Discount (₹)</th>
+                    <th class="text-end">Grand Total (₹)</th>
+                    <th class="text-end">Amount Received (₹)</th>
+                    <th class="text-end">Balance Due (₹)</th>
+                    <th class="text-center pe-4 no-print">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($sales as $sale)
+                    @php
+                        $balanceDue = $sale->grand_total - $sale->paid_amount;
+                    @endphp
                     <tr>
-                        <td class="ps-4 fw-bold font-monospace">#{{ $sale->invoice_number }}</td>
-                        <td class="fw-semibold text-dark">{{ $sale->customer->name ?? 'N/A' }}</td>
+                        @if(auth()->user()->isSuperAdmin())
+                            <td><span class="badge bg-dark-subtle text-dark border">{{ $sale->firm->name ?? 'N/A' }}</span></td>
+                        @endif
+                        <td class="ps-4 fw-bold font-monospace text-primary">#{{ $sale->invoice_number }}</td>
                         <td class="small text-muted">{{ $sale->sale_date }}</td>
+                        <td class="fw-semibold text-dark">{{ $sale->customer->company_name ?? 'N/A' }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ $sale->project_name ?? 'N/A' }}</span></td>
                         <td>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">{{ strtoupper($sale->payment_status) }}</span>
+                            @if($sale->payment_status === 'paid')
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">PAID</span>
+                            @elseif($sale->payment_status === 'unpaid')
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">UNPAID</span>
+                            @else
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1">PENDING</span>
+                            @endif
                         </td>
-                        <td class="text-end pe-4 fw-bold text-dark">₹{{ number_format($sale->grand_total, 2) }}</td>
+                        <td class="text-end font-monospace">₹{{ number_format($sale->subtotal, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">+₹{{ number_format($sale->tax_amount, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">-₹{{ number_format($sale->discount_amount, 2) }}</td>
+                        <td class="text-end font-monospace fw-bold text-dark">₹{{ number_format($sale->grand_total, 2) }}</td>
+                        <td class="text-end font-monospace fw-semibold text-success">₹{{ number_format($sale->paid_amount, 2) }}</td>
+                        <td class="text-end font-monospace fw-semibold {{ $balanceDue > 0 ? 'text-danger' : 'text-muted' }}">
+                            ₹{{ number_format($balanceDue, 2) }}
+                        </td>
+                        <td class="text-center pe-4 no-print">
+                            <div class="btn-group">
+                                <a href="{{ route('sales.show', $sale) }}" class="btn btn-sm btn-light border" title="View Order Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('sales.challan', $sale) }}" class="btn btn-sm btn-light border text-info" title="Delivery Challan View">
+                                    <i class="bi bi-truck"></i>
+                                </a>
+                                <a href="{{ route('sales.invoice', $sale) }}" class="btn btn-sm btn-light border text-primary" target="_blank" title="Print Invoice">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">No sales records found for selected period.</td>
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 13 : 12 }}" class="text-center py-5 text-muted">
+                            <i class="bi bi-receipt fs-1 d-block mb-2 text-secondary"></i>
+                            No sales records match the selected filter criteria.
+                        </td>
                     </tr>
                 @endforelse
             </tbody>
+            @if(count($sales) > 0)
+                <tfoot class="table-light border-top">
+                    <tr class="fw-bold">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 6 : 5 }}" class="ps-4 text-end">TOTALS:</td>
+                        <td class="text-end font-monospace">₹{{ number_format($totalSubtotal, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">+₹{{ number_format($totalTaxAmount, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">-₹{{ number_format($totalDiscountAmount, 2) }}</td>
+                        <td class="text-end font-monospace text-dark fs-6">₹{{ number_format($totalGrandTotal, 2) }}</td>
+                        <td class="text-end font-monospace text-success fs-6">₹{{ number_format($totalPaidAmount, 2) }}</td>
+                        <td class="text-end font-monospace text-danger fs-6">₹{{ number_format($totalPendingAmount, 2) }}</td>
+                        <td class="no-print"></td>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
     </div>
     @if($sales->hasPages())
-        <div class="p-3 border-top">
+        <div class="p-3 border-top no-print">
             {{ $sales->links() }}
         </div>
     @endif
 </div>
+
+<style>
+@media print {
+    .no-print, nav, sidebar, header, .btn, .header_actions { display: none !important; }
+    body { background: #fff !important; padding: 0 !important; color: #000 !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    .table { width: 100% !important; border: 1px solid #dee2e6 !important; }
+}
+</style>
 
 @endsection

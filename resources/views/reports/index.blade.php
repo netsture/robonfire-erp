@@ -7,18 +7,6 @@
 @section('content')
 
 <div class="row g-3 mb-4">
-    <!-- Sales Report Card -->
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="card card-custom border-0 p-4 h-100">
-            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                <i class="bi bi-bar-chart-fill fs-4"></i>
-            </div>
-            <h5 class="fw-bold font-outfit text-dark mb-1">Sales Reports</h5>
-            <p class="text-muted small mb-3">Itemized revenue by date range, customer ledgers, and payment statuses.</p>
-            <a href="{{ route('reports.sales') }}" class="btn btn-outline-primary rounded-pill w-100 mt-auto fw-semibold">View Sales Report</a>
-        </div>
-    </div>
-
     <!-- Purchases Report Card -->
     <div class="col-12 col-md-6 col-xl-3">
         <div class="card card-custom border-0 p-4 h-100">
@@ -31,6 +19,18 @@
         </div>
     </div>
 
+    <!-- Sales Report Card -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card card-custom border-0 p-4 h-100">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <i class="bi bi-bar-chart-fill fs-4"></i>
+            </div>
+            <h5 class="fw-bold font-outfit text-dark mb-1">Sales Reports</h5>
+            <p class="text-muted small mb-3">Itemized revenue by date range, customer ledgers, and payment statuses.</p>
+            <a href="{{ route('reports.sales') }}" class="btn btn-outline-primary rounded-pill w-100 mt-auto fw-semibold">View Sales Report</a>
+        </div>
+    </div>
+    
     <!-- Inventory Valuation Card -->
     <div class="col-12 col-md-6 col-xl-3">
         <div class="card card-custom border-0 p-4 h-100">
@@ -43,8 +43,20 @@
         </div>
     </div>
 
-    <!-- Profit & Loss Card -->
+    <!-- Return Product Report Card -->
     <div class="col-12 col-md-6 col-xl-3">
+        <div class="card card-custom border-0 p-4 h-100">
+            <div class="rounded-circle bg-purple bg-opacity-10 text-purple p-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(111, 66, 193, 0.1); color: #6f42c1;">
+                <i class="bi bi-box-arrow-in-left fs-4"></i>
+            </div>
+            <h5 class="fw-bold font-outfit text-dark mb-1">Return Product Report</h5>
+            <p class="text-muted small mb-3">Itemized returned materials history by date range, customer, and valuation.</p>
+            <a href="{{ route('reports.return-products') }}" class="btn btn-outline-primary rounded-pill w-100 mt-auto fw-semibold">View Return Report</a>
+        </div>
+    </div>
+
+    <!-- Profit & Loss Card -->
+    <!--<div class="col-12 col-md-6 col-xl-3">
         <div class="card card-custom border-0 p-4 h-100">
             <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                 <i class="bi bi-pie-chart-fill fs-4"></i>
@@ -53,11 +65,11 @@
             <p class="text-muted small mb-3">Generate income statements subtracting Cost of Goods Sold from total sales revenue.</p>
             <a href="{{ route('reports.profit-loss') }}" class="btn btn-outline-warning rounded-pill w-100 mt-auto fw-semibold">P&L Statement</a>
         </div>
-    </div>
+    </div>-->
 </div>
 
 <!-- Stock Valuation Summary Banner -->
-<div class="card card-custom border-0 p-4 bg-dark text-white">
+<!--<div class="card card-custom border-0 p-4 bg-dark text-white">
     <div class="row align-items-center text-center text-md-start">
         <div class="col-md-4 mb-3 mb-md-0 border-end border-secondary border-opacity-20">
             <span class="text-white-50 small fw-semibold">CURRENT INVENTORY COST VALUE</span>
@@ -72,6 +84,6 @@
             <h2 class="fw-bold font-outfit mt-1 mb-0 text-success">₹{{ number_format($potentialProfit, 2) }}</h2>
         </div>
     </div>
-</div>
+</div>-->
 
 @endsection

@@ -8,12 +8,27 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $adjustments = StockAdjustment::with('product', 'user')->latest()->paginate(15);
-        $products = Product::where('status', 'active')->get();
+        $user = auth()->user();
+        $query = StockAdjustment::with(['product', 'user', 'firm']);
 
-        return view('inventory.index', compact('adjustments', 'products'));
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        $adjustments = $query->latest()->paginate(15);
+
+        $prodQuery = Product::where('status', 'active');
+        if (!$user->isSuperAdmin()) {
+            $prodQuery->where('firm_id', $user->firm_id);
+        }
+        $products = $prodQuery->get();
+        $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
+
+        return view('inventory.index', compact('adjustments', 'products', 'firms'));
     }
 
     public function adjust(Request $request)

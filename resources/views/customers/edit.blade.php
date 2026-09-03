@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Edit Customer')
-@section('page_title', 'Edit Customer: ' . $customer->name)
+@section('page_title', 'Edit Customer: ' . $customer->company_name)
 @section('page_subtitle', 'Update contact and billing details')
 
 @section('header_actions')
@@ -20,20 +20,26 @@
                 
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
-                        <label for="name" class="form-label fw-semibold text-dark">Customer Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $customer->name) }}" required>
-                        @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label for="company_name" class="form-label fw-semibold text-dark">Company / Organization</label>
-                        <input type="text" class="form-control @error('company_name') is-invalid @enderror" id="company_name" name="company_name" value="{{ old('company_name', $customer->company_name) }}">
+                        <label for="company_name" class="form-label fw-semibold text-dark">Company Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('company_name') is-invalid @enderror" id="company_name" name="company_name" value="{{ old('company_name', $customer->company_name) }}" required>
                         @error('company_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-6">
+                        <label for="gst_number" class="form-label fw-semibold text-dark">GST Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('gst_number') is-invalid @enderror" id="gst_number" name="gst_number" value="{{ old('gst_number', $customer->gst_number) }}" required placeholder="e.g. 27AAAAA0000A1Z5">
+                        @error('gst_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label for="address" class="form-label fw-semibold text-dark">Billing address <span class="text-danger">*</span></label>
+                        <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="2" required>{{ old('address', $customer->address) }}</textarea>
+                        @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12 col-md-6">
                         <label for="phone" class="form-label fw-semibold text-dark">Phone Number <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone', $customer->phone) }}" required minlength="10" maxlength="10" placeholder="e.g. 9876543210">
+                        <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone', $customer->phone) }}" required maxlength="10" minlength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="e.g. 9876543210">
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -43,25 +49,7 @@
                         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label for="tax_number" class="form-label fw-semibold text-dark">Tax / VAT ID</label>
-                        <input type="text" class="form-control @error('tax_number') is-invalid @enderror" id="tax_number" name="tax_number" value="{{ old('tax_number', $customer->tax_number) }}">
-                        @error('tax_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label for="city" class="form-label fw-semibold text-dark">City / State</label>
-                        <input type="text" class="form-control @error('city') is-invalid @enderror" id="city" name="city" value="{{ old('city', $customer->city) }}">
-                        @error('city') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
                     <div class="col-12">
-                        <label for="address" class="form-label fw-semibold text-dark">Full Billing Address</label>
-                        <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="2">{{ old('address', $customer->address) }}</textarea>
-                        @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
                         <label for="status" class="form-label fw-semibold text-dark">Status <span class="text-danger">*</span></label>
                         <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
                             <option value="active" {{ old('status', $customer->status) == 'active' ? 'selected' : '' }}>Active</option>

@@ -5,9 +5,11 @@
 @section('page_subtitle', 'Manage system users, assign roles and configure access status')
 
 @section('header_actions')
-    <a href="{{ route('users.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-person-plus-fill me-1"></i> Add New User
-    </a>
+    @if(!auth()->user()->isSuperAdmin())
+        <a href="{{ route('users.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-person-plus-fill me-1"></i> Add New User
+        </a>
+    @endif
 @endsection
 
 @section('content')
@@ -94,35 +96,47 @@
                             </span>
                         </td>
                         <td>
-                            <form action="{{ route('users.toggle-status', $user) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-sm border-0 p-0" title="Click to toggle status">
-                                    @if($user->status === 'active')
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
-                                    @else
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">Inactive</span>
-                                    @endif
-                                </button>
-                            </form>
+                            @if(!auth()->user()->isSuperAdmin())
+                                <form action="{{ route('users.toggle-status', $user) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm border-0 p-0" title="Click to toggle status">
+                                        @if($user->status === 'active')
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
+                                        @else
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">Inactive</span>
+                                        @endif
+                                    </button>
+                                </form>
+                            @else
+                                @if($user->status === 'active')
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">Inactive</span>
+                                @endif
+                            @endif
                         </td>
                         <td class="small text-muted">
                             {{ $user->created_at->format('M d, Y') }}
                         </td>
                         <td class="text-end pe-4">
-                            <div class="btn-group">
-                                <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-light border" title="Edit User">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                @if($user->id !== auth()->id())
-                                    <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete User">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
+                            @if(!auth()->user()->isSuperAdmin())
+                                <div class="btn-group">
+                                    <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-light border" title="Edit User">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    @if($user->id !== auth()->id())
+                                        <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete User">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-muted small">View Only</span>
+                            @endif
                         </td>
                     </tr>
                 @empty

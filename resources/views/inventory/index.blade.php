@@ -5,12 +5,34 @@
 @section('page_subtitle', 'Manually adjust stock quantities for damaged goods, returns, or stocktaking reconciliations')
 
 @section('header_actions')
-    <button type="button" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium" data-bs-toggle="modal" data-bs-target="#adjustStockModal">
-        <i class="bi bi-arrow-repeat me-1"></i> New Adjustment
-    </button>
+    @if(!auth()->user()->isSuperAdmin())
+        <button type="button" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium" data-bs-toggle="modal" data-bs-target="#adjustStockModal">
+            <i class="bi bi-arrow-repeat me-1"></i> New Adjustment
+        </button>
+    @endif
 @endsection
 
 @section('content')
+
+@if(auth()->user()->isSuperAdmin())
+<!-- Firm Filter Bar -->
+<div class="card card-custom border-0 p-3 mb-4">
+    <form method="GET" action="{{ route('inventory.index') }}" class="row g-2 align-items-center">
+        <div class="col-12 col-md-9">
+            <select name="firm_id" class="form-select bg-light">
+                <option value="">All Firms</option>
+                @foreach($firms as $firm)
+                    <option value="{{ $firm->id }}" {{ request('firm_id') == $firm->id ? 'selected' : '' }}>{{ $firm->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-12 col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-dark w-100 rounded-3">Filter</button>
+            <a href="{{ route('inventory.index') }}" class="btn btn-light border w-100 rounded-3">Reset</a>
+        </div>
+    </form>
+</div>
+@endif
 
 <div class="card card-custom border-0 overflow-hidden">
     <div class="table-responsive">
@@ -18,6 +40,9 @@
             <thead class="table-light">
                 <tr>
                     <th class="ps-4">Date & Time</th>
+                    @if(auth()->user()->isSuperAdmin())
+                        <th>Firm</th>
+                    @endif
                     <th>Product</th>
                     <th>Adjusted By</th>
                     <th>Adjustment Type</th>
@@ -29,9 +54,13 @@
                 @forelse($adjustments as $adj)
                     <tr>
                         <td class="ps-4 small text-muted">{{ $adj->created_at->format('M d, Y H:i A') }}</td>
+                        @if(auth()->user()->isSuperAdmin())
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ $adj->firm->name ?? ($adj->product->firm->name ?? 'N/A') }}</span>
+                            </td>
+                        @endif
                         <td>
                             <div class="fw-semibold text-dark">{{ $adj->product->name ?? 'Deleted Product' }}</div>
-                            <div class="small text-muted font-monospace">{{ $adj->product->sku ?? '' }}</div>
                         </td>
                         <td class="small text-dark fw-medium">{{ $adj->user->name ?? 'System' }}</td>
                         <td>

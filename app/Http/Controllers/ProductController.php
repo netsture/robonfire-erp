@@ -13,7 +13,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Product::with('category', 'brand');
+        $query = Product::with('category', 'brand', 'firm');
 
         if (!$user->isSuperAdmin()) {
             $query->where('firm_id', $user->firm_id);
@@ -25,8 +25,6 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('barcode', 'like', "%{$search}%")
                   ->orWhere('hsn_code', 'like', "%{$search}%");
             });
         }
@@ -54,8 +52,9 @@ class ProductController extends Controller
 
         $categories = $catQuery->get();
         $brands = $brandQuery->get();
+        $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
-        return view('products.index', compact('products', 'categories', 'brands'));
+        return view('products.index', compact('products', 'categories', 'brands', 'firms'));
     }
 
     public function create()
@@ -70,8 +69,7 @@ class ProductController extends Controller
 
         $categories = $catQuery->get();
         $brands = $brandQuery->get();
-        $autoSku = 'SKU-' . strtoupper(Str::random(6));
-        return view('products.create', compact('categories', 'brands', 'autoSku'));
+        return view('products.create', compact('categories', 'brands'));
     }
 
     public function store(Request $request)
@@ -80,36 +78,42 @@ class ProductController extends Controller
         $firmId = $user->isSuperAdmin() ? ($request->input('firm_id') ?? 1) : $user->firm_id;
 
         $validated = $request->validate([
-            'name'           => ['required', 'string', 'max:255'],
-            'sku'            => ['required', 'string', 'max:100'],
-            'barcode'        => ['nullable', 'string', 'max:100'],
+            'name'           => [
+                'required',
+                'string',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('products', 'name')
+                    ->where('firm_id', $firmId)
+                    ->where('category_id', $request->input('category_id'))
+                    ->where('brand_id', $request->input('brand_id')),
+            ],
             'hsn_code'       => ['required', 'string', 'max:50'],
             'category_id'    => ['required', 'exists:categories,id'],
             'brand_id'       => ['required', 'exists:brands,id'],
             'unit'           => ['required', 'string', 'max:50'],
-            'cost_price'     => ['required', 'numeric', 'min:0'],
-            'selling_price'  => ['required', 'numeric', 'min:0'],
+            'cost_price'     => ['nullable', 'numeric', 'min:0'],
+            'selling_price'  => ['nullable', 'numeric', 'min:0'],
             'tax_percent'    => ['required', 'numeric', 'min:0', 'max:100'],
             'alert_quantity' => ['required', 'integer', 'min:0'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0'],
             'description'    => ['nullable', 'string'],
             'status'         => ['required', 'in:active,inactive'],
+        ], [
+            'name.unique'    => 'A product with this Title, Category, and Brand combination already exists for your firm.',
         ]);
 
         Product::create([
             'firm_id'        => $firmId,
             'name'           => $validated['name'],
-            'sku'            => strtoupper($validated['sku']),
-            'barcode'        => $validated['barcode'] ?? $validated['sku'],
             'hsn_code'       => $validated['hsn_code'],
             'category_id'    => $validated['category_id'],
             'brand_id'       => $validated['brand_id'],
             'unit'           => $validated['unit'],
-            'cost_price'     => $validated['cost_price'],
-            'selling_price'  => $validated['selling_price'],
+            'cost_price'     => $validated['cost_price'] ?? 0.00,
+            'selling_price'  => $validated['selling_price'] ?? 0.00,
             'tax_percent'    => $validated['tax_percent'],
             'alert_quantity' => $validated['alert_quantity'],
-            'stock_quantity' => $validated['stock_quantity'],
+            'stock_quantity' => $validated['stock_quantity'] ?? 0,
             'description'    => $validated['description'] ?? null,
             'status'         => $validated['status'],
         ]);
@@ -156,21 +160,36 @@ class ProductController extends Controller
         }
 
         $validated = $request->validate([
-            'name'           => ['required', 'string', 'max:255'],
-            'sku'            => ['required', 'string', 'max:100'],
-            'barcode'        => ['nullable', 'string', 'max:100'],
+            'name'           => [
+                'required',
+                'string',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('products', 'name')
+                    ->where('firm_id', $product->firm_id)
+                    ->where('category_id', $request->input('category_id'))
+                    ->where('brand_id', $request->input('brand_id'))
+                    ->ignore($product->id),
+            ],
             'hsn_code'       => ['required', 'string', 'max:50'],
             'category_id'    => ['required', 'exists:categories,id'],
             'brand_id'       => ['required', 'exists:brands,id'],
             'unit'           => ['required', 'string', 'max:50'],
-            'cost_price'     => ['required', 'numeric', 'min:0'],
-            'selling_price'  => ['required', 'numeric', 'min:0'],
+            'cost_price'     => ['nullable', 'numeric', 'min:0'],
+            'selling_price'  => ['nullable', 'numeric', 'min:0'],
             'tax_percent'    => ['required', 'numeric', 'min:0', 'max:100'],
             'alert_quantity' => ['required', 'integer', 'min:0'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0'],
             'description'    => ['nullable', 'string'],
             'status'         => ['required', 'in:active,inactive'],
+        ], [
+            'name.unique'    => 'A product with this Title, Category, and Brand combination already exists for your firm.',
         ]);
+
+        $validated['cost_price'] = $validated['cost_price'] ?? 0.00;
+        $validated['selling_price'] = $validated['selling_price'] ?? 0.00;
+        if (!isset($validated['stock_quantity'])) {
+            $validated['stock_quantity'] = $product->stock_quantity;
+        }
 
         $product->update($validated);
 

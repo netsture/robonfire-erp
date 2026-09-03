@@ -1,13 +1,15 @@
 @extends('layouts.app')
 
 @section('title', 'Customer Ledger')
-@section('page_title', 'Customer Ledger: ' . $customer->name)
+@section('page_title', 'Customer Ledger: ' . $customer->company_name)
 @section('page_subtitle', 'Customer summary and sales order history')
 
 @section('header_actions')
-    <a href="{{ route('customers.edit', $customer) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-pencil me-1"></i> Edit Profile
-    </a>
+    @if(!auth()->user()->isSuperAdmin())
+        <a href="{{ route('customers.edit', $customer) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-pencil me-1"></i> Edit Profile
+        </a>
+    @endif
     <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to List
     </a>
@@ -17,35 +19,26 @@
 
 <div class="row g-3 mb-4">
     <!-- Info Card -->
-    <div class="col-12 col-md-4">
-        <div class="card card-custom border-0 p-4 h-100">
+    <div class="col-12">
+        <div class="card card-custom border-0 p-4">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                    <i class="bi bi-building fs-3"></i>
+                    <i class="bi bi-person-circle fs-3"></i>
                 </div>
                 <div>
-                    <h4 class="fw-bold font-outfit text-dark mb-0">{{ $customer->name }}</h4>
-                    <span class="text-muted small">{{ $customer->company_name ?? 'Individual Customer' }}</span>
+                    <h4 class="fw-bold font-outfit text-dark mb-0">{{ $customer->company_name }}</h4>
+                    <span class="text-muted small">Customer Account</span>
                 </div>
             </div>
 
             <hr class="my-2 text-muted">
 
-            <div class="d-flex flex-column gap-2 my-2">
-                <div class="small"><i class="bi bi-telephone text-muted me-2"></i>{{ $customer->phone }}</div>
-                <div class="small"><i class="bi bi-envelope text-muted me-2"></i>{{ $customer->email ?? 'No email on file' }}</div>
-                <div class="small"><i class="bi bi-geo-alt text-muted me-2"></i>{{ $customer->address ?? 'N/A' }} {{ $customer->city ? '('.$customer->city.')' : '' }}</div>
-                <div class="small"><i class="bi bi-receipt text-muted me-2"></i>Tax ID: {{ $customer->tax_number ?? 'N/A' }}</div>
+            <div class="row g-2 my-2">
+                <div class="col-12 col-md-3 small"><i class="bi bi-telephone text-muted me-2"></i><strong>Phone:</strong> {{ $customer->phone ?? 'N/A' }}</div>
+                <div class="col-12 col-md-3 small"><i class="bi bi-envelope text-muted me-2"></i><strong>Email:</strong> {{ $customer->email ?? 'N/A' }}</div>
+                <div class="col-12 col-md-3 small"><i class="bi bi-receipt text-muted me-2"></i><strong>GST Number:</strong> {{ $customer->gst_number ?? 'N/A' }}</div>
+                <div class="col-12 col-md-3 small"><i class="bi bi-geo-alt text-muted me-2"></i><strong>Address:</strong> {{ $customer->address ?? 'N/A' }}</div>
             </div>
-        </div>
-    </div>
-
-    <!-- Balance Metrics -->
-    <div class="col-12 col-md-8">
-        <div class="card card-custom border-0 p-4 bg-dark text-white h-100">
-            <span class="text-white-50 small fw-semibold">CURRENT BALANCE DUE</span>
-            <h2 class="fw-bold font-outfit mt-2 mb-0 text-warning">₹{{ number_format($customer->current_balance, 2) }}</h2>
-            <span class="small mt-2 text-white-50">Outstanding total</span>
         </div>
     </div>
 </div>

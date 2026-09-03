@@ -11,14 +11,11 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('firm_id')->constrained()->onDelete('cascade');
-            $table->string('name');
+            $table->string('company_name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
-            $table->string('company_name')->nullable();
-            $table->string('tax_number')->nullable();
+            $table->string('gst_number')->nullable();
             $table->text('address')->nullable();
-            $table->string('city')->nullable();
-            $table->decimal('current_balance', 12, 2)->default(0.00);
             $table->string('status')->default('active');
             $table->timestamps();
         });
@@ -26,14 +23,11 @@ return new class extends Migration
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('firm_id')->constrained()->onDelete('cascade');
-            $table->string('name');
+            $table->string('company_name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
-            $table->string('company_name')->nullable();
-            $table->string('tax_number')->nullable();
+            $table->string('gst_number')->nullable();
             $table->text('address')->nullable();
-            $table->string('city')->nullable();
-            $table->decimal('current_balance', 12, 2)->default(0.00);
             $table->string('status')->default('active');
             $table->timestamps();
         });

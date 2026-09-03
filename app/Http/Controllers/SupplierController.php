@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SupplierController extends Controller
 {
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Supplier::query();
+        $query = Supplier::with('firm');
 
         if (!$user->isSuperAdmin()) {
             $query->where('firm_id', $user->firm_id);
@@ -21,16 +22,17 @@ class SupplierController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('company_name', 'like', "%{$search}%")
+                $q->where('company_name', 'like', "%{$search}%")
+                  ->orWhere('gst_number', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
         $suppliers = $query->latest()->paginate(10);
+        $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
-        return view('suppliers.index', compact('suppliers'));
+        return view('suppliers.index', compact('suppliers', 'firms'));
     }
 
     public function create()
@@ -44,28 +46,36 @@ class SupplierController extends Controller
         $firmId = $user->isSuperAdmin() ? ($request->input('firm_id') ?? 1) : $user->firm_id;
 
         $validated = $request->validate([
-            'name'         => ['required', 'string', 'max:255'],
+            'company_name' => ['required', 'string', 'max:255', Rule::unique('suppliers', 'company_name')->where('firm_id', $firmId)],
             'email'        => ['nullable', 'email', 'max:255'],
-            'phone'        => ['required', 'string', 'min:10', 'max:10'],
-            'company_name' => ['nullable', 'string', 'max:255'],
-            'tax_number'   => ['nullable', 'string', 'max:50'],
-            'address'      => ['nullable', 'string'],
-            'city'         => ['nullable', 'string', 'max:100'],
+            'phone'        => ['required', 'string', 'min:10', 'max:10', 'regex:/^[0-9]{10}$/'],
+            'gst_number'   => ['required', 'string', 'max:50'],
+            'address'      => ['required', 'string'],
             'status'       => ['required', 'in:active,inactive'],
+        ], [
+            'company_name.unique' => 'Company Name already exists.',
+            'phone.min'   => 'Phone number must be exactly 10 digits.',
+            'phone.max'   => 'Phone number must be exactly 10 digits.',
+            'phone.regex' => 'Phone number must contain 10 digits only.',
         ]);
 
-        Supplier::create([
-            'firm_id'         => $firmId,
-            'name'            => $validated['name'],
-            'email'           => $validated['email'],
-            'phone'           => $validated['phone'],
-            'company_name'    => $validated['company_name'],
-            'tax_number'      => $validated['tax_number'],
-            'address'         => $validated['address'],
-            'city'            => $validated['city'],
-            'current_balance' => 0,
-            'status'          => $validated['status'],
+        $supplier = Supplier::create([
+            'firm_id'      => $firmId,
+            'company_name' => $validated['company_name'],
+            'email'        => $validated['email'] ?? null,
+            'phone'        => $validated['phone'],
+            'gst_number'   => $validated['gst_number'],
+            'address'      => $validated['address'],
+            'status'       => $validated['status'],
         ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Supplier created successfully.',
+                'supplier' => $supplier
+            ]);
+        }
 
         return redirect()->route('suppliers.index')->with('success', 'Supplier record created successfully.');
     }
@@ -99,14 +109,17 @@ class SupplierController extends Controller
         }
 
         $validated = $request->validate([
-            'name'         => ['required', 'string', 'max:255'],
+            'company_name' => ['required', 'string', 'max:255', Rule::unique('suppliers', 'company_name')->where('firm_id', $supplier->firm_id)->ignore($supplier->id)],
             'email'        => ['nullable', 'email', 'max:255'],
-            'phone'        => ['required', 'string', 'min:10', 'max:10'],
-            'company_name' => ['nullable', 'string', 'max:255'],
-            'tax_number'   => ['nullable', 'string', 'max:50'],
-            'address'      => ['nullable', 'string'],
-            'city'         => ['nullable', 'string', 'max:100'],
+            'phone'        => ['required', 'string', 'min:10', 'max:10', 'regex:/^[0-9]{10}$/'],
+            'gst_number'   => ['required', 'string', 'max:50'],
+            'address'      => ['required', 'string'],
             'status'       => ['required', 'in:active,inactive'],
+        ], [
+            'company_name.unique' => 'Company Name already exists.',
+            'phone.min'   => 'Phone number must be exactly 10 digits.',
+            'phone.max'   => 'Phone number must be exactly 10 digits.',
+            'phone.regex' => 'Phone number must contain 10 digits only.',
         ]);
 
         $supplier->update($validated);

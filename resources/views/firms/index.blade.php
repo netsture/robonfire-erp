@@ -18,7 +18,7 @@
         <div class="col-12 col-md-9">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search fire safety firm name, email, phone..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search fire safety firm name, email, phone, address..." value="{{ request('search') }}">
             </div>
         </div>
         <div class="col-12 col-md-3 d-flex gap-2">
@@ -101,7 +101,7 @@
                     <tr>
                         <td colspan="7" class="text-center py-5 text-muted">
                             <i class="bi bi-building fs-1 d-block mb-2 text-secondary"></i>
-                            No firms found. Click "Add New Firm" to register a firm.
+                            No firms found matching your search.
                         </td>
                     </tr>
                 @endforelse
@@ -110,7 +110,7 @@
     </div>
     @if($firms->hasPages())
         <div class="p-3 border-top">
-            {{ $firms->links() }}
+            {{ $firms->withQueryString()->links() }}
         </div>
     @endif
 </div>

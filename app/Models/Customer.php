@@ -13,16 +13,23 @@ class Customer extends Model
 
     protected $fillable = [
         'firm_id',
-        'name',
+        'company_name',
         'email',
         'phone',
-        'company_name',
-        'tax_number',
+        'gst_number',
         'address',
-        'city',
-        'current_balance',
         'status',
     ];
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['company_name'] ?? null;
+    }
+
+    public function getTaxNumberAttribute()
+    {
+        return $this->attributes['gst_number'] ?? null;
+    }
 
     public function firm(): BelongsTo
     {

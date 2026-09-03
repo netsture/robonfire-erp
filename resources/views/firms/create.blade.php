@@ -24,22 +24,28 @@
                     @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
+                <div class="col-12">
+                    <label for="address" class="form-label fw-semibold text-dark">Office / Headquarter Address <span class="text-danger">*</span></label>
+                    <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="3" required placeholder="Robonfire HQ, Plot 10 Fire Safety Zone, City, Pin 400001">{{ old('address') }}</textarea>
+                    @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
                 <div class="col-12 col-md-6">
-                    <label for="email" class="form-label fw-semibold text-dark">Contact Email</label>
-                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" placeholder="contact@robonfire.com">
+                    <label for="email" class="form-label fw-semibold text-dark">Firm Email/Login Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required placeholder="contact@robonfire.com">
                     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
-                    <label for="phone" class="form-label fw-semibold text-dark">Phone Number <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" required minlength="10" maxlength="10" placeholder="e.g. 9876543210">
+                    <label for="phone" class="form-label fw-semibold text-dark">Firm Phone Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" required maxlength="10" minlength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="e.g. 9876543210">
                     @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <div class="col-12">
-                    <label for="address" class="form-label fw-semibold text-dark">Office / Headquarter Address</label>
-                    <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="3" placeholder="Robonfire HQ, Plot 10 Fire Safety Zone, City, Pin 400001">{{ old('address') }}</textarea>
-                    @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <div class="col-12 col-md-6">
+                    <label for="password" class="form-label fw-semibold text-dark">Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required placeholder="Minimum 6 characters">
+                    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -49,32 +55,6 @@
                         <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
                     @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-            </div>
-
-            <!-- Firm Admin Account Details -->
-            <div class="border-top pt-4 mt-4">
-                <h5 class="fw-bold font-outfit text-dark mb-1"><i class="bi bi-person-badge me-2 text-primary"></i>Firm Admin Account</h5>
-                <p class="text-muted small mb-3">Set up the initial Administrator user for this firm firm.</p>
-
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label for="admin_name" class="form-label fw-semibold text-dark">Admin Full Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('admin_name') is-invalid @enderror" id="admin_name" name="admin_name" value="{{ old('admin_name') }}" required placeholder="e.g. Chief Fire Officer John Doe">
-                        @error('admin_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label for="admin_email" class="form-label fw-semibold text-dark">Username / Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control @error('admin_email') is-invalid @enderror" id="admin_email" name="admin_email" value="{{ old('admin_email') }}" required placeholder="fireadmin@robonfire.com">
-                        @error('admin_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label for="admin_password" class="form-label fw-semibold text-dark">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control @error('admin_password') is-invalid @enderror" id="admin_password" name="admin_password" required placeholder="Minimum 6 characters">
-                        @error('admin_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
                 </div>
             </div>
 

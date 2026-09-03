@@ -25,7 +25,12 @@
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <label for="category_id" class="form-label fw-semibold text-dark">Category <span class="text-danger">*</span></label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="category_id" class="form-label fw-semibold text-dark mb-0">Category <span class="text-danger">*</span></label>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-medium" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                                <i class="bi bi-plus-circle me-1"></i>Add New Category
+                            </button>
+                        </div>
                         <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
                             <option value="">Select Category</option>
                             @foreach($categories as $category)
@@ -36,7 +41,12 @@
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <label for="brand_id" class="form-label fw-semibold text-dark">Brand <span class="text-danger">*</span></label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="brand_id" class="form-label fw-semibold text-dark mb-0">Brand <span class="text-danger">*</span></label>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-medium" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                                <i class="bi bi-plus-circle me-1"></i>Add New Brand
+                            </button>
+                        </div>
                         <select class="form-select @error('brand_id') is-invalid @enderror" id="brand_id" name="brand_id" required>
                             <option value="">Select Brand</option>
                             @foreach($brands as $brand)
@@ -46,26 +56,14 @@
                         @error('brand_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-3">
-                        <label for="sku" class="form-label fw-semibold text-dark">SKU Code <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('sku') is-invalid @enderror" id="sku" name="sku" value="{{ old('sku', $autoSku) }}" required>
-                        @error('sku') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-3">
-                        <label for="barcode" class="form-label fw-semibold text-dark">Barcode (Optional)</label>
-                        <input type="text" class="form-control @error('barcode') is-invalid @enderror" id="barcode" name="barcode" value="{{ old('barcode') }}" placeholder="IS:15683 / EAN-13">
-                        @error('barcode') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-md-6">
                         <label for="hsn_code" class="form-label fw-semibold text-dark">HSN Code <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('hsn_code') is-invalid @enderror" id="hsn_code" name="hsn_code" value="{{ old('hsn_code') }}" required placeholder="e.g. 84241000">
                         @error('hsn_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-3">
-                        <label for="unit" class="form-label fw-semibold text-dark">Measurement Unit <span class="text-danger">*</span></label>
+                    <div class="col-12 col-md-6">
+                        <label for="unit" class="form-label fw-semibold text-dark">Measurement Type <span class="text-danger">*</span></label>
                         <select class="form-select @error('unit') is-invalid @enderror" id="unit" name="unit" required>
                             <option value="Pcs" {{ old('unit') == 'Pcs' ? 'selected' : '' }}>Pcs (Pieces)</option>
                             <option value="Box" {{ old('unit') == 'Box' ? 'selected' : '' }}>Box</option>
@@ -78,27 +76,27 @@
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="cost_price" class="form-label fw-semibold text-dark">Purchase Cost (₹) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" class="form-control @error('cost_price') is-invalid @enderror" id="cost_price" name="cost_price" value="{{ old('cost_price', '0.00') }}" required>
+                        <label for="cost_price" class="form-label fw-semibold text-dark">Purchase Cost (₹)</label>
+                        <input type="number" class="form-control @error('cost_price') is-invalid @enderror" id="cost_price" name="cost_price" value="{{ old('cost_price', '0') }}" placeholder="0">
                         @error('cost_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="selling_price" class="form-label fw-semibold text-dark">Selling Retail Price (₹) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" name="selling_price" value="{{ old('selling_price', '0.00') }}" required>
+                        <label for="selling_price" class="form-label fw-semibold text-dark">Selling Retail Price (₹)</label>
+                        <input type="number" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" name="selling_price" value="{{ old('selling_price', '0') }}" placeholder="0">
                         @error('selling_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
                         <label for="tax_percent" class="form-label fw-semibold text-dark">Tax Rate (%) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" class="form-control @error('tax_percent') is-invalid @enderror" id="tax_percent" name="tax_percent" value="{{ old('tax_percent', '0.00') }}" required>
+                        <input type="number" class="form-control @error('tax_percent') is-invalid @enderror" id="tax_percent" name="tax_percent" value="{{ old('tax_percent', '18') }}" required>
                         @error('tax_percent') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="stock_quantity" class="form-label fw-semibold text-dark">Initial Stock Level <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control @error('stock_quantity') is-invalid @enderror" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', '10') }}" required>
-                        @error('stock_quantity') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label for="stock_quantity_display" class="form-label fw-semibold text-dark">Initial Stock Level</label>
+                        <input type="number" class="form-control bg-light" id="stock_quantity_display" value="0" disabled>
+                        <input type="hidden" name="stock_quantity" value="0">
                     </div>
 
                     <div class="col-12 col-md-4">
@@ -131,4 +129,190 @@
         </div>
     </div>
 </div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-outfit fw-bold" id="addCategoryModalLabel">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="ajaxAddCategoryForm">
+                @csrf
+                <div class="modal-body">
+                    <div id="categoryModalAlert" class="alert alert-danger d-none mb-3"></div>
+                    <div class="mb-3">
+                        <label for="modal_category_name" class="form-label fw-semibold">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="modal_category_name" name="name" required placeholder="e.g. Fire Extinguishers">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modal_category_description" class="form-label fw-semibold">Description (Optional)</label>
+                        <textarea class="form-control" id="modal_category_description" name="description" rows="2" placeholder="Category details..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveCategoryBtn">
+                        <i class="bi bi-plus-circle me-1"></i> Add Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Brand Modal -->
+<div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-outfit fw-bold" id="addBrandModalLabel">Add New Brand</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="ajaxAddBrandForm">
+                @csrf
+                <div class="modal-body">
+                    <div id="brandModalAlert" class="alert alert-danger d-none mb-3"></div>
+                    <div class="mb-3">
+                        <label for="modal_brand_name" class="form-label fw-semibold">Brand Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="modal_brand_name" name="name" required placeholder="e.g. PyroShield">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modal_brand_description" class="form-label fw-semibold">Description (Optional)</label>
+                        <textarea class="form-control" id="modal_brand_description" name="description" rows="2" placeholder="Brand details..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveBrandBtn">
+                        <i class="bi bi-plus-circle me-1"></i> Add Brand
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryForm = document.getElementById('ajaxAddCategoryForm');
+    if (categoryForm) {
+        categoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const alertBox = document.getElementById('categoryModalAlert');
+            const submitBtn = document.getElementById('saveCategoryBtn');
+            alertBox.classList.add('d-none');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...';
+
+            const formData = new FormData(categoryForm);
+
+            fetch("{{ route('categories.store') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(res => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Category';
+
+                if (res.status === 200 || res.status === 201) {
+                    if (res.body.success) {
+                        const select = document.getElementById('category_id');
+                        const option = document.createElement('option');
+                        option.value = res.body.category.id;
+                        option.textContent = res.body.category.name;
+                        option.selected = true;
+                        select.appendChild(option);
+
+                        categoryForm.reset();
+                        const modalEl = document.getElementById('addCategoryModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        if (modal) {
+                            modal.hide();
+                        }
+                    }
+                } else {
+                    let errMsg = res.body.message || 'Error adding category.';
+                    if (res.body.errors && res.body.errors.name) {
+                        errMsg = res.body.errors.name.join(' ');
+                    }
+                    alertBox.textContent = errMsg;
+                    alertBox.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Category';
+                alertBox.textContent = 'Failed to save category. Please try again.';
+                alertBox.classList.remove('d-none');
+            });
+        });
+    }
+
+    const brandForm = document.getElementById('ajaxAddBrandForm');
+    if (brandForm) {
+        brandForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const alertBox = document.getElementById('brandModalAlert');
+            const submitBtn = document.getElementById('saveBrandBtn');
+            alertBox.classList.add('d-none');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...';
+
+            const formData = new FormData(brandForm);
+
+            fetch("{{ route('brands.store') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(res => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Brand';
+
+                if (res.status === 200 || res.status === 201) {
+                    if (res.body.success) {
+                        const select = document.getElementById('brand_id');
+                        const option = document.createElement('option');
+                        option.value = res.body.brand.id;
+                        option.textContent = res.body.brand.name;
+                        option.selected = true;
+                        select.appendChild(option);
+
+                        brandForm.reset();
+                        const modalEl = document.getElementById('addBrandModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        if (modal) {
+                            modal.hide();
+                        }
+                    }
+                } else {
+                    let errMsg = res.body.message || 'Error adding brand.';
+                    if (res.body.errors && res.body.errors.name) {
+                        errMsg = res.body.errors.name.join(' ');
+                    }
+                    alertBox.textContent = errMsg;
+                    alertBox.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Brand';
+                alertBox.textContent = 'Failed to save brand. Please try again.';
+                alertBox.classList.remove('d-none');
+            });
+        });
+    }
+});
+</script>
 @endsection

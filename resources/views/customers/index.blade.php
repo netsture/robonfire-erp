@@ -5,9 +5,11 @@
 @section('page_subtitle', 'Maintain client directory and financial ledgers')
 
 @section('header_actions')
-    <a href="{{ route('customers.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-person-plus-fill me-1"></i> Add Customer
-    </a>
+    @if(!auth()->user()->isSuperAdmin())
+        <a href="{{ route('customers.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-person-plus-fill me-1"></i> Add New Customer
+        </a>
+    @endif
 @endsection
 
 @section('content')
@@ -15,12 +17,22 @@
 <!-- Search & Filter Bar -->
 <div class="card card-custom border-0 p-3 mb-4">
     <form method="GET" action="{{ route('customers.index') }}" class="row g-2 align-items-center">
-        <div class="col-12 col-md-9">
+        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-6' : 'col-md-9' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search fire safety customer name, company, email..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search customer name, GST number, email..." value="{{ request('search') }}">
             </div>
         </div>
+        @if(auth()->user()->isSuperAdmin())
+        <div class="col-12 col-md-3">
+            <select name="firm_id" class="form-select bg-light">
+                <option value="">All Firms</option>
+                @foreach($firms as $firm)
+                    <option value="{{ $firm->id }}" {{ request('firm_id') == $firm->id ? 'selected' : '' }}>{{ $firm->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
         <div class="col-12 col-md-3 d-flex gap-2">
             <button type="submit" class="btn btn-dark w-100 rounded-3">Search</button>
             <a href="{{ route('customers.index') }}" class="btn btn-light border w-100 rounded-3">Reset</a>
@@ -34,10 +46,13 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Customer / Company</th>
-                    <th>Contact Details</th>
-                    <th>Full Address</th>
-                    <th>Tax / VAT ID</th>
+                    <th class="ps-4">Customer Name</th>
+                    @if(auth()->user()->isSuperAdmin())
+                        <th>Firm</th>
+                    @endif
+                    <th>Contact Info</th>
+                    <th>Billing Address</th>
+                    <th>GST Number</th>
                     <th>Status</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
@@ -52,32 +67,36 @@
                                 </div>
                                 <div>
                                     <a href="{{ route('customers.show', $customer) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
-                                        {{ $customer->name }}
+                                        {{ $customer->company_name }}
                                     </a>
-                                    @if($customer->company_name)
-                                        <div class="text-muted small"><i class="bi bi-briefcase me-1"></i>{{ $customer->company_name }}</div>
-                                    @endif
                                 </div>
                             </div>
                         </td>
+                        @if(auth()->user()->isSuperAdmin())
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ $customer->firm->name ?? 'N/A' }}</span>
+                            </td>
+                        @endif
                         <td>
-                            <div class="small"><i class="bi bi-telephone text-muted me-1"></i>{{ $customer->phone }}</div>
+                            @if($customer->phone)
+                                <div class="small"><i class="bi bi-telephone text-muted me-1"></i>{{ $customer->phone }}</div>
+                            @endif
                             @if($customer->email)
                                 <div class="small text-muted"><i class="bi bi-envelope me-1"></i>{{ $customer->email }}</div>
+                            @endif
+                            @if(!$customer->phone && !$customer->email)
+                                <span class="text-muted small">N/A</span>
                             @endif
                         </td>
                         <td class="small text-muted">
                             @if($customer->address)
                                 <div class="fw-medium text-dark"><i class="bi bi-geo-alt text-muted me-1"></i>{{ $customer->address }}</div>
-                            @endif
-                            @if($customer->city)
-                                <div class="text-muted small">{{ $customer->city }}</div>
-                            @elseif(!$customer->address)
+                            @else
                                 N/A
                             @endif
                         </td>
                         <td class="small font-monospace">
-                            {{ $customer->tax_number ?? 'N/A' }}
+                            {{ $customer->gst_number ?? 'N/A' }}
                         </td>
                         <td>
                             @if($customer->status === 'active')
@@ -91,16 +110,18 @@
                                 <a href="{{ route('customers.show', $customer) }}" class="btn btn-sm btn-light border" title="View Ledger">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm btn-light border" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete customer record?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                @if(!auth()->user()->isSuperAdmin())
+                                    <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm btn-light border" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete customer record?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

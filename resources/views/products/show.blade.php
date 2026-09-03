@@ -2,12 +2,14 @@
 
 @section('title', 'Product Overview')
 @section('page_title', $product->name)
-@section('page_subtitle', 'SKU: ' . $product->sku . ' | Category: ' . $product->category->name)
+@section('page_subtitle', 'Category: ' . $product->category->name)
 
 @section('header_actions')
-    <a href="{{ route('products.edit', $product) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-pencil me-1"></i> Edit Product
-    </a>
+    @if(!auth()->user()->isSuperAdmin())
+        <a href="{{ route('products.edit', $product) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-pencil me-1"></i> Edit Product
+        </a>
+    @endif
     <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Catalog
     </a>
@@ -35,11 +37,9 @@
             <hr class="my-2 text-muted">
 
             <div class="d-flex flex-column gap-2 my-2">
-                <div class="small"><i class="bi bi-barcode me-2 text-muted"></i>SKU: <span class="font-monospace fw-bold">{{ $product->sku }}</span></div>
-                <div class="small"><i class="bi bi-qr-code me-2 text-muted"></i>Barcode: <span class="font-monospace">{{ $product->barcode ?? 'N/A' }}</span></div>
                 <div class="small"><i class="bi bi-hash me-2 text-muted"></i>HSN / SAC: <span class="font-monospace fw-bold text-dark">{{ $product->hsn_code ?? 'N/A' }}</span></div>
                 <div class="small"><i class="bi bi-percent me-2 text-muted"></i>Tax Rate: <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle rounded-pill px-2 py-1 ms-1 fw-bold">{{ number_format($product->tax_percent, 2) }}%</span></div>
-                <div class="small"><i class="bi bi-rulers me-2 text-muted"></i>Measurement Unit: <span class="fw-semibold text-dark">{{ $product->unit }}</span></div>
+                <div class="small"><i class="bi bi-rulers me-2 text-muted"></i>Measurement Type: <span class="fw-semibold text-dark">{{ $product->unit }}</span></div>
             </div>
         </div>
     </div>

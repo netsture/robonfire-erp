@@ -4,6 +4,24 @@
 @section('page_title', 'Create Purchase Order')
 @section('page_subtitle', 'Restock products from vendors with automatic inventory increment')
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<style>
+    .ts-control {
+        border-radius: 0.375rem !important;
+        padding: 0.45rem 0.75rem !important;
+        border-color: #dee2e6 !important;
+        font-size: 0.9rem;
+    }
+    .ts-dropdown {
+        border-radius: 0.5rem !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        border: 1px solid #e2e8f0 !important;
+        z-index: 1055 !important;
+    }
+</style>
+@endpush
+
 @section('header_actions')
     <a href="{{ route('purchases.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Purchases
@@ -22,11 +40,16 @@
 
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-md-4">
-                        <label for="supplier_id" class="form-label fw-semibold text-dark">Supplier / Vendor <span class="text-danger">*</span></label>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label for="supplier_id" class="form-label fw-semibold text-dark mb-0">Select Supplier Name <span class="text-danger">*</span></label>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-medium" data-bs-toggle="modal" data-bs-target="#addCompanyModal">
+                                <i class="bi bi-plus-circle me-1"></i>Add New Supplier
+                            </button>
+                        </div>
                         <select class="form-select @error('supplier_id') is-invalid @enderror" id="supplier_id" name="supplier_id" required>
-                            <option value="">Select Supplier</option>
+                            <option value="">Select Supplier Name</option>
                             @foreach($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
+                                <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->company_name }}</option>
                             @endforeach
                         </select>
                         @error('supplier_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -34,13 +57,13 @@
 
                     <div class="col-12 col-md-3">
                         <label for="project_name" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('project_name') is-invalid @enderror" id="project_name" name="project_name" value="{{ old('project_name') }}" placeholder="e.g. PRJ-METRO-001" required>
+                        <input type="text" class="form-control @error('project_name') is-invalid @enderror" id="project_name" name="project_name" value="{{ old('project_name') }}" required>
                         @error('project_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-3">
                         <label for="invoice_number" class="form-label fw-semibold text-dark">Invoice No <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control font-monospace @error('invoice_number') is-invalid @enderror" id="invoice_number" name="invoice_number" value="{{ old('invoice_number', $autoInv) }}" required>
+                        <input type="text" class="form-control font-monospace @error('invoice_number') is-invalid @enderror" id="invoice_number" name="invoice_number" value="{{ old('invoice_number') }}" placeholder="" required>
                         @error('invoice_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -62,13 +85,13 @@
                     <table class="table table-bordered align-middle" id="itemsTable">
                         <thead class="table-light">
                             <tr>
-                                <th style="min-width: 140px;">Category</th>
-                                <th style="min-width: 200px;">Product Item (Brand)</th>
+                                <th style="min-width: 180px;">Category <span class="text-danger">*</span></th>
+                                <th style="min-width: 180px;">Product Item <br>(Brand)</th>
                                 <th style="min-width: 100px;">HSN Code</th>
-                                <th style="min-width: 90px;">Unit</th>
+                                <th style="min-width: 60px;">Type</th>
                                 <th style="min-width: 80px;">Qty</th>
-                                <th style="min-width: 110px;">Unit Cost (₹)</th>
-                                <th style="min-width: 90px;">Tax (%)</th>
+                                <th style="min-width: 100px;">Unit Cost(₹)</th>
+                                <th style="min-width: 80px;">Tax (%)</th>
                                 <th style="min-width: 110px;">Total (₹)</th>
                                 <th style="min-width: 110px;">Total w/ Tax</th>
                                 <th style="width: 50px;" class="text-center">Action</th>
@@ -83,8 +106,8 @@
                                     @endphp
                                     <tr class="item-row">
                                         <td>
-                                            <select class="form-select form-select-sm category-select">
-                                                <option value="">All Categories</option>
+                                            <select class="form-select form-select-sm category-select" required>
+                                                <option value="">Select Category...</option>
                                                 @foreach($categories as $cat)
                                                     <option value="{{ $cat->id }}" {{ $selCatId == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                                                 @endforeach
@@ -110,16 +133,16 @@
                                             <input type="text" class="form-control form-control-sm hsn-input bg-light" readonly placeholder="HSN">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Unit">
+                                            <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Type">
                                         </td>
                                         <td>
                                             <input type="number" name="products[{{ $index }}][qty]" class="form-control form-control-sm qty-input" min="1" value="{{ $oldProduct['qty'] ?? 1 }}" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" name="products[{{ $index }}][cost]" class="form-control form-control-sm cost-input" value="{{ $oldProduct['cost'] ?? '0.00' }}" required>
+                                            <input type="number" step="0.01" min="0.01" name="products[{{ $index }}][cost]" class="form-control form-control-sm cost-input" value="{{ $oldProduct['cost'] ?? '' }}" placeholder="e.g. 100.00" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $oldProduct['tax_percent'] ?? '0.00' }}" min="0">
+                                            <input type="number" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $oldProduct['tax_percent'] ?? '0.00' }}" min="0">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0.00">
@@ -135,8 +158,8 @@
                             @else
                                 <tr class="item-row">
                                     <td>
-                                        <select class="form-select form-select-sm category-select">
-                                            <option value="">All Categories</option>
+                                        <select class="form-select form-select-sm category-select" required>
+                                            <option value="">Select Category...</option>
                                             @foreach($categories as $cat)
                                                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                             @endforeach
@@ -161,16 +184,16 @@
                                         <input type="text" class="form-control form-control-sm hsn-input bg-light" readonly placeholder="HSN">
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Unit">
+                                        <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Type">
                                     </td>
                                     <td>
                                         <input type="number" name="products[0][qty]" class="form-control form-control-sm qty-input" min="1" value="1" required>
                                     </td>
                                     <td>
-                                        <input type="number" step="0.01" name="products[0][cost]" class="form-control form-control-sm cost-input" value="0.00" required>
+                                        <input type="number" step="0.01" min="0.01" name="products[0][cost]" class="form-control form-control-sm cost-input" value="" placeholder="e.g. 100.00" required>
                                     </td>
                                     <td>
-                                        <input type="number" step="0.01" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" min="0">
+                                        <input type="number" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" min="0">
                                     </td>
                                     <td>
                                         <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0.00">
@@ -206,12 +229,12 @@
 
                 <div class="mb-3">
                     <label for="discount_amount" class="form-label small fw-semibold">Discount (₹)</label>
-                    <input type="number" step="0.01" class="form-control form-control-sm" id="discount_amount" name="discount_amount" value="{{ old('discount_amount', '0.00') }}">
+                    <input type="number" class="form-control form-control-sm" id="discount_amount" name="discount_amount" value="{{ old('discount_amount', '0.00') }}">
                 </div>
 
                 <div class="mb-3">
                     <label for="shipping_cost" class="form-label small fw-semibold">Shipping Cost (₹)</label>
-                    <input type="number" step="0.01" class="form-control form-control-sm" id="shipping_cost" name="shipping_cost" value="{{ old('shipping_cost', '0.00') }}">
+                    <input type="number" class="form-control form-control-sm" id="shipping_cost" name="shipping_cost" value="{{ old('shipping_cost', '0.00') }}">
                 </div>
 
                 <hr>
@@ -222,8 +245,17 @@
                 </div>
 
                 <div class="mb-3">
+                    <label for="payment_status" class="form-label small fw-semibold text-dark">Payment Status <span class="text-danger">*</span></label>
+                    <select class="form-select" id="payment_status" name="payment_status" required onchange="syncPaymentStatus()">
+                        <option value="pending" {{ old('payment_status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="paid" {{ old('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                        <option value="unpaid" {{ old('payment_status') == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
                     <label for="paid_amount" class="form-label small fw-semibold text-dark">Amount Paid (₹) <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" class="form-control" id="paid_amount" name="paid_amount" value="{{ old('paid_amount', '0.00') }}" required>
+                    <input type="number" step="0.01" class="form-control" id="paid_amount" name="paid_amount" value="{{ old('paid_amount', '0.00') }}" required readonly>
                 </div>
 
                 <div class="mb-3">
@@ -238,11 +270,80 @@
         </div>
     </div>
 </form>
+
+<!-- Add Company Modal -->
+<div class="modal fade" id="addCompanyModal" tabindex="-1" aria-labelledby="addCompanyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-outfit fw-bold" id="addCompanyModalLabel">Add New Supplier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="ajaxAddCompanyForm">
+                @csrf
+                <div class="modal-body">
+                    <div id="companyModalAlert" class="alert alert-danger d-none mb-3"></div>
+                    
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="modal_company_name" class="form-label fw-semibold">Company Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modal_company_name" name="company_name" required placeholder="e.g. FlameShield Safety Equipment">
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="modal_tax_number" class="form-label fw-semibold">GST Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modal_tax_number" name="gst_number" required placeholder="e.g. 27AAAAA0000A1Z5">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="modal_address" class="form-label fw-semibold">Warehouse / Office Address <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="modal_address" name="address" rows="2" required placeholder="Full office/warehouse address..."></textarea>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="modal_phone" class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modal_phone" name="phone" required maxlength="10" minlength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="e.g. 9876543210">
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="modal_email" class="form-label fw-semibold">Email Address</label>
+                            <input type="email" class="form-control" id="modal_email" name="email" placeholder="vendor@example.com">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="modal_status" class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="modal_status" name="status" required>
+                                <option value="active" selected>Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveCompanyBtn">
+                        <i class="bi bi-plus-circle me-1"></i> Add Supplier
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
+    let supplierSelect;
     document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('supplier_id')) {
+            supplierSelect = new TomSelect('#supplier_id', {
+                create: false,
+                placeholder: 'Search or select supplier...',
+                plugins: ['dropdown_input']
+            });
+        }
+
         let rowCount = {{ old('products') ? count(old('products')) : 1 }};
 
         const categoryOptions = `@foreach($categories as $cat)<option value="{{ $cat->id }}">{{ $cat->name }}</option>@endforeach`;
@@ -312,8 +413,8 @@
             newRow.className = 'item-row';
             newRow.innerHTML = `
                 <td>
-                    <select class="form-select form-select-sm category-select">
-                        <option value="">All Categories</option>
+                    <select class="form-select form-select-sm category-select" required>
+                        <option value="">Select Category...</option>
                         ${categoryOptions}
                     </select>
                 </td>
@@ -327,16 +428,16 @@
                     <input type="text" class="form-control form-control-sm hsn-input bg-light" readonly placeholder="HSN">
                 </td>
                 <td>
-                    <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Unit">
+                    <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Type">
                 </td>
                 <td>
                     <input type="number" name="products[${rowCount}][qty]" class="form-control form-control-sm qty-input" min="1" value="1" required>
                 </td>
                 <td>
-                    <input type="number" step="0.01" name="products[${rowCount}][cost]" class="form-control form-control-sm cost-input" value="0.00" required>
+                    <input type="number" step="0.01" min="0.01" name="products[${rowCount}][cost]" class="form-control form-control-sm cost-input" value="" placeholder="e.g. 100.00" required>
                 </td>
                 <td>
-                    <input type="number" step="0.01" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" min="0">
+                    <input type="number" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" min="0">
                 </td>
                 <td>
                     <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0.00">
@@ -413,7 +514,30 @@
             document.getElementById('subtotalDisplay').textContent = '₹' + subtotal.toFixed(2);
             document.getElementById('taxDisplay').textContent = '₹' + totalTax.toFixed(2);
             document.getElementById('grandTotalDisplay').textContent = '₹' + grandTotal.toFixed(2);
-            document.getElementById('paid_amount').value = grandTotal.toFixed(2);
+            
+            syncPaymentStatus(grandTotal);
+        }
+
+        function syncPaymentStatus(grandTotalValue) {
+            const statusSelect = document.getElementById('payment_status');
+            if (!statusSelect) return;
+            const status = statusSelect.value;
+            const paidInput = document.getElementById('paid_amount');
+
+            if (grandTotalValue === undefined) {
+                const grandTotalText = document.getElementById('grandTotalDisplay').textContent.replace('₹', '');
+                grandTotalValue = parseFloat(grandTotalText) || 0;
+            }
+
+            if (status === 'paid') {
+                paidInput.value = grandTotalValue.toFixed(2);
+                paidInput.readOnly = true;
+            } else if (status === 'unpaid') {
+                paidInput.value = '0.00';
+                paidInput.readOnly = true;
+            } else {
+                paidInput.readOnly = false;
+            }
         }
 
         // Initial auto-fill for old input rows if redirected back with error
@@ -426,7 +550,76 @@
 
         // Initial calculation
         calculateTotals();
+
+        // AJAX Add Company Form Handler
+        const companyForm = document.getElementById('ajaxAddCompanyForm');
+        if (companyForm) {
+            companyForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const alertBox = document.getElementById('companyModalAlert');
+                const submitBtn = document.getElementById('saveCompanyBtn');
+                alertBox.classList.add('d-none');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...';
+
+                const formData = new FormData(companyForm);
+
+                fetch("{{ route('suppliers.store') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(res => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Supplier';
+
+                    if (res.status === 200 || res.status === 201) {
+                        if (res.body.success) {
+                            if (supplierSelect) {
+                                supplierSelect.addOption({ value: res.body.supplier.id, text: res.body.supplier.company_name });
+                                supplierSelect.setValue(res.body.supplier.id);
+                            } else {
+                                const select = document.getElementById('supplier_id');
+                                const option = document.createElement('option');
+                                option.value = res.body.supplier.id;
+                                option.textContent = res.body.supplier.company_name;
+                                option.selected = true;
+                                select.appendChild(option);
+                            }
+
+                            companyForm.reset();
+                            const modalEl = document.getElementById('addCompanyModal');
+                            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            if (modal) {
+                                modal.hide();
+                            }
+                        }
+                    } else {
+                        let errMsg = 'Company Name already exists.';
+                        if (res.body.errors) {
+                            const firstErrKey = Object.keys(res.body.errors)[0];
+                            if (firstErrKey) {
+                                errMsg = res.body.errors[firstErrKey].join(' ');
+                            }
+                        } else if (res.body.message) {
+                            errMsg = res.body.message;
+                        }
+                        alertBox.textContent = errMsg;
+                        alertBox.classList.remove('d-none');
+                    }
+                })
+                .catch(err => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Supplier';
+                    alertBox.textContent = 'Company Name already exists.';
+                    alertBox.classList.remove('d-none');
+                });
+            });
+        }
     });
 </script>
 @endpush
-

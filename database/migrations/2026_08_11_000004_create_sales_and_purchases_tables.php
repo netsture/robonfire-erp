@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('shipping_cost', 12, 2)->default(0.00);
             $table->decimal('grand_total', 12, 2);
             $table->decimal('paid_amount', 12, 2)->default(0.00);
-            $table->enum('payment_status', ['paid', 'partial', 'due'])->default('paid');
+            $table->string('payment_status', 50)->default('pending');
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->unique(['firm_id', 'reference_no']);
@@ -54,7 +54,7 @@ return new class extends Migration
             $table->decimal('shipping_cost', 12, 2)->default(0.00);
             $table->decimal('grand_total', 12, 2);
             $table->decimal('paid_amount', 12, 2)->default(0.00);
-            $table->enum('payment_status', ['paid', 'partial', 'due'])->default('paid');
+            $table->string('payment_status', 50)->default('pending');
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->unique(['firm_id', 'invoice_number']);

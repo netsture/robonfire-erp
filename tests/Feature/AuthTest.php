@@ -190,4 +190,77 @@ class AuthTest extends TestCase
         $response->assertSessionHasErrors();
         $this->assertGuest();
     }
+
+    public function test_user_belonging_to_inactive_firm_cannot_login()
+    {
+        $firm = \App\Models\Firm::create([
+            'name'    => 'Inactive Firm Co',
+            'slug'    => 'inactive-firm-co',
+            'email'   => 'firm@inactive.com',
+            'phone'   => '9876543299',
+            'address' => '123 Test St',
+            'status'  => 'inactive',
+        ]);
+
+        $user = User::create([
+            'firm_id'  => $firm->id,
+            'name'     => 'Firm Active User',
+            'email'    => 'firmuser@inactive.com',
+            'phone'    => '9876543298',
+            'password' => Hash::make('password123'),
+            'role'     => 'user',
+            'status'   => 'active',
+        ]);
+
+        $response = $this->post('/login', [
+            'login'    => 'firmuser@inactive.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors(['login']);
+        $this->assertGuest();
+    }
+
+    public function test_updating_firm_status_syncs_firm_user_status()
+    {
+        $superadmin = User::create([
+            'name'     => 'Super Admin',
+            'email'    => 'admin@system.com',
+            'phone'    => '9999988888',
+            'password' => Hash::make('password123'),
+            'role'     => 'superadmin',
+            'status'   => 'active',
+        ]);
+
+        $firm = \App\Models\Firm::create([
+            'name'    => 'Active Firm Co',
+            'slug'    => 'active-firm-co',
+            'email'   => 'activefirm@example.com',
+            'phone'   => '9876543297',
+            'address' => '456 Test Ave',
+            'status'  => 'active',
+        ]);
+
+        $firmUser = User::create([
+            'firm_id'  => $firm->id,
+            'name'     => 'Firm Member',
+            'email'    => 'member@activefirm.com',
+            'phone'    => '9876543296',
+            'password' => Hash::make('password123'),
+            'role'     => 'admin',
+            'status'   => 'active',
+        ]);
+
+        $response = $this->actingAs($superadmin)->put("/firms/{$firm->id}", [
+            'name'    => $firm->name,
+            'address' => $firm->address,
+            'email'   => $firm->email,
+            'phone'   => $firm->phone,
+            'status'  => 'inactive',
+        ]);
+
+        $response->assertRedirect('/firms');
+        $this->assertEquals('inactive', $firm->fresh()->status);
+        $this->assertEquals('inactive', $firmUser->fresh()->status);
+    }
 }

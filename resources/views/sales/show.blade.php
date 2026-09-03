@@ -2,7 +2,7 @@
 
 @section('title', 'Sales Order Details')
 @section('page_title', 'Sales Order: #' . $sale->invoice_number)
-@section('page_subtitle', 'Customer: ' . $sale->customer->name . ' | Date: ' . $sale->sale_date)
+@section('page_subtitle', 'Customer: ' . $sale->customer->company_name . ' | Date: ' . $sale->sale_date)
 
 @section('header_actions')
     <a href="{{ route('sales.invoice', $sale) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium" target="_blank">
@@ -19,38 +19,54 @@
         <div class="card card-custom border-0 p-4">
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
-                    <h4 class="fw-bold font-outfit text-dark mb-0">Sales Tax Invoice</h4>
-                    <span class="text-muted small font-monospace">Invoice #: {{ $sale->invoice_number }}</span>
+                    <h4 class="fw-bold font-outfit text-dark mb-0">Delivery Invoice</h4>
+                    <span class="text-muted small font-monospace">Challan #: {{ $sale->invoice_number }}</span>
                 </div>
-                <div>
+                <div class="d-flex align-items-center gap-2">
                     @if($sale->payment_status === 'paid')
                         <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-4 py-2 fs-6">PAID</span>
-                    @elseif($sale->payment_status === 'partial')
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-4 py-2 fs-6">PARTIAL</span>
+                    @elseif($sale->payment_status === 'unpaid')
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-4 py-2 fs-6">UNPAID</span>
                     @else
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-4 py-2 fs-6">DUE</span>
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-4 py-2 fs-6">PENDING</span>
+                    @endif
+
+                    @if(!auth()->user()->isSuperAdmin())
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 font-outfit" data-bs-toggle="modal" data-bs-target="#updatePaymentModal">
+                            <i class="bi bi-wallet2 me-1"></i> Update Payment
+                        </button>
                     @endif
                 </div>
             </div>
 
             <div class="row g-3 mb-4">
                 <div class="col-6">
-                    <span class="text-muted small fw-semibold">BILLED TO</span>
-                    <div class="fw-bold text-dark mt-1">{{ $sale->customer->name }}</div>
-                    <div class="small text-muted">{{ $sale->customer->company_name }}</div>
-                    <div class="small text-muted">{{ $sale->customer->phone }}</div>
-                    <div class="small text-muted">{{ $sale->customer->address }}</div>
+                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">CUSTOMER</span>
+                    <div class="fw-bold text-dark mt-2 mb-1 fs-5">{{ $sale->customer->company_name ?? 'N/A' }}</div>
+                    @if($sale->customer->address)
+                        <div class="small text-muted mb-1"><i class="bi bi-geo-alt me-1 text-secondary"></i><strong>Address:</strong> {{ $sale->customer->address }}</div>
+                    @endif
+                    @if($sale->customer->gst_number)
+                        <div class="small text-muted mb-1"><i class="bi bi-card-heading me-1 text-secondary"></i><strong>Gst No:</strong> {{ $sale->customer->gst_number }}</div>
+                    @endif
+                    @if($sale->customer->phone)
+                        <div class="small text-muted mb-1"><i class="bi bi-telephone me-1 text-secondary"></i><strong>Contact No:</strong> {{ $sale->customer->phone }}</div>
+                    @endif
+                    @if($sale->customer->email)
+                        <div class="small text-muted mb-1"><i class="bi bi-envelope me-1 text-secondary"></i><strong>Email:</strong> {{ $sale->customer->email }}</div>
+                    @endif
                 </div>
                 <div class="col-6 text-end">
-                    <span class="text-muted small fw-semibold">INVOICE DETAILS</span>
-                    <div class="small text-dark mt-1">Date: <strong>{{ $sale->sale_date }}</strong></div>
+                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">DELIVERY DETAILS</span>
+                    <div class="small text-dark mt-2 mb-1">Sale Date: <strong>{{ $sale->sale_date }}</strong></div>
+                    <div class="small text-dark mb-1">Challan No: <strong>#{{ $sale->invoice_number }}</strong></div>
                     @if($sale->project_name)
-                        <div class="small text-dark">Project: <strong>{{ $sale->project_name }}</strong></div>
+                        <div class="small text-dark mb-1">Project Name: <strong>{{ $sale->project_name }}</strong></div>
                     @endif
                     @if($sale->vehicle_number)
-                        <div class="small text-dark">Vehicle No: <strong>{{ $sale->vehicle_number }}</strong></div>
+                        <div class="small text-dark mb-1">Vehicle No: <strong>{{ $sale->vehicle_number }}</strong></div>
                     @endif
-                    <div class="small text-dark">Billed By: <strong>{{ $sale->user->name ?? 'Admin' }}</strong></div>
+                    <div class="small text-dark mb-1">Recorded By: <strong>{{ $sale->user->name ?? 'Admin' }}</strong></div>
                 </div>
             </div>
 
@@ -62,11 +78,12 @@
                             <th>Category</th>
                             <th>Product Item (Brand)</th>
                             <th>HSN Code</th>
-                            <th>Unit</th>
+                            <th>Type</th>
                             <th class="text-center">Qty</th>
                             <th class="text-end">Selling Price (₹)</th>
-                            <th class="text-center">Tax (%)</th>
                             <th class="text-end">Total (₹)</th>
+                            <th class="text-center">Tax (%)</th>
+                            <th class="text-end">Tax (₹)</th>
                             <th class="text-end">Total w/ Tax</th>
                         </tr>
                     </thead>
@@ -85,8 +102,9 @@
                                 <td><span class="badge bg-secondary-subtle text-secondary border px-2">{{ $prod->unit ?? 'Pcs' }}</span></td>
                                 <td class="text-center fw-bold">{{ $item->quantity }}</td>
                                 <td class="text-end">₹{{ number_format($item->unit_price, 2) }}</td>
-                                <td class="text-center">{{ number_format($taxPct, 2) }}%</td>
                                 <td class="text-end font-monospace">₹{{ number_format($item->subtotal, 2) }}</td>
+                                <td class="text-center">{{ number_format($taxPct, 2) }}%</td>
+                                <td class="text-end font-monospace text-muted">₹{{ number_format($lineTax, 2) }}</td>
                                 <td class="text-end fw-bold text-dark font-monospace">₹{{ number_format($totalWithTax, 2) }}</td>
                             </tr>
                         @endforeach
@@ -94,9 +112,17 @@
                 </table>
             </div>
 
-            <div class="row justify-content-end">
-                <div class="col-12 col-md-5">
-                    <div class="bg-light rounded-3 p-3">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    @if($sale->notes)
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="text-muted small fw-semibold d-block mb-1">ORDER NOTES</span>
+                            <div class="small text-dark">{{ $sale->notes }}</div>
+                        </div>
+                    @endif
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 border">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Subtotal:</span>
                             <span class="fw-bold text-dark">₹{{ number_format($sale->subtotal, 2) }}</span>
@@ -128,4 +154,67 @@
         </div>
     </div>
 </div>
+
+@if(!auth()->user()->isSuperAdmin())
+<!-- Update Payment Modal -->
+<div class="modal fade" id="updatePaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <form action="{{ route('sales.update-payment-status', $sale) }}" method="POST">
+                @csrf
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold font-outfit">Set Payment Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 p-3 bg-light rounded-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small">Challan #:</span>
+                            <span class="fw-bold font-monospace">{{ $sale->invoice_number }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small">Customer:</span>
+                            <span class="fw-semibold">{{ $sale->customer->company_name ?? 'N/A' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Grand Total:</span>
+                            <span class="fw-bold text-primary">₹{{ number_format($sale->grand_total, 2) }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
+                        <select name="payment_status" class="form-select" onchange="toggleModalPaidInput(this, {{ $sale->grand_total }}, 'modal_paid_show')">
+                            <option value="pending" {{ in_array($sale->payment_status, ['pending', 'due']) ? 'selected' : '' }}>Pending</option>
+                            <option value="paid" {{ $sale->payment_status === 'paid' ? 'selected' : '' }}>Paid</option>
+                            <option value="unpaid" {{ $sale->payment_status === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Amount Received (₹)</label>
+                        <input type="number" step="0.01" name="paid_amount" id="modal_paid_show" class="form-control" value="{{ number_format($sale->paid_amount, 2, '.', '') }}" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-1"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    function toggleModalPaidInput(selectEl, grandTotal, targetInputId) {
+        const inputEl = document.getElementById(targetInputId);
+        if (!inputEl) return;
+        if (selectEl.value === 'paid') {
+            inputEl.value = parseFloat(grandTotal).toFixed(2);
+        } else {
+            inputEl.value = '0.00';
+        }
+    }
+</script>
+@endpush
+@endif
 @endsection

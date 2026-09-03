@@ -27,7 +27,8 @@ class FirmController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%");
             });
         }
 
@@ -52,14 +53,17 @@ class FirmController extends Controller
         }
 
         $validated = $request->validate([
-            'name'           => ['required', 'string', 'max:255', 'unique:firms'],
-            'email'          => ['nullable', 'email', 'max:255'],
-            'phone'          => ['required', 'string', 'min:10', 'max:10'],
-            'address'        => ['nullable', 'string'],
-            'status'         => ['required', 'in:active,inactive'],
-            'admin_name'     => ['required', 'string', 'max:255'],
-            'admin_email'    => ['required', 'email', 'max:255', 'unique:users,email'],
-            'admin_password' => ['required', 'string', 'min:6'],
+            'name'     => ['required', 'string', 'max:255', 'unique:firms,name'],
+            'address'  => ['required', 'string'],
+            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone'    => ['required', 'string', 'min:10', 'max:10', 'unique:users,phone'],
+            'password' => ['required', 'string', 'min:6'],
+            'status'   => ['required', 'in:active,inactive'],
+        ], [
+            'email.unique' => 'This email address is already registered to another user.',
+            'phone.unique' => 'This phone number is already registered to another user.',
+            'phone.min'    => 'Firm Phone Number must be 10 digits.',
+            'phone.max'    => 'Firm Phone Number must be 10 digits.',
         ]);
 
         DB::transaction(function () use ($validated, &$firm) {
@@ -75,12 +79,12 @@ class FirmController extends Controller
             // Create Firm Admin User
             $adminUser = User::create([
                 'firm_id'  => $firm->id,
-                'name'     => $validated['admin_name'],
-                'email'    => $validated['admin_email'],
-                'password' => Hash::make($validated['admin_password']),
+                'name'     => $validated['name'] . ' Admin',
+                'email'    => $validated['email'],
+                'password' => Hash::make($validated['password']),
                 'phone'    => $validated['phone'],
                 'role'     => 'admin',
-                'status'   => 'active',
+                'status'   => $validated['status'],
             ]);
 
             $adminRole = Role::where('slug', 'admin')->first();
@@ -118,11 +122,16 @@ class FirmController extends Controller
         }
 
         $validated = $request->validate([
-            'name'    => ['required', 'string', 'max:255', 'unique:firms,name,' . $firm->id],
-            'email'   => ['nullable', 'email', 'max:255'],
-            'phone'   => ['required', 'string', 'min:10', 'max:10'],
-            'address' => ['nullable', 'string'],
-            'status'  => ['required', 'in:active,inactive'],
+            'name'     => ['required', 'string', 'max:255', 'unique:firms,name,' . $firm->id],
+            'address'  => ['required', 'string'],
+            'email'    => ['required', 'email', 'max:255'],
+            'phone'    => ['required', 'string', 'min:10', 'max:10'],
+            'password' => ['nullable', 'string', 'min:6'],
+            'status'   => ['required', 'in:active,inactive'],
+        ], [
+            'phone.min'    => 'Firm Phone Number must be 10 digits.',
+            'phone.max'    => 'Firm Phone Number must be 10 digits.',
+            'password.min' => 'Password must be at least 6 characters.',
         ]);
 
         $firm->update([
@@ -133,6 +142,23 @@ class FirmController extends Controller
             'address' => $validated['address'],
             'status'  => $validated['status'],
         ]);
+
+        $firm->users()->update([
+            'status' => $validated['status'],
+        ]);
+
+        if (!empty($validated['password'])) {
+            $adminUser = $firm->users()->where('role', 'admin')->first();
+            if ($adminUser) {
+                $adminUser->update([
+                    'password' => Hash::make($validated['password']),
+                ]);
+            } else {
+                $firm->users()->update([
+                    'password' => Hash::make($validated['password']),
+                ]);
+            }
+        }
 
         return redirect()->route('firms.index')->with('success', 'Firm updated successfully.');
     }

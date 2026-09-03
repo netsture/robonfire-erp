@@ -1,13 +1,15 @@
 @extends('layouts.app')
 
 @section('title', 'Supplier Profile')
-@section('page_title', 'Supplier Profile: ' . $supplier->name)
-@section('page_subtitle', 'Vendor details, procurement history, and balance due')
+@section('page_title', 'Supplier Profile: ' . $supplier->company_name)
+@section('page_subtitle', 'Vendor details and procurement history')
 
 @section('header_actions')
-    <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-pencil me-1"></i> Edit Supplier
-    </a>
+    @if(!auth()->user()->isSuperAdmin())
+        <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-pencil me-1"></i> Edit Supplier
+        </a>
+    @endif
     <a href="{{ route('suppliers.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to List
     </a>
@@ -17,35 +19,26 @@
 
 <div class="row g-3 mb-4">
     <!-- Supplier Info Card -->
-    <div class="col-12 col-md-5">
-        <div class="card card-custom border-0 p-4 h-100">
+    <div class="col-12">
+        <div class="card card-custom border-0 p-4">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="rounded-circle bg-info bg-opacity-10 text-info fw-bold d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
                     <i class="bi bi-truck fs-3"></i>
                 </div>
                 <div>
-                    <h4 class="fw-bold font-outfit text-dark mb-0">{{ $supplier->name }}</h4>
-                    <span class="text-muted small">{{ $supplier->company_name ?? 'Vendor Account' }}</span>
+                    <h4 class="fw-bold font-outfit text-dark mb-0">{{ $supplier->company_name }}</h4>
+                    <span class="text-muted small">Vendor Account</span>
                 </div>
             </div>
 
             <hr class="my-2 text-muted">
 
-            <div class="d-flex flex-column gap-2 my-2">
-                <div class="small"><i class="bi bi-telephone text-muted me-2"></i>{{ $supplier->phone }}</div>
-                <div class="small"><i class="bi bi-envelope text-muted me-2"></i>{{ $supplier->email ?? 'No email on file' }}</div>
-                <div class="small"><i class="bi bi-geo-alt text-muted me-2"></i>{{ $supplier->address ?? 'N/A' }} {{ $supplier->city ? '('.$supplier->city.')' : '' }}</div>
-                <div class="small"><i class="bi bi-receipt text-muted me-2"></i>Tax ID: {{ $supplier->tax_number ?? 'N/A' }}</div>
+            <div class="row g-2 my-2">
+                <div class="col-12 col-md-3 small"><i class="bi bi-telephone text-muted me-2"></i><strong>Phone:</strong> {{ $supplier->phone ?? 'N/A' }}</div>
+                <div class="col-12 col-md-3 small"><i class="bi bi-envelope text-muted me-2"></i><strong>Email:</strong> {{ $supplier->email ?? 'N/A' }}</div>
+                <div class="col-12 col-md-3 small"><i class="bi bi-receipt text-muted me-2"></i><strong>GST Number:</strong> {{ $supplier->gst_number ?? 'N/A' }}</div>
+                <div class="col-12 col-md-3 small"><i class="bi bi-geo-alt text-muted me-2"></i><strong>Address:</strong> {{ $supplier->address ?? 'N/A' }}</div>
             </div>
-        </div>
-    </div>
-
-    <!-- Balance Metric -->
-    <div class="col-12 col-md-7">
-        <div class="card card-custom border-0 p-4 bg-dark text-white h-100 justify-content-center">
-            <span class="text-white-50 small fw-semibold uppercase tracking-wider">TOTAL OUTSTANDING PAYABLE</span>
-            <h1 class="fw-bold font-outfit mt-2 mb-1 text-warning">₹{{ number_format($supplier->current_balance, 2) }}</h1>
-            <span class="small text-white-50">Current balance owed to vendor for purchase orders</span>
         </div>
     </div>
 </div>

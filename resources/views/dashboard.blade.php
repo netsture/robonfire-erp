@@ -5,12 +5,26 @@
 @section('page_subtitle', 'Real-time overview of business operations, sales performance, and stock status')
 
 @section('header_actions')
-    <a href="{{ route('sales.index') }}" class="btn btn-primary rounded-pill px-3 shadow-sm font-outfit fw-medium">
-        <i class="bi bi-cart-plus me-1"></i> New Sale Order
-    </a>
-    <a href="{{ route('purchases.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-bag-plus me-1"></i> Record Purchase
-    </a>
+    @if(auth()->user()->isSuperAdmin())
+        <form method="GET" action="{{ route('dashboard') }}" class="d-flex align-items-center gap-2">
+            <select name="firm_id" class="form-select bg-light rounded-pill font-outfit" onchange="this.form.submit()">
+                <option value="">All Firms (Global Overview)</option>
+                @foreach($firms as $firm)
+                    <option value="{{ $firm->id }}" {{ request('firm_id') == $firm->id ? 'selected' : '' }}>{{ $firm->name }}</option>
+                @endforeach
+            </select>
+            @if(request('firm_id'))
+                <a href="{{ route('dashboard') }}" class="btn btn-sm btn-light border rounded-circle" title="Clear filter"><i class="bi bi-x"></i></a>
+            @endif
+        </form>
+    @else
+        <a href="{{ route('sales.index') }}" class="btn btn-primary rounded-pill px-3 shadow-sm font-outfit fw-medium">
+            <i class="bi bi-cart-plus me-1"></i> New Sale Order
+        </a>
+        <a href="{{ route('purchases.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-bag-plus me-1"></i> Record Purchase
+        </a>
+    @endif
 @endsection
 
 @section('content')
@@ -151,7 +165,7 @@
                         </div>
                         <div>
                             <div class="fw-semibold text-dark">Add New Product</div>
-                            <div class="text-muted small">Update SKU, price & alert thresholds</div>
+                            <div class="text-muted small">Update price & alert thresholds</div>
                         </div>
                     </div>
                     <i class="bi bi-chevron-right text-muted"></i>

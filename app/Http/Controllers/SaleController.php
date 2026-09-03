@@ -25,17 +25,20 @@ class SaleController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('invoice_number', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
                   ->orWhere('project_name', 'like', "%{$search}%")
                   ->orWhere('vehicle_number', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('company_name', 'like', "%{$search}%");
                   });
+            });
         }
 
         $sales = $query->latest()->paginate(10);
+        $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
-        return view('sales.index', compact('sales'));
+        return view('sales.index', compact('sales', 'firms'));
     }
 
     public function create()
@@ -72,18 +75,22 @@ class SaleController extends Controller
             'customer_id'     => ['required', 'exists:customers,id'],
             'invoice_number'  => ['required', 'string'],
             'project_name'    => ['required', 'string'],
-            'vehicle_number'  => ['required', 'string'],
+            'vehicle_number'  => ['nullable', 'string'],
             'sale_date'       => ['required', 'date'],
             'products'        => ['required', 'array', 'min:1'],
             'products.*.id'   => ['required', 'exists:products,id'],
             'products.*.qty'  => ['required', 'integer', 'min:1'],
-            'products.*.price'=> ['required', 'numeric', 'min:0'],
+            'products.*.price'=> ['required', 'numeric', 'gt:0'],
             'products.*.tax_percent' => ['nullable', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'tax_amount'      => ['nullable', 'numeric', 'min:0'],
             'shipping_cost'   => ['nullable', 'numeric', 'min:0'],
+            'payment_status'  => ['nullable', 'in:pending,paid,unpaid,due,partial'],
             'paid_amount'     => ['required', 'numeric', 'min:0'],
             'notes'           => ['nullable', 'string'],
+        ], [
+            'products.*.price.gt'       => 'Selling Price (₹) must be greater than 0 for all product items.',
+            'products.*.price.required' => 'Selling Price (₹) is required for all product items.',
         ]);
 
         // Check stock availability first
@@ -133,10 +140,16 @@ class SaleController extends Controller
             $shipping = $validated['shipping_cost'] ?? 0;
             $grandTotal = $subtotal - $discount + $tax + $shipping;
 
-            $paid = $validated['paid_amount'];
-            $paymentStatus = 'paid';
-            if ($paid < $grandTotal) {
-                $paymentStatus = $paid > 0 ? 'partial' : 'due';
+            $statusInput = $validated['payment_status'] ?? 'pending';
+            if ($statusInput === 'paid') {
+                $paid = $grandTotal;
+                $paymentStatus = 'paid';
+            } elseif ($statusInput === 'unpaid') {
+                $paid = 0.00;
+                $paymentStatus = 'unpaid';
+            } else {
+                $paid = 0.00;
+                $paymentStatus = 'pending';
             }
 
             $sale = Sale::create([
@@ -163,15 +176,38 @@ class SaleController extends Controller
                 // Auto-deduct stock quantity
                 Product::where('id', $iData['product_id'])->decrement('stock_quantity', $iData['quantity']);
             }
-
-            // Update Customer Balance Due
-            $due = $grandTotal - $paid;
-            if ($due > 0) {
-                Customer::find($validated['customer_id'])->increment('current_balance', $due);
-            }
         });
 
         return redirect()->route('sales.index')->with('success', 'Sales Order #' . $sale->invoice_number . ' completed & stock updated!');
+    }
+
+    public function updatePaymentStatus(Request $request, Sale $sale)
+    {
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && $sale->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to firm record.');
+        }
+
+        $validated = $request->validate([
+            'payment_status' => ['required', 'in:pending,paid,unpaid,due,partial'],
+            'paid_amount'    => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $status = $validated['payment_status'];
+        if ($status === 'paid') {
+            $newPaid = (float)$sale->grand_total;
+        } else {
+            $newPaid = 0.00;
+        }
+
+        DB::transaction(function () use ($sale, $status, $newPaid) {
+            $sale->update([
+                'payment_status' => $status,
+                'paid_amount'    => $newPaid,
+            ]);
+        });
+
+        return back()->with('success', 'Payment status updated successfully.');
     }
 
     public function show(Sale $sale)
@@ -185,6 +221,17 @@ class SaleController extends Controller
         return view('sales.show', compact('sale'));
     }
 
+    public function challan(Sale $sale)
+    {
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && $sale->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to firm record.');
+        }
+
+        $sale->load('customer', 'user', 'items.product.category', 'items.product.brand', 'firm');
+        return view('sales.challan', compact('sale'));
+    }
+
     public function printInvoice(Sale $sale)
     {
         $user = auth()->user();
@@ -194,6 +241,17 @@ class SaleController extends Controller
 
         $sale->load('customer', 'user', 'items.product.category', 'items.product.brand', 'firm');
         return view('sales.invoice', compact('sale'));
+    }
+
+    public function printChallan(Sale $sale)
+    {
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && $sale->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to firm record.');
+        }
+
+        $sale->load('customer', 'user', 'items.product.category', 'items.product.brand', 'firm');
+        return view('sales.print_challan', compact('sale'));
     }
 
     public function destroy(Sale $sale)

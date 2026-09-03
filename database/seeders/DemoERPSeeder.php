@@ -107,8 +107,6 @@ class DemoERPSeeder extends Seeder
         $p1 = Product::create([
             'firm_id' => $firm1->id,
             'name' => 'ABC Dry Powder Extinguisher 5kg',
-            'sku' => 'PRD-EXT-001',
-            'barcode' => '880192837411',
             'hsn_code' => '84241000',
             'category_id' => $catElectronics->id,
             'brand_id' => $brandDell->id,
@@ -125,8 +123,6 @@ class DemoERPSeeder extends Seeder
         $p2 = Product::create([
             'firm_id' => $firm1->id,
             'name' => 'CO2 Fire Extinguisher 4.5kg',
-            'sku' => 'PRD-EXT-002',
-            'barcode' => '880192837422',
             'hsn_code' => '84241000',
             'category_id' => $catOffice->id,
             'brand_id' => $brandHerman->id,
@@ -142,27 +138,21 @@ class DemoERPSeeder extends Seeder
 
         $c1 = Customer::create([
             'firm_id' => $firm1->id,
-            'name' => 'BlazeProtect Safety Solutions',
+            'company_name' => 'BlazeProtect Safety Solutions',
             'email' => 'contact@blazeprotect.com',
             'phone' => '9876543213',
-            'company_name' => 'BlazeProtect Corp',
-            'tax_number' => 'TAX-FIRE-99',
+            'gst_number' => 'TAX-FIRE-99',
             'address' => '100 Industrial Safety Park',
-            'city' => 'San Jose, CA',
-            'current_balance' => 0.00,
             'status' => 'active',
         ]);
 
         $s1 = Supplier::create([
             'firm_id' => $firm1->id,
-            'name' => 'Global Fire Equipment Depot',
+            'company_name' => 'Global Fire Equipment Depot',
             'email' => 'sales@globalfiredepot.com',
             'phone' => '9876543214',
-            'company_name' => 'Global Fire Depot LLC',
-            'tax_number' => 'VAT-FIRE-101',
+            'gst_number' => 'VAT-FIRE-101',
             'address' => '88 Safety Blvd',
-            'city' => 'Chicago, IL',
-            'current_balance' => 0.00,
             'status' => 'active',
         ]);
 
@@ -230,8 +220,6 @@ class DemoERPSeeder extends Seeder
         $p3 = Product::create([
             'firm_id' => $firm2->id,
             'name' => 'Automatic Smoke & Heat Detector',
-            'sku' => 'PRD-ALM-003',
-            'barcode' => '880192837433',
             'hsn_code' => '85311090',
             'category_id' => $catNetworking->id,
             'brand_id' => $brandCisco->id,
@@ -247,14 +235,11 @@ class DemoERPSeeder extends Seeder
 
         $s2 = Supplier::create([
             'firm_id' => $firm2->id,
-            'name' => 'FlameGuard Safety Wholesale',
+            'company_name' => 'FlameGuard Safety Wholesale',
             'email' => 'orders@flameguard.com',
             'phone' => '9876543215',
-            'company_name' => 'FlameGuard Safety Inc',
-            'tax_number' => 'VAT-FLM-500',
+            'gst_number' => 'VAT-FLM-500',
             'address' => '12 Network Parkway',
-            'city' => 'Austin, TX',
-            'current_balance' => 0.00,
             'status' => 'active',
         ]);
 

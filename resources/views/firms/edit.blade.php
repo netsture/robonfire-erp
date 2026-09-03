@@ -25,22 +25,29 @@
                     @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
+                <div class="col-12">
+                    <label for="address" class="form-label fw-semibold text-dark">Office / Headquarter Address <span class="text-danger">*</span></label>
+                    <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="3" required>{{ old('address', $firm->address) }}</textarea>
+                    @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
                 <div class="col-12 col-md-6">
-                    <label for="email" class="form-label fw-semibold text-dark">Contact Email</label>
-                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $firm->email) }}">
+                    <label for="email" class="form-label fw-semibold text-dark">Firm Email/Login Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $firm->email) }}" required>
                     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
-                    <label for="phone" class="form-label fw-semibold text-dark">Phone Number <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone', $firm->phone) }}" required minlength="10" maxlength="10" placeholder="e.g. 9876543210">
+                    <label for="phone" class="form-label fw-semibold text-dark">Firm Phone Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone', $firm->phone) }}" required maxlength="10" minlength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="e.g. 9876543210">
                     @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <div class="col-12">
-                    <label for="address" class="form-label fw-semibold text-dark">Office Address</label>
-                    <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="3">{{ old('address', $firm->address) }}</textarea>
-                    @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <div class="col-12 col-md-6">
+                    <label for="password" class="form-label fw-semibold text-dark">Password</label>
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" placeholder="Leave blank to keep current">
+                    <div class="form-text small text-muted">Leave blank to keep current password</div>
+                    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="col-12 col-md-6">

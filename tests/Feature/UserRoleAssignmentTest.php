@@ -105,7 +105,7 @@ class UserRoleAssignmentTest extends TestCase
         ]);
     }
 
-    public function test_superadmin_can_assign_admin_role()
+    public function test_superadmin_cannot_create_user_due_to_view_only_restriction()
     {
         $response = $this->actingAs($this->superadminUser)->post('/users', [
             'name' => 'New Tenant Admin',
@@ -117,10 +117,6 @@ class UserRoleAssignmentTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response->assertRedirect('/users');
-        $this->assertDatabaseHas('users', [
-            'email' => 'newadmin@example.com',
-            'role' => 'Admin',
-        ]);
+        $response->assertStatus(403);
     }
 }

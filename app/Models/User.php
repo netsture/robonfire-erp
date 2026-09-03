@@ -66,7 +66,13 @@ class User extends Authenticatable
     public function hasPermission($permissionSlug)
     {
         if ($this->isSuperAdmin()) {
-            return true;
+            if (str_starts_with($permissionSlug, 'firms.')) {
+                return true;
+            }
+            if (str_contains($permissionSlug, '.view') || str_contains($permissionSlug, '.index') || str_contains($permissionSlug, '.show') || str_contains($permissionSlug, '.print') || str_contains($permissionSlug, '.report')) {
+                return true;
+            }
+            return false;
         }
 
         foreach ($this->roles as $role) {

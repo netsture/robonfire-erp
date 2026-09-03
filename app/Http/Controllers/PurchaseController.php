@@ -30,14 +30,15 @@ class PurchaseController extends Controller
                 $q->where('project_name', 'like', "%{$search}%")
                   ->orWhere('invoice_number', 'like', "%{$search}%")
                   ->orWhereHas('supplier', function ($sq) use ($search) {
-                      $sq->where('name', 'like', "%{$search}%");
+                      $sq->where('company_name', 'like', "%{$search}%");
                   });
             });
         }
 
         $purchases = $query->latest()->paginate(10);
+        $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
-        return view('purchases.index', compact('purchases'));
+        return view('purchases.index', compact('purchases', 'firms'));
     }
 
     public function create()
@@ -72,19 +73,23 @@ class PurchaseController extends Controller
         $firmId = $user->isSuperAdmin() ? ($request->input('firm_id') ?? 1) : $user->firm_id;
 
         $validated = $request->validate([
-            'supplier_id'          => ['required', 'exists:suppliers,id'],
-            'project_name'         => ['required', 'string'],
-            'invoice_number'       => ['nullable', 'string'],
-            'purchase_date'        => ['required', 'date'],
-            'products'             => ['required', 'array', 'min:1'],
-            'products.*.id'        => ['required', 'exists:products,id'],
-            'products.*.qty'       => ['required', 'integer', 'min:1'],
-            'products.*.cost'      => ['required', 'numeric', 'min:0'],
+            'supplier_id'            => ['required', 'exists:suppliers,id'],
+            'project_name'           => ['required', 'string'],
+            'invoice_number'         => ['nullable', 'string'],
+            'purchase_date'          => ['required', 'date'],
+            'products'               => ['required', 'array', 'min:1'],
+            'products.*.id'          => ['required', 'exists:products,id'],
+            'products.*.qty'         => ['required', 'integer', 'min:1'],
+            'products.*.cost'        => ['required', 'numeric', 'gt:0'],
             'products.*.tax_percent' => ['nullable', 'numeric', 'min:0'],
-            'discount_amount'      => ['nullable', 'numeric', 'min:0'],
-            'shipping_cost'        => ['nullable', 'numeric', 'min:0'],
-            'paid_amount'          => ['required', 'numeric', 'min:0'],
-            'notes'                => ['nullable', 'string'],
+            'discount_amount'        => ['nullable', 'numeric', 'min:0'],
+            'shipping_cost'          => ['nullable', 'numeric', 'min:0'],
+            'payment_status'         => ['nullable', 'in:pending,paid,unpaid,due,partial'],
+            'paid_amount'            => ['required', 'numeric', 'min:0'],
+            'notes'                  => ['nullable', 'string'],
+        ], [
+            'products.*.cost.gt'       => 'Unit Cost (₹) must be greater than 0 for all product items.',
+            'products.*.cost.required' => 'Unit Cost (₹) is required for all product items.',
         ]);
 
         if (empty($validated['invoice_number'])) {
@@ -128,10 +133,16 @@ class PurchaseController extends Controller
             $shipping = $validated['shipping_cost'] ?? 0;
             $grandTotal = $subtotal + $totalTax - $discount + $shipping;
 
-            $paid = $validated['paid_amount'];
-            $paymentStatus = 'paid';
-            if ($paid < $grandTotal) {
-                $paymentStatus = $paid > 0 ? 'partial' : 'due';
+            $statusInput = $validated['payment_status'] ?? 'pending';
+            if ($statusInput === 'paid') {
+                $paid = $grandTotal;
+                $paymentStatus = 'paid';
+            } elseif ($statusInput === 'unpaid') {
+                $paid = 0.00;
+                $paymentStatus = 'unpaid';
+            } else {
+                $paid = 0.00;
+                $paymentStatus = 'pending';
             }
 
             $purchase = Purchase::create([
@@ -159,15 +170,38 @@ class PurchaseController extends Controller
                 $product->increment('stock_quantity', $iData['quantity']);
                 $product->update(['cost_price' => $iData['unit_cost']]);
             }
-
-            // Update Supplier Balance Due
-            $due = $grandTotal - $paid;
-            if ($due > 0) {
-                Supplier::find($validated['supplier_id'])->increment('current_balance', $due);
-            }
         });
 
         return redirect()->route('purchases.index')->with('success', 'Purchase order created & product stock updated!');
+    }
+
+    public function updatePaymentStatus(Request $request, Purchase $purchase)
+    {
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && $purchase->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to firm record.');
+        }
+
+        $validated = $request->validate([
+            'payment_status' => ['required', 'in:pending,paid,unpaid,due,partial'],
+            'paid_amount'    => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $status = $validated['payment_status'];
+        if ($status === 'paid') {
+            $newPaid = (float)$purchase->grand_total;
+        } else {
+            $newPaid = 0.00;
+        }
+
+        DB::transaction(function () use ($purchase, $status, $newPaid) {
+            $purchase->update([
+                'payment_status' => $status,
+                'paid_amount'    => $newPaid,
+            ]);
+        });
+
+        return back()->with('success', 'Payment status updated successfully.');
     }
 
     public function show(Purchase $purchase)

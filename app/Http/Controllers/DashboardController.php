@@ -16,7 +16,7 @@ class DashboardController extends Controller
     /**
      * Display the ERP Admin Dashboard.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         $isSuper = $user->isSuperAdmin();
@@ -47,6 +47,14 @@ class DashboardController extends Controller
             $productsQuery->where('firm_id', $firmId);
             $salesQuery->where('firm_id', $firmId);
             $purchasesQuery->where('firm_id', $firmId);
+        } elseif ($request->filled('firm_id')) {
+            $selectedFirm = $request->firm_id;
+            $usersQuery->where('firm_id', $selectedFirm);
+            $customersQuery->where('firm_id', $selectedFirm);
+            $suppliersQuery->where('firm_id', $selectedFirm);
+            $productsQuery->where('firm_id', $selectedFirm);
+            $salesQuery->where('firm_id', $selectedFirm);
+            $purchasesQuery->where('firm_id', $selectedFirm);
         }
 
         $totalUsersCount = $usersQuery->count();
@@ -100,6 +108,8 @@ class DashboardController extends Controller
             $purchaseData[] = round((float) $mPurchases, 2);
         }
 
+        $firms = $isSuper ? \App\Models\Firm::all() : collect();
+
         return view('dashboard', compact(
             'totalUsersCount',
             'totalCustomersCount',
@@ -112,7 +122,8 @@ class DashboardController extends Controller
             'recentPurchases',
             'chartLabels',
             'salesData',
-            'purchaseData'
+            'purchaseData',
+            'firms'
         ));
     }
 }

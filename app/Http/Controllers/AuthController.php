@@ -57,10 +57,18 @@ class AuthController extends Controller
         })->first();
 
         if ($user && Hash::check($request->password, $user->password)) {
-            if ($user->status !== 'active') {
-                return back()->withErrors([
-                    'login' => 'Your account is deactivated. Please contact administrator.',
-                ])->onlyInput('login');
+            if (!$user->isSuperAdmin()) {
+                if ($user->status !== 'active') {
+                    return back()->withErrors([
+                        'login' => 'Your account is deactivated. Please contact administrator.',
+                    ])->onlyInput('login');
+                }
+
+                if ($user->firm && $user->firm->status !== 'active') {
+                    return back()->withErrors([
+                        'login' => 'Your firm account is deactivated. Please contact administrator.',
+                    ])->onlyInput('login');
+                }
             }
 
             Auth::login($user, $remember);

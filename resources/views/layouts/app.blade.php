@@ -285,6 +285,10 @@
                 <i class="bi bi-bag-check-fill"></i>
                 <span>Sales Orders</span>
             </a>
+            <a href="{{ route('returnable.index') }}" class="nav-link-custom {{ request()->routeIs('returnable*') ? 'active' : '' }}">
+                <i class="bi bi-box-arrow-in-left"></i>
+                <span>Returnable Entry</span>
+            </a>
 
             <div class="sidebar-heading">Administration</div>
             <a href="{{ route('users.index') }}" class="nav-link-custom {{ request()->routeIs('users*') ? 'active' : '' }}">
@@ -295,10 +299,10 @@
                 <i class="bi bi-shield-lock-fill"></i>
                 <span>Roles & Permissions</span>
             </a>
-            <!--<a href="{{ route('reports.index') }}" class="nav-link-custom {{ request()->routeIs('reports*') ? 'active' : '' }}">
+            <a href="{{ route('reports.index') }}" class="nav-link-custom {{ request()->routeIs('reports*') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-line-fill"></i>
                 <span>Analytics & Reports</span>
-            </a>-->
+            </a>
         </div>
 
         <div class="p-3 border-top border-secondary border-opacity-20 text-center">
