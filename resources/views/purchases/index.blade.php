@@ -20,7 +20,7 @@
         <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-6' : 'col-md-9' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search project name, invoice #, or supplier..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search Invoice No, Project Name, Supplier Name, Phone Number, Purchase Date..." value="{{ request('search') }}">
             </div>
         </div>
         @if(auth()->user()->isSuperAdmin())
@@ -47,7 +47,7 @@
             <thead class="table-light">
                 <tr>
                     <th class="ps-4">Invoice No / Project Name</th>
-                    <th>Supplier</th>
+                    <th>Supplier Name / Number</th>
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
@@ -62,35 +62,54 @@
                 @forelse($purchases as $purchase)
                     <tr>
                         <td class="ps-4">
-                            <div class="fw-bold font-monospace text-dark">{{ $purchase->invoice_number ?? 'N/A' }}</div>
-                            @if($purchase->project_name)
-                                <div class="small text-muted"><i class="bi bi-folder2-open me-1"></i>{{ $purchase->project_name }}</div>
-                            @endif
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-supplier" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-cart-plus-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold font-monospace text-dark">#{{ $purchase->invoice_number ?? 'N/A' }}</div>
+                                    @if($purchase->project_name)
+                                        <div class="small text-muted"><i class="bi bi-folder2-open me-1"></i>{{ $purchase->project_name }}</div>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
                         <td>
-                            <div class="fw-semibold text-dark">{{ $purchase->supplier->company_name ?? 'N/A' }}</div>
-                            <div class="small text-muted">{{ $purchase->supplier->phone ?? '' }}</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-supplier" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                                    <i class="bi bi-truck"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-dark">{{ $purchase->supplier->company_name ?? 'N/A' }}</div>
+                                    <div class="small text-muted">{{ $purchase->supplier->phone ?? '' }}</div>
+                                </div>
+                            </div>
                         </td>
                         @if(auth()->user()->isSuperAdmin())
                             <td>
                                 <span class="badge bg-light text-dark border">{{ $purchase->firm->name ?? 'N/A' }}</span>
                             </td>
                         @endif
-                        <td class="small text-muted">{{ $purchase->purchase_date }}</td>
+                        <td class="small text-dark font-monospace">{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d-m-Y') }}</td>
                         <td class="fw-bold text-dark">₹{{ number_format($purchase->grand_total, 2) }}</td>
                         <td class="text-muted small">₹{{ number_format($purchase->paid_amount, 2) }}</td>
                         <td>
                             @if($purchase->payment_status === 'paid')
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">PAID</span>
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1">PAID</span>
                             @elseif($purchase->payment_status === 'unpaid')
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">UNPAID</span>
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1">UNPAID</span>
+                            @elseif($purchase->payment_status === 'partial')
+                                <span class="badge bg-primary text-white rounded-pill px-3 py-1">PARTIAL</span>
                             @else
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1">PENDING</span>
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1">PENDING</span>
                             @endif
                         </td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
-                                @if(!auth()->user()->isSuperAdmin())
+                                @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
+                                    <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-sm btn-light border" title="Edit Purchase">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
                                     <button type="button" class="btn btn-sm btn-light border text-success" title="Set Payment Status" data-bs-toggle="modal" data-bs-target="#updatePaymentModal_{{ $purchase->id }}">
                                         <i class="bi bi-wallet2"></i>
                                     </button>
@@ -126,9 +145,15 @@
                                             <div class="modal-body">
                                                 <div class="mb-3 p-3 bg-light rounded-3">
                                                     <div class="d-flex justify-content-between mb-1">
-                                                        <span class="text-muted small">Invoice #:</span>
+                                                        <span class="text-muted small">Invoice No:</span>
                                                         <span class="fw-bold font-monospace">{{ $purchase->invoice_number }}</span>
                                                     </div>
+                                                    @if($purchase->project_name)
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span class="text-muted small">Project Name:</span>
+                                                        <span class="fw-semibold text-dark">{{ $purchase->project_name }}</span>
+                                                    </div>
+                                                    @endif
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span class="text-muted small">Supplier:</span>
                                                         <span class="fw-semibold">{{ $purchase->supplier->company_name ?? 'N/A' }}</span>
@@ -148,7 +173,7 @@
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label fw-semibold">Paid Amount (₹)</label>
-                                                    <input type="number" step="0.01" name="paid_amount" id="modal_paid_{{ $purchase->id }}" class="form-control" value="{{ number_format($purchase->paid_amount, 2, '.', '') }}" {{ $purchase->payment_status !== 'partial' ? 'readonly' : '' }}>
+                                                    <input type="number" name="paid_amount" id="modal_paid_{{ $purchase->id }}" class="form-control" value="{{ (float)$purchase->paid_amount == 0 ? 0 : (float)$purchase->paid_amount }}" {{ $purchase->payment_status !== 'partial' ? 'readonly' : '' }}>
                                                 </div>
                                             </div>
                                             <div class="modal-footer border-top">
@@ -189,7 +214,7 @@
             input.value = grandTotal.toFixed(2);
             input.readOnly = true;
         } else if (val === 'unpaid') {
-            input.value = '0.00';
+            input.value = '0';
             input.readOnly = true;
         } else {
             input.readOnly = false;

@@ -5,7 +5,12 @@
 @section('page_subtitle', 'Customer: ' . $sale->customer->company_name . ' | Date: ' . $sale->sale_date)
 
 @section('header_actions')
-    <a href="{{ route('sales.invoice', $sale) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium" target="_blank">
+    @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
+        <a href="{{ route('sales.edit', $sale) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-pencil me-1"></i> Edit Sale
+        </a>
+    @endif
+    <a href="{{ route('sales.invoice', $sale) }}" class="btn btn-outline-primary rounded-pill px-3 font-outfit fw-medium" target="_blank">
         <i class="bi bi-printer me-1"></i> Print Invoice
     </a>
     <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
@@ -20,15 +25,17 @@
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
                     <h4 class="fw-bold font-outfit text-dark mb-0">Delivery Invoice</h4>
-                    <span class="text-muted small font-monospace">Challan #: {{ $sale->invoice_number }}</span>
+                    <span class="text-muted small font-monospace">Challan No : {{ $sale->invoice_number }}</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     @if($sale->payment_status === 'paid')
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-4 py-2 fs-6">PAID</span>
+                        <span class="badge bg-success text-white rounded-pill px-4 py-2 fs-6">PAID</span>
                     @elseif($sale->payment_status === 'unpaid')
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-4 py-2 fs-6">UNPAID</span>
+                        <span class="badge bg-danger text-white rounded-pill px-4 py-2 fs-6">UNPAID</span>
+                    @elseif($sale->payment_status === 'partial')
+                        <span class="badge bg-primary text-white rounded-pill px-4 py-2 fs-6">PARTIAL</span>
                     @else
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-4 py-2 fs-6">PENDING</span>
+                        <span class="badge bg-warning text-dark rounded-pill px-4 py-2 fs-6">PENDING</span>
                     @endif
 
                     @if(!auth()->user()->isSuperAdmin())
@@ -41,8 +48,15 @@
 
             <div class="row g-3 mb-4">
                 <div class="col-6">
-                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">CUSTOMER</span>
-                    <div class="fw-bold text-dark mt-2 mb-1 fs-5">{{ $sale->customer->company_name ?? 'N/A' }}</div>
+                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">CUSTOMER DETAILS</span>
+                    <div class="d-flex align-items-center gap-3 mt-2 mb-2">
+                        <div class="rounded-circle dark-symbol-avatar dark-symbol-customer" style="width: 42px; height: 42px;">
+                            <i class="bi bi-person-circle fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark fs-5 mb-0">{{ $sale->customer->company_name ?? 'N/A' }}</div>
+                        </div>
+                    </div>
                     @if($sale->customer->address)
                         <div class="small text-muted mb-1"><i class="bi bi-geo-alt me-1 text-secondary"></i><strong>Address:</strong> {{ $sale->customer->address }}</div>
                     @endif
@@ -58,7 +72,7 @@
                 </div>
                 <div class="col-6 text-end">
                     <span class="text-muted small fw-semibold text-uppercase tracking-wider">DELIVERY DETAILS</span>
-                    <div class="small text-dark mt-2 mb-1">Sale Date: <strong>{{ $sale->sale_date }}</strong></div>
+                    <div class="small text-dark mt-2 mb-1">Challan Date: <strong>{{ $sale->sale_date }}</strong></div>
                     <div class="small text-dark mb-1">Challan No: <strong>#{{ $sale->invoice_number }}</strong></div>
                     @if($sale->project_name)
                         <div class="small text-dark mb-1">Project Name: <strong>{{ $sale->project_name }}</strong></div>
@@ -75,6 +89,7 @@
                 <table class="table table-bordered align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th class="text-center" style="width: 55px;">Symbol</th>
                             <th>Category</th>
                             <th>Product Item (Brand)</th>
                             <th>HSN Code</th>
@@ -96,15 +111,24 @@
                                 $totalWithTax = $item->subtotal + $lineTax;
                             @endphp
                             <tr>
+                                <td class="text-center">
+                                    <div class="rounded-circle dark-symbol-avatar dark-symbol-product mx-auto" style="width: 38px; height: 38px;">
+                                        @if(!empty($prod->image) && file_exists(public_path('storage/' . $prod->image)))
+                                            <img src="{{ asset('storage/' . $prod->image) }}" alt="{{ $prod->name }}" class="rounded-circle w-100 h-100 object-fit-cover">
+                                        @else
+                                            <i class="bi bi-box-seam fs-6"></i>
+                                        @endif
+                                    </div>
+                                </td>
                                 <td><span class="badge bg-light text-dark border">{{ $prod->category->name ?? 'N/A' }}</span></td>
                                 <td class="fw-semibold text-dark">{{ $prod->name ?? 'N/A' }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}</td>
-                                <td class="small font-monospace text-muted">{{ $prod->hsn_code ?? 'N/A' }}</td>
+                                <td class="small font-monospace text-dark">{{ $prod->hsn_code ?? 'N/A' }}</td>
                                 <td><span class="badge bg-secondary-subtle text-secondary border px-2">{{ $prod->unit ?? 'Pcs' }}</span></td>
                                 <td class="text-center fw-bold">{{ $item->quantity }}</td>
                                 <td class="text-end">₹{{ number_format($item->unit_price, 2) }}</td>
                                 <td class="text-end font-monospace">₹{{ number_format($item->subtotal, 2) }}</td>
                                 <td class="text-center">{{ number_format($taxPct, 2) }}%</td>
-                                <td class="text-end font-monospace text-muted">₹{{ number_format($lineTax, 2) }}</td>
+                                <td class="text-end font-monospace text-dark">₹{{ number_format($lineTax, 2) }}</td>
                                 <td class="text-end fw-bold text-dark font-monospace">₹{{ number_format($totalWithTax, 2) }}</td>
                             </tr>
                         @endforeach
@@ -116,7 +140,7 @@
                 <div class="col-md-6">
                     @if($sale->notes)
                         <div class="p-3 bg-light rounded-3 border">
-                            <span class="text-muted small fw-semibold d-block mb-1">ORDER NOTES</span>
+                            <span class="text-muted small fw-semibold d-block mb-1">SALESORDER NOTES</span>
                             <div class="small text-dark">{{ $sale->notes }}</div>
                         </div>
                     @endif
@@ -132,11 +156,11 @@
                             <span class="text-dark">+₹{{ number_format($sale->tax_amount, 2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Discount:</span>
+                            <span class="text-muted">Discount Amount:</span>
                             <span class="text-dark">-₹{{ number_format($sale->discount_amount, 2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Shipping Fee:</span>
+                            <span class="text-muted">Shipping Cost:</span>
                             <span class="text-dark">+₹{{ number_format($sale->shipping_cost, 2) }}</span>
                         </div>
                         <hr class="my-2">
@@ -191,7 +215,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Amount Received (₹)</label>
-                        <input type="number" step="0.01" name="paid_amount" id="modal_paid_show" class="form-control" value="{{ number_format($sale->paid_amount, 2, '.', '') }}" readonly>
+                        <input type="number" name="paid_amount" id="modal_paid_show" class="form-control" value="{{ (float)$sale->paid_amount == 0 ? 0 : (float)$sale->paid_amount }}" readonly>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
@@ -211,7 +235,7 @@
         if (selectEl.value === 'paid') {
             inputEl.value = parseFloat(grandTotal).toFixed(2);
         } else {
-            inputEl.value = '0.00';
+            inputEl.value = '0';
         }
     }
 </script>

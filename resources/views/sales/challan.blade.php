@@ -20,7 +20,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
                     <h4 class="fw-bold font-outfit text-dark mb-0">Delivery Challan</h4>
-                    <span class="text-muted small font-monospace">Challan #: {{ $sale->invoice_number }}</span>
+                    <span class="text-muted small font-monospace">Challan  No : {{ $sale->invoice_number }}</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     @if($sale->payment_status === 'paid')
@@ -35,7 +35,7 @@
 
             <div class="row g-3 mb-4">
                 <div class="col-6">
-                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">CUSTOMER</span>
+                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">CUSTOMER DETAILS</span>
                     <div class="fw-bold text-dark mt-2 mb-1 fs-5">{{ $sale->customer->company_name ?? 'N/A' }}</div>
                     @if($sale->customer->address)
                         <div class="small text-muted mb-1"><i class="bi bi-geo-alt me-1 text-secondary"></i><strong>Address:</strong> {{ $sale->customer->address }}</div>
@@ -52,7 +52,7 @@
                 </div>
                 <div class="col-6 text-end">
                     <span class="text-muted small fw-semibold text-uppercase tracking-wider">DELIVERY DETAILS</span>
-                    <div class="small text-dark mt-2 mb-1">Sale Date: <strong>{{ $sale->sale_date }}</strong></div>
+                    <div class="small text-dark mt-2 mb-1">Challan Date: <strong>{{ $sale->sale_date }}</strong></div>
                     <div class="small text-dark mb-1">Challan No: <strong>#{{ $sale->invoice_number }}</strong></div>
                     @if($sale->project_name)
                         <div class="small text-dark mb-1">Project Name: <strong>{{ $sale->project_name }}</strong></div>
@@ -84,7 +84,7 @@
                             <tr>
                                 <td><span class="badge bg-light text-dark border">{{ $prod->category->name ?? 'N/A' }}</span></td>
                                 <td class="fw-semibold text-dark">{{ $prod->name ?? 'N/A' }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}</td>
-                                <td class="small font-monospace text-muted">{{ $prod->hsn_code ?? 'N/A' }}</td>
+                                <td class="small font-monospace text-dark">{{ $prod->hsn_code ?? 'N/A' }}</td>
                                 <td><span class="badge bg-secondary-subtle text-secondary border px-2">{{ $prod->unit ?? 'Pcs' }}</span></td>
                                 <td class="text-center fw-bold">{{ $item->quantity }}</td>
                             </tr>
@@ -95,7 +95,7 @@
 
             @if($sale->notes)
                 <div class="p-3 bg-light rounded-3 border">
-                    <span class="text-muted small fw-semibold d-block mb-1">ORDER NOTES</span>
+                    <span class="text-muted small fw-semibold d-block mb-1">SALES ORDER NOTES</span>
                     <div class="small text-dark">{{ $sale->notes }}</div>
                 </div>
             @endif

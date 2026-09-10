@@ -50,6 +50,30 @@ class ReportController extends Controller
         ));
     }
 
+    private function parseDateInput(?string $dateStr): ?string
+    {
+        if (empty($dateStr)) {
+            return null;
+        }
+
+        $trimmed = trim($dateStr);
+        try {
+            if (preg_match('/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/', $trimmed)) {
+                $normalized = str_replace('/', '-', $trimmed);
+                return \Carbon\Carbon::createFromFormat('d-m-Y', $normalized)->format('Y-m-d');
+            }
+
+            if (preg_match('/^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/', $trimmed)) {
+                $normalized = str_replace('/', '-', $trimmed);
+                return \Carbon\Carbon::createFromFormat('Y-m-d', $normalized)->format('Y-m-d');
+            }
+
+            return \Carbon\Carbon::parse($trimmed)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     public function salesReport(Request $request)
     {
         $user = auth()->user();
@@ -62,10 +86,16 @@ class ReportController extends Controller
         }
 
         if ($request->filled('start_date')) {
-            $query->whereDate('sale_date', '>=', $request->start_date);
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('sale_date', '>=', $startDate);
+            }
         }
         if ($request->filled('end_date')) {
-            $query->whereDate('sale_date', '<=', $request->end_date);
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('sale_date', '<=', $endDate);
+            }
         }
         if ($request->filled('customer_id')) {
             $query->where('customer_id', $request->customer_id);
@@ -78,6 +108,7 @@ class ReportController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
                   ->orWhere('project_name', 'like', "%{$search}%")
+                  ->orWhere('vehicle_number', 'like', "%{$search}%")
                   ->orWhereHas('customer', function($cQ) use ($search) {
                       $cQ->where('company_name', 'like', "%{$search}%");
                   });
@@ -143,10 +174,16 @@ class ReportController extends Controller
         }
 
         if ($request->filled('start_date')) {
-            $query->whereDate('purchase_date', '>=', $request->start_date);
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('purchase_date', '>=', $startDate);
+            }
         }
         if ($request->filled('end_date')) {
-            $query->whereDate('purchase_date', '<=', $request->end_date);
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('purchase_date', '<=', $endDate);
+            }
         }
         if ($request->filled('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
@@ -306,12 +343,18 @@ class ReportController extends Controller
         }
 
         if ($request->filled('start_date')) {
-            $salesQuery->whereDate('sale_date', '>=', $request->start_date);
-            $purchasesQuery->whereDate('purchase_date', '>=', $request->start_date);
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $salesQuery->whereDate('sale_date', '>=', $startDate);
+                $purchasesQuery->whereDate('purchase_date', '>=', $startDate);
+            }
         }
         if ($request->filled('end_date')) {
-            $salesQuery->whereDate('sale_date', '<=', $request->end_date);
-            $purchasesQuery->whereDate('purchase_date', '<=', $request->end_date);
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $salesQuery->whereDate('sale_date', '<=', $endDate);
+                $purchasesQuery->whereDate('purchase_date', '<=', $endDate);
+            }
         }
 
         $salesCount       = (clone $salesQuery)->count();
@@ -381,10 +424,16 @@ class ReportController extends Controller
         }
 
         if ($request->filled('start_date')) {
-            $query->whereDate('return_date', '>=', $request->start_date);
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('return_date', '>=', $startDate);
+            }
         }
         if ($request->filled('end_date')) {
-            $query->whereDate('return_date', '<=', $request->end_date);
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('return_date', '<=', $endDate);
+            }
         }
         if ($request->filled('customer_id')) {
             $query->where('customer_id', $request->customer_id);

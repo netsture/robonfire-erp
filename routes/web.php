@@ -129,6 +129,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/returnable/create', [ReturnableMaterialController::class, 'create'])->name('returnable.create');
         Route::post('/returnable', [ReturnableMaterialController::class, 'store'])->name('returnable.store');
+        Route::get('/returnable/{returnable_material}/edit', [ReturnableMaterialController::class, 'edit'])->name('returnable.edit');
+        Route::put('/returnable/{returnable_material}', [ReturnableMaterialController::class, 'update'])->name('returnable.update');
+        Route::patch('/returnable/{returnable_material}', [ReturnableMaterialController::class, 'update']);
         Route::delete('/returnable/{returnable_material}', [ReturnableMaterialController::class, 'destroy'])->name('returnable.destroy');
     });
 

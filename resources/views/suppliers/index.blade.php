@@ -20,7 +20,7 @@
         <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-6' : 'col-md-9' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search company name, GST number, email..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search Company Name, GST Number, Email, Phone Number, Address..." value="{{ request('search') }}">
             </div>
         </div>
         @if(auth()->user()->isSuperAdmin())
@@ -50,9 +50,9 @@
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
-                    <th>Contact Info</th>
-                    <th>Warehouse / Office Address</th>
                     <th>GST Number</th>
+                    <th>Warehouse / Office Address</th>
+                    <th>Contact Info</th>
                     <th>Status</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
@@ -62,8 +62,8 @@
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-info bg-opacity-10 text-info fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="bi bi-truck"></i>
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-supplier" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-truck fs-5"></i>
                                 </div>
                                 <div>
                                     <a href="{{ route('suppliers.show', $supplier) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
@@ -77,6 +77,16 @@
                                 <span class="badge bg-light text-dark border">{{ $supplier->firm->name ?? 'N/A' }}</span>
                             </td>
                         @endif
+                        <td class="small font-monospace">
+                            {{ $supplier->gst_number ?? 'N/A' }}
+                        </td>
+                        <td class="small text-muted">
+                            @if($supplier->address)
+                                <div class="fw-medium text-dark"><i class="bi bi-geo-alt text-muted me-1"></i>{{ $supplier->address }}</div>
+                            @else
+                                N/A
+                            @endif
+                        </td>
                         <td>
                             @if($supplier->phone)
                                 <div class="small"><i class="bi bi-telephone text-muted me-1"></i>{{ $supplier->phone }}</div>
@@ -88,21 +98,11 @@
                                 <span class="text-muted small">N/A</span>
                             @endif
                         </td>
-                        <td class="small text-muted">
-                            @if($supplier->address)
-                                <div class="fw-medium text-dark"><i class="bi bi-geo-alt text-muted me-1"></i>{{ $supplier->address }}</div>
-                            @else
-                                N/A
-                            @endif
-                        </td>
-                        <td class="small font-monospace">
-                            {{ $supplier->gst_number ?? 'N/A' }}
-                        </td>
                         <td>
                             @if($supplier->status === 'active')
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1">Active</span>
                             @else
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">Inactive</span>
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
                             @endif
                         </td>
                         <td class="text-end pe-4">

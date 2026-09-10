@@ -8,11 +8,63 @@
     <style>
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 2.5rem; background: #fff; color: #1e293b; }
         .challan-card { max-width: 850px; margin: 0 auto; border: 1px solid #cbd5e1; padding: 2.5rem; border-radius: 0.75rem; }
-        .challan-header-bg { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #fff; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem; }
+        .challan-header-bg { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #fff; padding: 1.25rem 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem; }
+        .table td, .table th { padding: 0.45rem 0.5rem; font-size: 12px; }
+        
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm 10mm;
+            }
+            *, ::after, ::before {
+                box-sizing: border-box !important;
+            }
             .no-print { display: none !important; }
-            body { padding: 0; }
-            .challan-card { border: none; padding: 0; }
+            body { padding: 0 !important; margin: 0 !important; background: #fff !important; }
+            .challan-card {
+                border: 1px solid #cbd5e1 !important;
+                padding: 1.25rem !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0.5rem !important;
+            }
+            .row {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+            .challan-header-bg {
+                padding: 1rem !important;
+                margin-bottom: 1rem !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .table {
+                margin-bottom: 1rem !important;
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            .table-bordered,
+            .table-bordered th,
+            .table-bordered td {
+                border: 1px solid #cbd5e1 !important;
+            }
+            .table td, .table th {
+                padding: 0.3rem 0.45rem !important;
+                font-size: 11px !important;
+            }
+            tr {
+                page-break-inside: avoid !important;
+            }
+            thead {
+                display: table-header-group;
+            }
+            .row.justify-content-end, .mt-4, .mt-5 {
+                page-break-inside: avoid !important;
+            }
+            .bg-light, .badge, .table-light {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
@@ -30,13 +82,13 @@
             </div>
             <div class="text-end">
                 <h4 class="fw-bold mb-0 text-uppercase">Return Challan</h4>
-                <span class="font-monospace opacity-75">Challan #: {{ $returnableMaterial->return_number }}</span>
+                <span class="font-monospace opacity-75">Challan No : {{ $returnableMaterial->return_number }}</span>
             </div>
         </div>
 
         <div class="row mb-4">
             <div class="col-6">
-                <span class="text-muted small fw-bold text-uppercase tracking-wider">CUSTOMER</span>
+                <span class="text-muted small fw-bold text-uppercase tracking-wider">CUSTOMER DETAILS</span>
                 <h5 class="fw-bold text-dark mt-2 mb-1">{{ $returnableMaterial->customer->company_name ?? 'N/A' }}</h5>
                 @if($returnableMaterial->customer && $returnableMaterial->customer->address)
                     <div class="small text-muted mb-1"><strong>Address:</strong> {{ $returnableMaterial->customer->address }}</div>
@@ -84,7 +136,7 @@
                     <tr>
                         <td>{{ $prod->category->name ?? 'N/A' }}</td>
                         <td class="fw-semibold">{{ $prod->name ?? 'Product' }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}</td>
-                        <td class="font-monospace small text-muted">{{ $prod->hsn_code ?? 'N/A' }}</td>
+                        <td class="font-monospace small text-dark">{{ $prod->hsn_code ?? 'N/A' }}</td>
                         <td>{{ $prod->unit ?? 'Pcs' }}</td>
                         <td class="text-center fw-bold">{{ $item->quantity }}</td>
                     </tr>

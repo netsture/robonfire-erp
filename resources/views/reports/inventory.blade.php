@@ -26,47 +26,65 @@
 <!-- KPI Metric Cards -->
 <div class="row g-3 mb-4">
     <div class="col-12 col-sm-6 col-xl-2">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Total Products</span>
-            <h3 class="fw-bold font-outfit text-dark mt-2 mb-0">{{ number_format($totalProducts) }}</h3>
+        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #6f42c1 0%, #4c1d95 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Products</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">{{ number_format($totalProducts) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Total Units</span>
-            <h3 class="fw-bold font-outfit text-primary mt-2 mb-0">{{ number_format($totalUnitsInStock) }}</h3>
+        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Units</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">{{ number_format($totalUnitsInStock) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <div class="card card-custom border-0 p-3 bg-dark text-white">
-            <span class="text-white-50 small fw-semibold text-uppercase">Stock Cost Value</span>
-            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalCostValue, 2) }}</h3>
+            <span class="text-white small fw-semibold text-uppercase" style="color: #ffffff !important;">Stock Cost Value</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalCostValue, 2) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <div class="card card-custom border-0 p-3 bg-primary text-white">
-            <span class="text-white-50 small fw-semibold text-uppercase">Retail Valuation</span>
-            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalRetailValue, 2) }}</h3>
+            <span class="text-white small fw-semibold text-uppercase" style="color: #ffffff !important;">Retail Valuation</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalRetailValue, 2) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <div class="card card-custom border-0 p-3 bg-success text-white">
-            <span class="text-white-50 small fw-semibold text-uppercase">Potential Profit</span>
-            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($potentialProfit, 2) }}</h3>
+            <span class="text-white small fw-semibold text-uppercase" style="color: #ffffff !important;">Potential Profit</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($potentialProfit, 2) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Stock Alerts</span>
+        @php
+            if ($outOfStockCount > 0) {
+                $alertCardClass = 'bg-danger text-white';
+                $alertTextClass = 'text-white';
+                $badgeOutClass = 'bg-white text-danger';
+                $badgeLowClass = 'bg-warning text-dark';
+            } elseif ($lowStockCount > 0) {
+                $alertCardClass = 'bg-warning text-dark';
+                $alertTextClass = 'text-dark';
+                $badgeOutClass = 'bg-danger text-white';
+                $badgeLowClass = 'bg-dark text-white';
+            } else {
+                $alertCardClass = 'bg-success text-white';
+                $alertTextClass = 'text-white';
+                $badgeOutClass = 'bg-white text-danger';
+                $badgeLowClass = 'bg-white text-warning';
+            }
+        @endphp
+        <div class="card card-custom border-0 p-3 {{ $alertCardClass }}">
+            <span class="small fw-semibold text-uppercase {{ $alertTextClass }}" style="{{ $alertCardClass !== 'bg-warning text-dark' ? 'color: #ffffff !important;' : '' }}">Stock Alerts</span>
             <div class="mt-2">
                 @if($outOfStockCount > 0)
-                    <span class="badge bg-danger rounded-pill px-2 py-1 me-1" title="Out of Stock">{{ $outOfStockCount }} Out</span>
+                    <span class="badge {{ $badgeOutClass }} rounded-pill px-2.5 py-1 me-1 fw-bold" title="Out of Stock">{{ $outOfStockCount }} Out</span>
                 @endif
                 @if($lowStockCount > 0)
-                    <span class="badge bg-warning text-dark rounded-pill px-2 py-1" title="Low Stock">{{ $lowStockCount }} Low</span>
+                    <span class="badge {{ $badgeLowClass }} rounded-pill px-2.5 py-1 fw-bold" title="Low Stock">{{ $lowStockCount }} Low</span>
                 @endif
                 @if($outOfStockCount == 0 && $lowStockCount == 0)
-                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">Healthy</span>
+                    <span class="badge bg-white text-success rounded-pill px-2.5 py-1 fw-bold"><i class="bi bi-shield-check me-1"></i>Healthy</span>
                 @endif
             </div>
         </div>
@@ -89,7 +107,7 @@
         @endif
 
         <div class="col-12 col-md-3">
-            <label class="form-label small fw-semibold text-muted mb-1">Search Product / HSN</label>
+            <label class="form-label small fw-semibold text-muted mb-1">Search Product Name / HSN Code</label>
             <div class="input-group input-group-sm">
                 <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
                 <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}">
@@ -173,16 +191,22 @@
                                 HSN: {{ $product->hsn_code ?? 'N/A' }}
                             </div>
                         </td>
-                        <td><span class="badge bg-light text-dark border">{{ $product->category->name ?? 'N/A' }}</span></td>
-                        <td><span class="badge bg-secondary-subtle text-secondary border">{{ $product->brand->name ?? 'N/A' }}</span></td>
-                        <td><span class="badge bg-light text-secondary border px-2">{{ $product->unit ?? 'Pcs' }}</span></td>
+                        <td><span class="badge bg-primary text-white rounded-pill px-3 py-1 fw-semibold"><i class="bi bi-tag-fill me-1"></i>{{ $product->category->name ?? 'N/A' }}</span></td>
+                        <td>
+                            @if($product->brand)
+                                <span class="badge text-white rounded-pill px-2.5 py-1 small" style="background-color: #6f42c1;"><i class="bi bi-award-fill me-1"></i>{{ $product->brand->name }}</span>
+                            @else
+                                <span class="text-muted small">N/A</span>
+                            @endif
+                        </td>
+                        <td><span class="badge bg-info text-white rounded-pill px-3 py-1 fw-semibold"><i class="bi bi-rulers me-1"></i>{{ $product->unit ?? 'Pcs' }}</span></td>
                         <td class="text-center">
                             @if($product->stock_quantity <= 0)
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 rounded-pill">0 {{ $product->unit }} (OUT)</span>
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-bold"><i class="bi bi-x-circle-fill me-1"></i>0 {{ $product->unit }} (OUT)</span>
                             @elseif($product->stock_quantity <= $product->alert_quantity)
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1 rounded-pill">{{ $product->stock_quantity }} {{ $product->unit }} (LOW)</span>
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $product->stock_quantity }} {{ $product->unit }} (LOW)</span>
                             @else
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 rounded-pill">{{ $product->stock_quantity }} {{ $product->unit }}</span>
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1 fw-bold"><i class="bi bi-check-circle-fill me-1"></i>{{ $product->stock_quantity }} {{ $product->unit }}</span>
                             @endif
                         </td>
                         <td class="text-end font-monospace">₹{{ number_format($product->cost_price, 2) }}</td>

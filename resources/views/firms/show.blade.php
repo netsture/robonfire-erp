@@ -20,15 +20,15 @@
     <div class="col-12 col-md-4">
         <div class="card card-custom border-0 p-4 h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                <div class="rounded-circle dark-symbol-avatar dark-symbol-firm" style="width: 56px; height: 56px;">
                     <i class="bi bi-building fs-2"></i>
                 </div>
                 <div>
                     <h5 class="fw-bold font-outfit text-dark mb-1">{{ $firm->name }}</h5>
                     @if($firm->status === 'active')
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active Firm</span>
+                        <span class="badge bg-success text-white rounded-pill px-3 py-1">Active Firm</span>
                     @else
-                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">Inactive</span>
+                        <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
                     @endif
                 </div>
             </div>
@@ -60,10 +60,27 @@
                     </thead>
                     <tbody>
                         @forelse($firm->users as $u)
+                            @php
+                                $rStr = strtolower(trim($u->role ?? 'user'));
+                            @endphp
                             <tr>
                                 <td class="fw-semibold text-dark">{{ $u->name }}</td>
                                 <td class="small text-muted">{{ $u->email }}</td>
-                                <td><span class="badge bg-light text-dark border">{{ ucfirst($u->role) }}</span></td>
+                                <td>
+                                    @if(in_array($rStr, ['superadmin', 'super admin', 'super-admin']))
+                                        <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-semibold">Superadmin</span>
+                                    @elseif(in_array($rStr, ['admin', 'administrator']))
+                                        <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #4f46e5;">Admin</span>
+                                    @elseif(in_array($rStr, ['manager', 'supervisor']))
+                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-semibold">Manager</span>
+                                    @elseif(in_array($rStr, ['sales', 'staff', 'biller']))
+                                        <span class="badge bg-info text-white rounded-pill px-3 py-1 fw-semibold">Sales</span>
+                                    @elseif(in_array($rStr, ['user', 'standard user', 'customer']))
+                                        <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">User</span>
+                                    @else
+                                        <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #6f42c1;">{{ ucfirst($u->role ?? 'User') }}</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if($u->status === 'active')
                                         <span class="badge bg-success-subtle text-success">Active</span>

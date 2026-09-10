@@ -26,39 +26,39 @@
 <!-- KPI Metric Cards -->
 <div class="row g-3 mb-4">
     <div class="col-12 col-sm-6 col-xl-2">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Total Orders</span>
-            <h3 class="fw-bold font-outfit text-dark mt-2 mb-0">{{ number_format($totalOrdersCount) }}</h3>
+        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Orders</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">{{ number_format($totalOrdersCount) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Gross Cost (Subtotal)</span>
-            <h3 class="fw-bold font-outfit text-dark mt-2 mb-0">₹{{ number_format($totalSubtotal, 2) }}</h3>
+        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Gross Cost (Subtotal)</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalSubtotal, 2) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Tax Paid</span>
-            <h3 class="fw-bold font-outfit text-info mt-2 mb-0">+₹{{ number_format($totalTaxAmount, 2) }}</h3>
+        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Tax Paid</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">+₹{{ number_format($totalTaxAmount, 2) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <div class="card card-custom border-0 p-3 bg-dark text-white">
-            <span class="text-white-50 small fw-semibold text-uppercase">Grand Total Expense</span>
-            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalGrandTotal, 2) }}</h3>
+            <span class="text-white small fw-semibold text-uppercase" style="color: #ffffff !important;">Grand Total Expense</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalGrandTotal, 2) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <div class="card card-custom border-0 p-3 bg-success text-white">
-            <span class="text-white-50 small fw-semibold text-uppercase">Paid to Vendors</span>
-            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalPaidAmount, 2) }}</h3>
+            <span class="text-white small fw-semibold text-uppercase" style="color: #ffffff !important;">Paid to Vendors</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalPaidAmount, 2) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <div class="card card-custom border-0 p-3 bg-danger text-white">
-            <span class="text-white-50 small fw-semibold text-uppercase">Vendor Payables</span>
-            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalPendingAmount, 2) }}</h3>
+            <span class="text-white small fw-semibold text-uppercase" style="color: #ffffff !important;">Vendor Payables</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalPendingAmount, 2) }}</h3>
         </div>
     </div>
 </div>
@@ -79,25 +79,31 @@
         @endif
 
         <div class="col-12 col-md-2">
-            <label class="form-label small fw-semibold text-muted mb-1">Search Invoice / Supplier</label>
+            <label class="form-label small fw-semibold text-muted mb-1">Search Invoice No / Project / Supplier</label>
             <div class="input-group input-group-sm">
                 <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-                <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control" placeholder="Search invoice, project, supplier..." value="{{ request('search') }}">
             </div>
         </div>
 
         <div class="col-12 col-md-2">
-            <label class="form-label small fw-semibold text-muted mb-1">Start Date</label>
-            <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}">
+            <label class="form-label small fw-semibold text-muted mb-1">Start Date (dd-mm-yyyy)</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="bi bi-calendar3"></i></span>
+                <input type="text" name="start_date" class="form-control form-control-sm datepicker-ddmmyyyy" placeholder="dd-mm-yyyy" value="{{ request('start_date') ? (\Carbon\Carbon::canBeCreatedFromFormat(request('start_date'), 'd-m-Y') ? request('start_date') : \Carbon\Carbon::parse(request('start_date'))->format('d-m-Y')) : '' }}" autocomplete="off">
+            </div>
         </div>
 
         <div class="col-12 col-md-2">
-            <label class="form-label small fw-semibold text-muted mb-1">End Date</label>
-            <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}">
+            <label class="form-label small fw-semibold text-muted mb-1">End Date (dd-mm-yyyy)</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="bi bi-calendar3"></i></span>
+                <input type="text" name="end_date" class="form-control form-control-sm datepicker-ddmmyyyy" placeholder="dd-mm-yyyy" value="{{ request('end_date') ? (\Carbon\Carbon::canBeCreatedFromFormat(request('end_date'), 'd-m-Y') ? request('end_date') : \Carbon\Carbon::parse(request('end_date'))->format('d-m-Y')) : '' }}" autocomplete="off">
+            </div>
         </div>
 
         <div class="col-12 col-md-2">
-            <label class="form-label small fw-semibold text-muted mb-1">Supplier</label>
+            <label class="form-label small fw-semibold text-muted mb-1">Search Supplier Name</label>
             <select name="supplier_id" class="form-select form-select-sm">
                 <option value="">All Suppliers</option>
                 @foreach($suppliers as $s)
@@ -129,17 +135,19 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
+                    <th class="ps-4">#</th>
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
-                    <th class="ps-4">Invoice #</th>
-                    <th>Date</th>
-                    <th>Supplier / Vendor</th>
+                    <th>Invoice No</th>
+                    <th>Purchase Date</th>
+                    <th>Supplier Name</th>
                     <th>Project Name</th>
                     <th>Status</th>
                     <th class="text-end">Subtotal (₹)</th>
                     <th class="text-end">Tax (₹)</th>
                     <th class="text-end">Discount (₹)</th>
+                    <th class="text-end">Shipping Cost (₹)</th>
                     <th class="text-end">Grand Total (₹)</th>
                     <th class="text-end">Amount Paid (₹)</th>
                     <th class="text-end">Balance Payable (₹)</th>
@@ -147,30 +155,40 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($purchases as $purchase)
+                @forelse($purchases as $idx => $purchase)
                     @php
                         $balanceDue = $purchase->grand_total - $purchase->paid_amount;
                     @endphp
                     <tr>
+                        <td class="ps-4 text-muted small">{{ ($purchases->currentPage() - 1) * $purchases->perPage() + $idx + 1 }}</td>
                         @if(auth()->user()->isSuperAdmin())
                             <td><span class="badge bg-dark-subtle text-dark border">{{ $purchase->firm->name ?? 'N/A' }}</span></td>
                         @endif
-                        <td class="ps-4 fw-bold font-monospace text-primary">#{{ $purchase->invoice_number }}</td>
-                        <td class="small text-muted">{{ $purchase->purchase_date }}</td>
+                        <td class="fw-bold font-monospace text-primary">#{{ $purchase->invoice_number }}</td>
+                        <td class="small text-muted font-monospace">{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d-m-Y') }}</td>
                         <td class="fw-semibold text-dark">{{ $purchase->supplier->company_name ?? 'N/A' }}</td>
-                        <td><span class="badge bg-light text-dark border">{{ $purchase->project_name ?? 'N/A' }}</span></td>
+                        <td>
+                            @if($purchase->project_name)
+                                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #4f46e5;"><i class="bi bi-folder-check me-1"></i>{{ $purchase->project_name }}</span>
+                            @else
+                                <span class="text-muted small">N/A</span>
+                            @endif
+                        </td>
                         <td>
                             @if($purchase->payment_status === 'paid')
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">PAID</span>
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1">PAID</span>
                             @elseif($purchase->payment_status === 'unpaid')
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">UNPAID</span>
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1">UNPAID</span>
+                            @elseif($purchase->payment_status === 'partial')
+                                <span class="badge bg-primary text-white rounded-pill px-3 py-1">PARTIAL</span>
                             @else
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1">PENDING</span>
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1">PENDING</span>
                             @endif
                         </td>
                         <td class="text-end font-monospace">₹{{ number_format($purchase->subtotal, 2) }}</td>
                         <td class="text-end font-monospace text-muted">+₹{{ number_format($purchase->tax_amount, 2) }}</td>
                         <td class="text-end font-monospace text-muted">-₹{{ number_format($purchase->discount_amount, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">+₹{{ number_format($purchase->shipping_cost ?? 0, 2) }}</td>
                         <td class="text-end font-monospace fw-bold text-dark">₹{{ number_format($purchase->grand_total, 2) }}</td>
                         <td class="text-end font-monospace fw-semibold text-success">₹{{ number_format($purchase->paid_amount, 2) }}</td>
                         <td class="text-end font-monospace fw-semibold {{ $balanceDue > 0 ? 'text-danger' : 'text-muted' }}">
@@ -178,7 +196,7 @@
                         </td>
                         <td class="text-center pe-4 no-print">
                             <div class="btn-group">
-                                <a href="{{ route('purchases.show', $purchase) }}" class="btn btn-sm btn-light border" title="View Details">
+                                <a href="{{ route('purchases.show', $purchase) }}" class="btn btn-sm btn-light border" target="_blank" title="View Details">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 <a href="{{ route('purchases.print', $purchase) }}" class="btn btn-sm btn-light border text-primary" target="_blank" title="Print Receipt">
@@ -189,7 +207,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 13 : 12 }}" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 15 : 14 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-cart-x fs-1 d-block mb-2 text-secondary"></i>
                             No purchase records match the selected filter criteria.
                         </td>
@@ -199,10 +217,11 @@
             @if(count($purchases) > 0)
                 <tfoot class="table-light border-top">
                     <tr class="fw-bold">
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 6 : 5 }}" class="ps-4 text-end">TOTALS:</td>
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 7 : 6 }}" class="ps-4 text-end">TOTALS:</td>
                         <td class="text-end font-monospace">₹{{ number_format($totalSubtotal, 2) }}</td>
                         <td class="text-end font-monospace text-muted">+₹{{ number_format($totalTaxAmount, 2) }}</td>
                         <td class="text-end font-monospace text-muted">-₹{{ number_format($totalDiscountAmount, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">+₹{{ number_format($totalShippingCost, 2) }}</td>
                         <td class="text-end font-monospace text-dark fs-6">₹{{ number_format($totalGrandTotal, 2) }}</td>
                         <td class="text-end font-monospace text-success fs-6">₹{{ number_format($totalPaidAmount, 2) }}</td>
                         <td class="text-end font-monospace text-danger fs-6">₹{{ number_format($totalPendingAmount, 2) }}</td>

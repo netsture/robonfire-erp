@@ -36,7 +36,10 @@ class UserController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhereHas('firm', function ($fq) use ($search) {
+                      $fq->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -59,6 +62,10 @@ class UserController extends Controller
     public function create()
     {
         $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
+
         $rolesQuery = Role::query();
         if (!$authUser->isSuperAdmin()) {
             $rolesQuery->where('slug', 'user');
@@ -71,6 +78,9 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
 
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
@@ -108,6 +118,10 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
+
         if (!$authUser->isSuperAdmin()) {
             if ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id) {
                 abort(403, 'Unauthorized access to user profile.');
@@ -126,6 +140,10 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
+
         if (!$authUser->isSuperAdmin()) {
             if ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id) {
                 abort(403, 'Unauthorized access to user profile.');
@@ -171,6 +189,9 @@ class UserController extends Controller
     public function toggleStatus(User $user)
     {
         $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
         if (!$authUser->isSuperAdmin() && ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id)) {
             abort(403, 'Unauthorized action.');
         }
@@ -188,6 +209,9 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
         if (!$authUser->isSuperAdmin() && ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id)) {
             abort(403, 'Unauthorized action.');
         }

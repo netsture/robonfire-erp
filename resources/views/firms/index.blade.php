@@ -48,7 +48,7 @@
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-firm" style="width: 42px; height: 42px;">
                                     <i class="bi bi-building fs-5"></i>
                                 </div>
                                 <div>
@@ -74,9 +74,9 @@
                         </td>
                         <td>
                             @if($firm->status === 'active')
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1">Active</span>
                             @else
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">Inactive</span>
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
                             @endif
                         </td>
                         <td class="text-end pe-4">

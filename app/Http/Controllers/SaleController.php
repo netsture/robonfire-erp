@@ -24,14 +24,28 @@ class SaleController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
                   ->orWhere('project_name', 'like', "%{$search}%")
                   ->orWhere('vehicle_number', 'like', "%{$search}%")
+                  ->orWhere('sale_date', 'like', "%{$search}%")
+                  ->orWhereRaw("DATE_FORMAT(sale_date, '%m-%d-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(sale_date, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(sale_date, '%m/%d/%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(sale_date, '%d/%m/%Y') LIKE ?", ["%{$search}%"])
                   ->orWhereHas('customer', function ($cq) use ($search) {
-                      $cq->where('company_name', 'like', "%{$search}%");
+                      $cq->where('company_name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                   });
+
+                if (preg_match('/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/', $search, $matches)) {
+                    $month = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+                    $day   = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
+                    $year  = $matches[3];
+                    $dateFormatted = "{$year}-{$month}-{$day}";
+                    $q->orWhere('sale_date', 'like', "%{$dateFormatted}%");
+                }
             });
         }
 
@@ -61,7 +75,7 @@ class SaleController extends Controller
         $categories = $categoriesQuery->get();
 
         $firmSeq = Sale::where('firm_id', $firmId)->count() + 1;
-        $autoInvoice = 'INV-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
+        $autoInvoice = 'CHN-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
 
         return view('sales.create', compact('customers', 'products', 'categories', 'autoInvoice'));
     }
@@ -136,9 +150,9 @@ class SaleController extends Controller
             }
 
             $discount = $validated['discount_amount'] ?? 0;
-            $tax = $validated['tax_amount'] ?? $totalTax;
+            $tax = $totalTax;
             $shipping = $validated['shipping_cost'] ?? 0;
-            $grandTotal = $subtotal - $discount + $tax + $shipping;
+            $grandTotal = $subtotal + $tax - $discount + $shipping;
 
             $statusInput = $validated['payment_status'] ?? 'pending';
             if ($statusInput === 'paid') {
@@ -208,6 +222,125 @@ class SaleController extends Controller
         });
 
         return back()->with('success', 'Payment status updated successfully.');
+    }
+
+    public function edit(Sale $sale)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin() || $user->isSuperAdmin() || ($sale->firm_id !== $user->firm_id && !$user->isSuperAdmin())) {
+            abort(403, 'Unauthorized access to edit sales order.');
+        }
+
+        $firmId = $sale->firm_id;
+        $customers = Customer::where('status', 'active')->where('firm_id', $firmId)->get();
+        $products = Product::with(['category', 'brand'])->where('status', 'active')->where('firm_id', $firmId)->get();
+        $categories = Category::where('firm_id', $firmId)->get();
+        $sale->load('items.product');
+
+        return view('sales.edit', compact('sale', 'customers', 'products', 'categories', 'firmId'));
+    }
+
+    public function update(Request $request, Sale $sale)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin() || $user->isSuperAdmin() || ($sale->firm_id !== $user->firm_id && !$user->isSuperAdmin())) {
+            abort(403, 'Unauthorized access to update sales order.');
+        }
+
+        $validated = $request->validate([
+            'customer_id'            => ['required', 'exists:customers,id'],
+            'invoice_number'         => ['required', 'string'],
+            'project_name'           => ['required', 'string'],
+            'vehicle_number'         => ['nullable', 'string'],
+            'sale_date'              => ['required', 'date'],
+            'products'               => ['required', 'array', 'min:1'],
+            'products.*.id'          => ['required', 'exists:products,id'],
+            'products.*.qty'         => ['required', 'integer', 'min:1'],
+            'products.*.price'       => ['required', 'numeric', 'min:0'],
+            'products.*.tax_percent' => ['nullable', 'numeric', 'min:0'],
+            'discount_amount'        => ['nullable', 'numeric', 'min:0'],
+            'shipping_cost'          => ['nullable', 'numeric', 'min:0'],
+            'payment_status'         => ['nullable', 'in:pending,paid,unpaid,due,partial'],
+            'paid_amount'            => ['required', 'numeric', 'min:0'],
+            'notes'                  => ['nullable', 'string'],
+        ]);
+
+        $firmId = $sale->firm_id;
+
+        $existsInv = Sale::where('firm_id', $firmId)->where('invoice_number', $validated['invoice_number'])->where('id', '!=', $sale->id)->exists();
+        if ($existsInv) {
+            return back()->withErrors(['invoice_number' => 'Invoice number already exists for this firm.'])->withInput();
+        }
+
+        DB::transaction(function () use ($validated, $sale) {
+            // Revert old inventory stock deductions
+            foreach ($sale->items as $oldItem) {
+                Product::where('id', $oldItem->product_id)->increment('stock_quantity', $oldItem->quantity);
+            }
+            $sale->items()->delete();
+
+            $subtotal = 0;
+            $totalTax = 0;
+            $itemsData = [];
+
+            foreach ($validated['products'] as $item) {
+                $itemSubtotal = $item['qty'] * $item['price'];
+                $taxPercent = $item['tax_percent'] ?? 0;
+                $itemTax = ($itemSubtotal * $taxPercent) / 100;
+
+                $subtotal += $itemSubtotal;
+                $totalTax += $itemTax;
+
+                $itemsData[] = [
+                    'product_id' => $item['id'],
+                    'unit_price' => $item['price'],
+                    'quantity'   => $item['qty'],
+                    'subtotal'   => $itemSubtotal,
+                ];
+            }
+
+            $discount = $validated['discount_amount'] ?? 0;
+            $shipping = $validated['shipping_cost'] ?? 0;
+            $grandTotal = $subtotal + $totalTax - $discount + $shipping;
+
+            $statusInput = $validated['payment_status'] ?? 'pending';
+            if ($statusInput === 'paid') {
+                $paid = $grandTotal;
+                $paymentStatus = 'paid';
+            } elseif ($statusInput === 'unpaid') {
+                $paid = 0.00;
+                $paymentStatus = 'unpaid';
+            } else {
+                $paid = (float)$validated['paid_amount'];
+                $paymentStatus = $statusInput;
+            }
+
+            $sale->update([
+                'invoice_number'  => $validated['invoice_number'],
+                'project_name'    => $validated['project_name'] ?? null,
+                'vehicle_number'  => $validated['vehicle_number'] ?? null,
+                'customer_id'     => $validated['customer_id'],
+                'sale_date'       => $validated['sale_date'],
+                'subtotal'        => $subtotal,
+                'tax_amount'      => $totalTax,
+                'discount_amount' => $discount,
+                'shipping_cost'   => $shipping,
+                'grand_total'     => $grandTotal,
+                'paid_amount'     => $paid,
+                'payment_status'  => $paymentStatus,
+                'notes'           => $validated['notes'] ?? null,
+            ]);
+
+            foreach ($itemsData as $iData) {
+                $sale->items()->create($iData);
+
+                // Deduct stock for new items
+                $product = Product::find($iData['product_id']);
+                $product->decrement('stock_quantity', $iData['quantity']);
+            }
+        });
+
+        return redirect()->route('sales.index')->with('success', 'Sales order updated successfully & inventory recalculated!');
     }
 
     public function show(Sale $sale)

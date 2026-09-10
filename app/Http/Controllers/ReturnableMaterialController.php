@@ -24,14 +24,28 @@ class ReturnableMaterialController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('return_number', 'like', "%{$search}%")
                   ->orWhere('project_name', 'like', "%{$search}%")
                   ->orWhere('return_reason', 'like', "%{$search}%")
+                  ->orWhere('return_date', 'like', "%{$search}%")
+                  ->orWhereRaw("DATE_FORMAT(return_date, '%m-%d-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(return_date, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(return_date, '%m/%d/%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(return_date, '%d/%m/%Y') LIKE ?", ["%{$search}%"])
                   ->orWhereHas('customer', function ($cq) use ($search) {
-                      $cq->where('company_name', 'like', "%{$search}%");
+                      $cq->where('company_name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                   });
+
+                if (preg_match('/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/', $search, $matches)) {
+                    $month = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+                    $day   = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
+                    $year  = $matches[3];
+                    $dateFormatted = "{$year}-{$month}-{$day}";
+                    $q->orWhere('return_date', 'like', "%{$dateFormatted}%");
+                }
             });
         }
 
@@ -142,6 +156,109 @@ class ReturnableMaterialController extends Controller
         });
 
         return redirect()->route('returnable.index')->with('success', 'Returnable Entry #' . $returnableMaterial->return_number . ' created & inventory stock updated!');
+    }
+
+    public function edit(ReturnableMaterial $returnableMaterial)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin() || $user->isSuperAdmin() || ($returnableMaterial->firm_id !== $user->firm_id && !$user->isSuperAdmin())) {
+            abort(403, 'Unauthorized access to edit returnable material entry.');
+        }
+
+        $firmId = $returnableMaterial->firm_id;
+        $customers = Customer::where('status', 'active')->where('firm_id', $firmId)->get();
+        $products = Product::with(['category', 'brand'])->where('status', 'active')->where('firm_id', $firmId)->get();
+        $categories = Category::where('firm_id', $firmId)->get();
+        $returnableMaterial->load('items.product');
+
+        return view('returnable.edit', compact('returnableMaterial', 'customers', 'products', 'categories', 'firmId'));
+    }
+
+    public function update(Request $request, ReturnableMaterial $returnableMaterial)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin() || $user->isSuperAdmin() || ($returnableMaterial->firm_id !== $user->firm_id && !$user->isSuperAdmin())) {
+            abort(403, 'Unauthorized access to update returnable material entry.');
+        }
+
+        $validated = $request->validate([
+            'customer_id'           => ['required', 'exists:customers,id'],
+            'return_number'         => ['required', 'string'],
+            'project_name'          => ['required', 'string'],
+            'return_reason'         => ['required', 'string'],
+            'return_date'           => ['required', 'date'],
+            'products'              => ['required', 'array', 'min:1'],
+            'products.*.id'         => ['required', 'exists:products,id'],
+            'products.*.qty'        => ['required', 'integer', 'min:1'],
+            'products.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'discount_amount'       => ['nullable', 'numeric', 'min:0'],
+            'tax_amount'            => ['nullable', 'numeric', 'min:0'],
+            'shipping_cost'         => ['nullable', 'numeric', 'min:0'],
+            'notes'                 => ['nullable', 'string'],
+        ]);
+
+        $firmId = $returnableMaterial->firm_id;
+
+        $existsNum = ReturnableMaterial::where('firm_id', $firmId)->where('return_number', $validated['return_number'])->where('id', '!=', $returnableMaterial->id)->exists();
+        if ($existsNum) {
+            return back()->withErrors(['return_number' => 'Return Slip # already exists for this firm.'])->withInput();
+        }
+
+        DB::transaction(function () use ($validated, $returnableMaterial) {
+            // Revert old inventory stock additions
+            foreach ($returnableMaterial->items as $oldItem) {
+                Product::where('id', $oldItem->product_id)->decrement('stock_quantity', $oldItem->quantity);
+            }
+            $returnableMaterial->items()->delete();
+
+            $subtotal = 0;
+            $totalTax = 0;
+            $itemsData = [];
+
+            foreach ($validated['products'] as $item) {
+                $product = Product::find($item['id']);
+                $itemSubtotal = $item['qty'] * $item['unit_price'];
+                $itemTax = $itemSubtotal * (($product->tax_percent ?? 0) / 100);
+
+                $subtotal += $itemSubtotal;
+                $totalTax += $itemTax;
+
+                $itemsData[] = [
+                    'product_id' => $item['id'],
+                    'unit_price' => $item['unit_price'],
+                    'quantity'   => $item['qty'],
+                    'subtotal'   => $itemSubtotal,
+                ];
+            }
+
+            $discount = $validated['discount_amount'] ?? 0;
+            $tax = $validated['tax_amount'] ?? $totalTax;
+            $shipping = $validated['shipping_cost'] ?? 0;
+            $grandTotal = max(0, $subtotal - $discount + $tax + $shipping);
+
+            $returnableMaterial->update([
+                'return_number'   => $validated['return_number'],
+                'project_name'    => $validated['project_name'],
+                'return_reason'   => $validated['return_reason'],
+                'customer_id'     => $validated['customer_id'],
+                'return_date'     => $validated['return_date'],
+                'subtotal'        => $subtotal,
+                'tax_amount'      => $tax,
+                'discount_amount' => $discount,
+                'shipping_cost'   => $shipping,
+                'grand_total'     => $grandTotal,
+                'notes'           => $validated['notes'] ?? null,
+            ]);
+
+            foreach ($itemsData as $iData) {
+                $returnableMaterial->items()->create($iData);
+
+                // Re-increment stock for updated items
+                Product::where('id', $iData['product_id'])->increment('stock_quantity', $iData['quantity']);
+            }
+        });
+
+        return redirect()->route('returnable.index')->with('success', 'Returnable entry updated successfully & stock updated!');
     }
 
     public function show(ReturnableMaterial $returnableMaterial)

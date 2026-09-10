@@ -20,16 +20,16 @@
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
                     <h4 class="fw-bold font-outfit text-dark mb-0">Return Challan</h4>
-                    <span class="text-muted small font-monospace">Challan #: {{ $returnableMaterial->return_number }}</span>
+                    <span class="text-muted small font-monospace">Challan No : {{ $returnableMaterial->return_number }}</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-4 py-2 fs-6">RETURNED</span>
+                    <span class="badge bg-success text-white rounded-pill px-4 py-2 fs-6">RETURNED</span>
                 </div>
             </div>
 
             <div class="row g-3 mb-4">
                 <div class="col-6">
-                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">CUSTOMER</span>
+                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">CUSTOMER DETAILS</span>
                     <div class="fw-bold text-dark mt-2 mb-1 fs-5">{{ $returnableMaterial->customer->company_name ?? 'N/A' }}</div>
                     @if($returnableMaterial->customer && $returnableMaterial->customer->address)
                         <div class="small text-muted mb-1"><i class="bi bi-geo-alt me-1 text-secondary"></i><strong>Address:</strong> {{ $returnableMaterial->customer->address }}</div>
@@ -78,7 +78,7 @@
                             <tr>
                                 <td><span class="badge bg-light text-dark border">{{ $prod->category->name ?? 'N/A' }}</span></td>
                                 <td class="fw-semibold text-dark">{{ $prod->name ?? 'N/A' }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}</td>
-                                <td class="small font-monospace text-muted">{{ $prod->hsn_code ?? 'N/A' }}</td>
+                                <td class="small font-monospace text-dark">{{ $prod->hsn_code ?? 'N/A' }}</td>
                                 <td><span class="badge bg-secondary-subtle text-secondary border px-2">{{ $prod->unit ?? 'Pcs' }}</span></td>
                                 <td class="text-center fw-bold">{{ $item->quantity }}</td>
                             </tr>

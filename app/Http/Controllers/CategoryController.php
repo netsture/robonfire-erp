@@ -38,9 +38,18 @@ class CategoryController extends Controller
                 \Illuminate\Validation\Rule::unique('categories', 'name')->where('firm_id', $firmId),
             ],
             'description' => ['nullable', 'string'],
+        ], [
+            'name.unique' => 'The Category Name has already been taken.',
         ]);
 
         if ($validator->fails()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first('name') ?: 'The Category Name has already been taken.',
+                    'errors'  => $validator->errors()
+                ], 422);
+            }
             return back()->withErrors($validator)->withInput()->with('open_modal', 'createCategoryModal');
         }
 

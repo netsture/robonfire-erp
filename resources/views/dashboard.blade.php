@@ -21,7 +21,7 @@
         <a href="{{ route('sales.index') }}" class="btn btn-primary rounded-pill px-3 shadow-sm font-outfit fw-medium">
             <i class="bi bi-cart-plus me-1"></i> New Sale Order
         </a>
-        <a href="{{ route('purchases.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
+        <a href="{{ route('purchases.index') }}" class="btn btn-warning text-dark rounded-pill px-3 shadow-sm font-outfit fw-medium">
             <i class="bi bi-bag-plus me-1"></i> Record Purchase
         </a>
     @endif
@@ -31,37 +31,37 @@
 
 <!-- Metric Cards Row -->
 <div class="row g-3 mb-4">
-    <!-- Total Revenue -->
+    <!-- Total Purchases -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 h-100 p-3">
+        <div class="card card-custom border-0 h-100 p-3 text-white" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small fw-semibold uppercase tracking-wider">Total Sales Revenue</span>
-                    <h3 class="fw-bold font-outfit text-dark mt-2 mb-1">₹{{ number_format($totalSalesAmount, 2) }}</h3>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                        <i class="bi bi-arrow-up-right me-1"></i>+14.2% MoM
+                    <span class="fw-bold small text-uppercase tracking-wider" style="color: #ffffff !important;">Total Purchases</span>
+                    <h3 class="fw-bold font-outfit mt-2 mb-1" style="color: #ffffff !important;">₹{{ number_format($totalPurchasesAmount, 2) }}</h3>
+                    <span class="badge bg-white fw-bold rounded-pill" style="color: #0284c7;">
+                        <i class="bi bi-cart-check me-1"></i>Active Procurement
                     </span>
                 </div>
-                <div class="metric-icon bg-indigo-subtle text-primary" style="background: #e0e7ff; color: #4f46e5;">
-                    <i class="bi bi-currency-rupee fs-3"></i>
+                <div class="metric-icon dark-symbol-avatar shadow-sm" style="background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
+                    <i class="bi bi-truck fs-3"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Total Purchases -->
+    <!-- Total Revenue -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 h-100 p-3">
+        <div class="card card-custom border-0 h-100 p-3 text-white" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small fw-semibold uppercase tracking-wider">Total Purchases</span>
-                    <h3 class="fw-bold font-outfit text-dark mt-2 mb-1">₹{{ number_format($totalPurchasesAmount, 2) }}</h3>
-                    <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">
-                        <i class="bi bi-cart-check me-1"></i>Active Procurement
+                    <span class="fw-bold small text-uppercase tracking-wider" style="color: #ffffff !important;">Total Sales Revenue</span>
+                    <h3 class="fw-bold font-outfit mt-2 mb-1" style="color: #ffffff !important;">₹{{ number_format($totalSalesAmount, 2) }}</h3>
+                    <span class="badge bg-white text-success fw-bold rounded-pill">
+                        <i class="bi bi-arrow-up-right me-1"></i>+14.2% MoM
                     </span>
                 </div>
-                <div class="metric-icon" style="background: #e0f2fe; color: #0284c7;">
-                    <i class="bi bi-truck fs-3"></i>
+                <div class="metric-icon dark-symbol-avatar shadow-sm" style="background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
+                    <i class="bi bi-currency-rupee fs-3"></i>
                 </div>
             </div>
         </div>
@@ -69,14 +69,14 @@
 
     <!-- Total Products -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 h-100 p-3">
+        <div class="card card-custom border-0 h-100 p-3 text-white" style="background: linear-gradient(135deg, #6f42c1 0%, #4c1d95 100%);">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small fw-semibold uppercase tracking-wider">Total Products</span>
-                    <h3 class="fw-bold font-outfit text-dark mt-2 mb-1">{{ number_format($totalProductsCount) }}</h3>
-                    <span class="text-muted small"><i class="bi bi-box-seam me-1"></i>In Catalog</span>
+                    <span class="fw-bold small text-uppercase tracking-wider" style="color: #ffffff !important;">Total Products</span>
+                    <h3 class="fw-bold font-outfit mt-2 mb-1" style="color: #ffffff !important;">{{ number_format($totalProductsCount) }}</h3>
+                    <span class="badge bg-white text-dark fw-bold rounded-pill"><i class="bi bi-box-seam me-1"></i>In Catalog</span>
                 </div>
-                <div class="metric-icon" style="background: #f0fdf4; color: #16a34a;">
+                <div class="metric-icon dark-symbol-avatar shadow-sm" style="background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
                     <i class="bi bi-boxes fs-3"></i>
                 </div>
             </div>
@@ -85,22 +85,22 @@
 
     <!-- Low Stock Warnings -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 h-100 p-3">
+        <div class="card card-custom border-0 h-100 p-3 text-white" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small fw-semibold uppercase tracking-wider">Low Stock Warnings</span>
-                    <h3 class="fw-bold font-outfit text-danger mt-2 mb-1">{{ $lowStockCount }}</h3>
+                    <span class="fw-bold small text-uppercase tracking-wider" style="color: #ffffff !important;">Low Stock Warnings</span>
+                    <h3 class="fw-bold font-outfit mt-2 mb-1" style="color: #ffffff !important;">{{ $lowStockCount }}</h3>
                     @if($lowStockCount > 0)
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">
+                        <span class="badge bg-white text-danger fw-bold rounded-pill">
                             <i class="bi bi-exclamation-triangle me-1"></i>Requires Restock
                         </span>
                     @else
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                        <span class="badge bg-white text-success fw-bold rounded-pill">
                             <i class="bi bi-shield-check me-1"></i>Inventory Healthy
                         </span>
                     @endif
                 </div>
-                <div class="metric-icon" style="background: #fef2f2; color: #dc2626;">
+                <div class="metric-icon dark-symbol-avatar shadow-sm" style="background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
                     <i class="bi bi-exclamation-diamond fs-3"></i>
                 </div>
             </div>
@@ -113,12 +113,19 @@
     <!-- Revenue & Expense Analytics Graph -->
     <div class="col-12 col-lg-8">
         <div class="card card-custom border-0 p-4 h-100 d-flex flex-column">
-            <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <div>
                     <h5 class="fw-bold font-outfit mb-0 text-dark">Revenue & Expense Analytics</h5>
                     <span class="text-muted small">Monthly Comparison (Sales vs. Purchases)</span>
                 </div>
-                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill"><i class="bi bi-calendar3 me-1"></i> Last 6 Months</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge px-3 py-2 rounded-pill fw-semibold" style="background-color: #0f172a !important; color: #ffffff !important;">
+                        <i class="bi bi-calendar3 me-1 text-warning"></i> Last 6 Months
+                    </span>
+                    <a href="{{ route('reports.sales') }}" class="btn btn-sm btn-primary text-white rounded-pill px-3 fw-medium shadow-sm">
+                        <i class="bi bi-bar-chart-line me-1"></i> Full Report
+                    </a>
+                </div>
             </div>
             <div class="flex-grow-1 w-100 position-relative" style="min-height: 380px;">
                 <canvas id="salesAnalyticsChart"></canvas>
@@ -134,7 +141,7 @@
             <div class="list-group list-group-flush gap-2 border-0 flex-grow-1 d-flex flex-column justify-content-between">
                 <a href="{{ route('customers.index') }}" class="list-group-item list-group-item-action border rounded-3 p-3 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-info bg-opacity-10 p-2 me-3 text-info">
+                        <div class="rounded-circle dark-symbol-avatar dark-symbol-customer me-3" style="width: 42px; height: 42px;">
                             <i class="bi bi-people fs-5"></i>
                         </div>
                         <div>
@@ -147,7 +154,7 @@
 
                 <a href="{{ route('suppliers.index') }}" class="list-group-item list-group-item-action border rounded-3 p-3 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-secondary bg-opacity-10 p-2 me-3 text-secondary">
+                        <div class="rounded-circle dark-symbol-avatar dark-symbol-supplier me-3" style="width: 42px; height: 42px;">
                             <i class="bi bi-truck fs-5"></i>
                         </div>
                         <div>
@@ -160,7 +167,7 @@
 
                 <a href="{{ route('products.index') }}" class="list-group-item list-group-item-action border rounded-3 p-3 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-success bg-opacity-10 p-2 me-3 text-success">
+                        <div class="rounded-circle dark-symbol-avatar dark-symbol-product me-3" style="width: 42px; height: 42px;">
                             <i class="bi bi-box-seam fs-5"></i>
                         </div>
                         <div>
@@ -173,7 +180,7 @@
 
                 <a href="{{ route('sales.index') }}" class="list-group-item list-group-item-action border rounded-3 p-3 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3 text-primary">
+                        <div class="rounded-circle dark-symbol-avatar dark-symbol-customer me-3" style="width: 42px; height: 42px;">
                             <i class="bi bi-cart-plus fs-5"></i>
                         </div>
                         <div>
@@ -186,7 +193,7 @@
 
                 <a href="{{ route('purchases.index') }}" class="list-group-item list-group-item-action border rounded-3 p-3 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-warning bg-opacity-10 p-2 me-3 text-warning">
+                        <div class="rounded-circle dark-symbol-avatar dark-symbol-supplier me-3" style="width: 42px; height: 42px;">
                             <i class="bi bi-receipt-cutoff fs-5"></i>
                         </div>
                         <div>
@@ -279,10 +286,13 @@
                 },
                 plugins: {
                     legend: {
+                        display: true,
                         position: 'top',
+                        align: 'end',
                         labels: {
                             usePointStyle: true,
                             padding: 20,
+                            color: '#1e293b',
                             font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' }
                         }
                     },

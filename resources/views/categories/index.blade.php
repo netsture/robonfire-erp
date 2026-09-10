@@ -39,7 +39,7 @@
         <div class="col-12 col-md-6 col-lg-4">
             <div class="card card-custom border-0 p-4 h-100">
                 <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                    <div class="rounded-circle dark-symbol-avatar dark-symbol-category" style="width: 48px; height: 48px;">
                         <i class="bi bi-tags fs-4"></i>
                     </div>
                     <div class="text-end">

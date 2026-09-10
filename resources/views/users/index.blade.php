@@ -5,7 +5,7 @@
 @section('page_subtitle', 'Manage system users, assign roles and configure access status')
 
 @section('header_actions')
-    @if(!auth()->user()->isSuperAdmin())
+    @if(auth()->user()->isAdmin())
         <a href="{{ route('users.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
             <i class="bi bi-person-plus-fill me-1"></i> Add New User
         </a>
@@ -20,7 +20,7 @@
         <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-4' : 'col-md-5' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search fire officer by name, email, phone..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search User, Firm, Email, Phone Number..." value="{{ request('search') }}">
             </div>
         </div>
         @if(auth()->user()->isSuperAdmin())
@@ -67,13 +67,25 @@
                 @forelse($users as $user)
                     <tr>
                         <td class="ps-4">
+                            @php
+                                $rStr = strtolower(trim($user->role ?? ($user->roles->first()->name ?? 'User')));
+                                $avatarStyle = 'background-color: rgba(187, 59, 159, 0.15); color: #bb3b9f;';
+                                if (in_array($rStr, ['superadmin', 'super admin', 'super-admin'])) {
+                                    $avatarStyle = 'background-color: rgba(220, 53, 69, 0.15); color: #dc3545;';
+                                } elseif (in_array($rStr, ['admin', 'administrator'])) {
+                                    $avatarStyle = 'background-color: rgba(79, 70, 229, 0.15); color: #4f46e5;';
+                                } elseif (in_array($rStr, ['manager', 'supervisor'])) {
+                                    $avatarStyle = 'background-color: rgba(255, 193, 7, 0.2); color: #856404;';
+                                } elseif (in_array($rStr, ['sales', 'staff', 'biller'])) {
+                                    $avatarStyle = 'background-color: rgba(13, 202, 240, 0.15); color: #0dcaf0;';
+                                }
+                            @endphp
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-user" style="width: 40px; height: 40px; font-size: 1rem;">
                                     {{ strtoupper(substr($user->name, 0, 1)) }}
                                 </div>
                                 <div>
                                     <div class="fw-semibold text-dark">{{ $user->name }}</div>
-                                    <div class="text-muted small">ID: #USR-{{ str_pad($user->id, 4, '0', STR_PAD_LEFT) }}</div>
                                 </div>
                             </div>
                         </td>
@@ -91,27 +103,49 @@
                             <div class="small text-muted"><i class="bi bi-telephone me-1"></i>{{ $user->phone ?? 'N/A' }}</div>
                         </td>
                         <td>
-                            <span class="badge bg-indigo-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
-                                <i class="bi bi-shield-check me-1"></i>{{ $user->role ?? 'User' }}
-                            </span>
+                            @if(in_array($rStr, ['superadmin', 'super admin', 'super-admin']))
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-semibold">
+                                    <i class="bi bi-shield-lock-fill me-1"></i>{{ $user->role ?? 'Superadmin' }}
+                                </span>
+                            @elseif(in_array($rStr, ['admin', 'administrator']))
+                                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #4f46e5;">
+                                    <i class="bi bi-shield-check me-1"></i>{{ $user->role ?? 'Admin' }}
+                                </span>
+                            @elseif(in_array($rStr, ['manager', 'supervisor']))
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-semibold">
+                                    <i class="bi bi-person-badge-fill me-1"></i>{{ $user->role ?? 'Manager' }}
+                                </span>
+                            @elseif(in_array($rStr, ['sales', 'staff', 'biller']))
+                                <span class="badge bg-info text-white rounded-pill px-3 py-1 fw-semibold">
+                                    <i class="bi bi-person-workspace me-1"></i>{{ $user->role ?? 'Sales' }}
+                                </span>
+                            @elseif(in_array($rStr, ['user', 'standard user', 'customer']))
+                                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
+                                    <i class="bi bi-person-check-fill me-1"></i>{{ $user->role ?? 'User' }}
+                                </span>
+                            @else
+                                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
+                                    <i class="bi bi-person-fill me-1"></i>{{ $user->role ?? 'User' }}
+                                </span>
+                            @endif
                         </td>
                         <td>
-                            @if(!auth()->user()->isSuperAdmin())
+                            @if(auth()->user()->isAdmin())
                                 <form action="{{ route('users.toggle-status', $user) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-sm border-0 p-0" title="Click to toggle status">
                                         @if($user->status === 'active')
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
+                                            <span class="badge bg-success text-white rounded-pill px-3 py-1">Active</span>
                                         @else
-                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">Inactive</span>
+                                            <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
                                         @endif
                                     </button>
                                 </form>
                             @else
                                 @if($user->status === 'active')
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
+                                    <span class="badge bg-success text-white rounded-pill px-3 py-1">Active</span>
                                 @else
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">Inactive</span>
+                                    <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
                                 @endif
                             @endif
                         </td>
@@ -119,7 +153,7 @@
                             {{ $user->created_at->format('M d, Y') }}
                         </td>
                         <td class="text-end pe-4">
-                            @if(!auth()->user()->isSuperAdmin())
+                            @if(auth()->user()->isAdmin())
                                 <div class="btn-group">
                                     <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-light border" title="Edit User">
                                         <i class="bi bi-pencil-square"></i>

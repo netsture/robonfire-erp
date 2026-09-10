@@ -22,12 +22,22 @@ class RoleController extends Controller
 
     public function create()
     {
+        $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
+
         $permissionsByModule = Permission::all()->groupBy('module');
         return view('roles.create', compact('permissionsByModule'));
     }
 
     public function store(Request $request)
     {
+        $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
+
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:255', 'unique:roles'],
             'description' => ['nullable', 'string'],
@@ -50,7 +60,12 @@ class RoleController extends Controller
 
     public function edit(Role $role)
     {
-        if (!auth()->user()->isSuperAdmin() && $role->slug === 'superadmin') {
+        $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
+
+        if (!$authUser->isSuperAdmin() && $role->slug === 'superadmin') {
             abort(403, 'Unauthorized access to Superadmin role.');
         }
 
@@ -61,7 +76,12 @@ class RoleController extends Controller
 
     public function update(Request $request, Role $role)
     {
-        if (!auth()->user()->isSuperAdmin() && $role->slug === 'superadmin') {
+        $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
+
+        if (!$authUser->isSuperAdmin() && $role->slug === 'superadmin') {
             abort(403, 'Unauthorized access to Superadmin role.');
         }
 
@@ -85,7 +105,12 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
-        if (!auth()->user()->isSuperAdmin() && $role->slug === 'superadmin') {
+        $authUser = auth()->user();
+        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
+            abort(403, 'Only Admin role can perform this action.');
+        }
+
+        if (!$authUser->isSuperAdmin() && $role->slug === 'superadmin') {
             abort(403, 'Unauthorized access to Superadmin role.');
         }
 

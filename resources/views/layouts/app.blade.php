@@ -18,6 +18,10 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Flatpickr Datepicker CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <style>
         :root {
             --sidebar-width: 260px;
@@ -41,6 +45,80 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        /* Dark Image & Icon Symbol Placeholder System */
+        .dark-symbol-avatar {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.35) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 700 !important;
+            flex-shrink: 0 !important;
+            transition: all 0.25s ease !important;
+        }
+
+        .dark-symbol-avatar:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 6px 15px rgba(15, 23, 42, 0.45) !important;
+        }
+
+        /* Entity Specific Dark Symbols */
+        .dark-symbol-product {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        }
+
+        .dark-symbol-category {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
+            color: #a5b4fc !important;
+            border: 1px solid rgba(165, 180, 252, 0.3) !important;
+        }
+
+        .dark-symbol-brand {
+            background: linear-gradient(135deg, #111827 0%, #1f2937 100%) !important;
+            color: #fbbf24 !important;
+            border: 1px solid rgba(251, 191, 36, 0.3) !important;
+        }
+
+        .dark-symbol-firm {
+            background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%) !important;
+            color: #34d399 !important;
+            border: 1px solid rgba(52, 211, 153, 0.3) !important;
+        }
+
+        .dark-symbol-supplier {
+            background: linear-gradient(135deg, #0f172a 0%, #0369a1 100%) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        }
+
+        .dark-symbol-customer {
+            background: linear-gradient(135deg, #0f172a 0%, #4338ca 100%) !important;
+            color: #c084fc !important;
+            border: 1px solid rgba(192, 132, 252, 0.3) !important;
+        }
+
+        .dark-symbol-user {
+            background: linear-gradient(135deg, #0f172a 0%, #831843 100%) !important;
+            color: #f472b6 !important;
+            border: 1px solid rgba(244, 114, 182, 0.3) !important;
+        }
+
+        .dark-symbol-role {
+            background: linear-gradient(135deg, #0f172a 0%, #312e81 100%) !important;
+            color: #818cf8 !important;
+            border: 1px solid rgba(129, 140, 248, 0.3) !important;
+        }
+
+        .dark-symbol-report {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            color: #fbbf24 !important;
+            border: 1px solid rgba(251, 191, 36, 0.3) !important;
+        }
+
         /* Sidebar Styling */
         #sidebar {
             width: var(--sidebar-width);
@@ -50,7 +128,7 @@
             left: 0;
             background: var(--sidebar-bg);
             color: #94a3b8;
-            z-index: 1040;
+            z-index: 1050;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
@@ -206,13 +284,32 @@
             letter-spacing: 0.05em;
         }
 
+        /* Mobile Backdrop Overlay */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 1040;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-backdrop.show {
+            display: block;
+        }
+
         /* Responsive Layout Adjustments */
         @media (max-width: 991.98px) {
             #sidebar {
                 margin-left: calc(-1 * var(--sidebar-width));
             }
             #sidebar.show {
-                margin-left: 0;
+                margin-left: 0 !important;
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.25) !important;
             }
             #topbar, #main-content {
                 margin-left: 0 !important;
@@ -222,6 +319,9 @@
     @stack('styles')
 </head>
 <body>
+
+    <!-- Mobile Backdrop Overlay -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
     <!-- Sidebar -->
     <aside id="sidebar">
@@ -269,7 +369,7 @@
             </a>
             <a href="{{ route('products.index') }}" class="nav-link-custom {{ request()->routeIs('products*') ? 'active' : '' }}">
                 <i class="bi bi-box-seam"></i>
-                <span>Products</span>
+                <span>Add Products</span>
             </a>
             <!--<a href="{{ route('inventory.index') }}" class="nav-link-custom {{ request()->routeIs('inventory*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-repeat"></i>
@@ -328,14 +428,50 @@
         </div>
 
         <div class="d-flex align-items-center gap-3">
-            <span class="badge bg-indigo-subtle text-primary border border-primary-subtle badge-role">
-                <i class="bi bi-shield-check me-1"></i>{{ Auth::user()->role ?? 'Admin' }}
-            </span>
+            @php
+                $headerRoleStr = strtolower(trim(Auth::user()->role ?? 'User'));
+                $headerAvatarStyle = 'background-color: rgba(187, 59, 159, 0.15); color: #bb3b9f;';
+                if (in_array($headerRoleStr, ['superadmin', 'super admin', 'super-admin'])) {
+                    $headerAvatarStyle = 'background-color: rgba(220, 53, 69, 0.15); color: #dc3545;';
+                } elseif (in_array($headerRoleStr, ['admin', 'administrator'])) {
+                    $headerAvatarStyle = 'background-color: rgba(79, 70, 229, 0.15); color: #4f46e5;';
+                } elseif (in_array($headerRoleStr, ['manager', 'supervisor'])) {
+                    $headerAvatarStyle = 'background-color: rgba(255, 193, 7, 0.2); color: #856404;';
+                } elseif (in_array($headerRoleStr, ['sales', 'staff', 'biller'])) {
+                    $headerAvatarStyle = 'background-color: rgba(13, 202, 240, 0.15); color: #0dcaf0;';
+                }
+            @endphp
+
+            @if(in_array($headerRoleStr, ['superadmin', 'super admin', 'super-admin']))
+                <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-semibold">
+                    <i class="bi bi-shield-lock-fill me-1"></i>{{ Auth::user()->role ?? 'Superadmin' }}
+                </span>
+            @elseif(in_array($headerRoleStr, ['admin', 'administrator']))
+                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #4f46e5;">
+                    <i class="bi bi-shield-check me-1"></i>{{ Auth::user()->role ?? 'Admin' }}
+                </span>
+            @elseif(in_array($headerRoleStr, ['manager', 'supervisor']))
+                <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-semibold">
+                    <i class="bi bi-person-badge-fill me-1"></i>{{ Auth::user()->role ?? 'Manager' }}
+                </span>
+            @elseif(in_array($headerRoleStr, ['sales', 'staff', 'biller']))
+                <span class="badge bg-info text-white rounded-pill px-3 py-1 fw-semibold">
+                    <i class="bi bi-person-workspace me-1"></i>{{ Auth::user()->role ?? 'Sales' }}
+                </span>
+            @elseif(in_array($headerRoleStr, ['user', 'standard user', 'customer']))
+                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
+                    <i class="bi bi-person-check-fill me-1"></i>{{ Auth::user()->role ?? 'User' }}
+                </span>
+            @else
+                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
+                    <i class="bi bi-person-fill me-1"></i>{{ Auth::user()->role ?? 'User' }}
+                </span>
+            @endif
 
             <!-- User Dropdown -->
             <div class="dropdown">
                 <button class="btn btn-light rounded-pill border d-flex align-items-center gap-2 px-3 py-1" type="button" data-bs-toggle="dropdown">
-                    <div class="rounded-circle bg-indigo text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #e0e7ff;">
+                    <div class="rounded-circle dark-symbol-avatar dark-symbol-user" style="width: 34px; height: 34px; font-size: 0.9rem;">
                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                     </div>
                     <span class="fw-semibold text-dark small d-none d-sm-inline">{{ Auth::user()->name ?? 'User' }}</span>
@@ -409,10 +545,49 @@
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('topbar').classList.toggle('full-width');
-            document.getElementById('main-content').classList.toggle('full-width');
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const topbar = document.getElementById('topbar');
+            const mainContent = document.getElementById('main-content');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+            function toggleSidebar() {
+                if (window.innerWidth < 992) {
+                    sidebar?.classList.toggle('show');
+                    sidebarBackdrop?.classList.toggle('show');
+                } else {
+                    sidebar?.classList.toggle('collapsed');
+                    topbar?.classList.toggle('full-width');
+                    mainContent?.classList.toggle('full-width');
+                }
+            }
+
+            sidebarToggle?.addEventListener('click', function (e) {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+
+            sidebarBackdrop?.addEventListener('click', function () {
+                sidebar?.classList.remove('show');
+                sidebarBackdrop?.classList.remove('show');
+            });
+
+            document.querySelectorAll('#sidebar .nav-link-custom').forEach(link => {
+                link.addEventListener('click', function () {
+                    if (window.innerWidth < 992) {
+                        sidebar?.classList.remove('show');
+                        sidebarBackdrop?.classList.remove('show');
+                    }
+                });
+            });
+
+            if (typeof flatpickr !== 'undefined') {
+                flatpickr('.datepicker-ddmmyyyy', {
+                    dateFormat: 'd-m-Y',
+                    allowInput: true
+                });
+            }
         });
     </script>
     @stack('scripts')

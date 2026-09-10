@@ -139,16 +139,16 @@
                                             <input type="number" name="products[{{ $index }}][qty]" class="form-control form-control-sm qty-input" min="1" value="{{ $oldProduct['qty'] ?? 1 }}" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" min="0.01" name="products[{{ $index }}][cost]" class="form-control form-control-sm cost-input" value="{{ $oldProduct['cost'] ?? '' }}" placeholder="e.g. 100.00" required>
+                                            <input type="number" min="0" name="products[{{ $index }}][cost]" class="form-control form-control-sm cost-input" value="{{ $oldProduct['cost'] ?? '' }}" placeholder="e.g. 100" required>
                                         </td>
                                         <td>
-                                            <input type="number" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $oldProduct['tax_percent'] ?? '0.00' }}" min="0">
+                                            <input type="number" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $oldProduct['tax_percent'] ?? '0' }}" min="0">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0.00">
+                                            <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control form-control-sm row-total-tax-input bg-light fw-bold text-dark" readonly value="₹0.00">
+                                            <input type="text" class="form-control form-control-sm row-total-tax-input bg-light fw-bold text-dark" readonly value="₹0">
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-light border text-danger remove-row-btn"><i class="bi bi-trash"></i></button>
@@ -190,16 +190,16 @@
                                         <input type="number" name="products[0][qty]" class="form-control form-control-sm qty-input" min="1" value="1" required>
                                     </td>
                                     <td>
-                                        <input type="number" step="0.01" min="0.01" name="products[0][cost]" class="form-control form-control-sm cost-input" value="" placeholder="e.g. 100.00" required>
+                                        <input type="number" min="0" name="products[0][cost]" class="form-control form-control-sm cost-input" value="" placeholder="e.g. 100" required>
                                     </td>
                                     <td>
-                                        <input type="number" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" min="0">
+                                        <input type="number" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0" min="0">
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0.00">
+                                        <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0">
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm row-total-tax-input bg-light fw-bold text-dark" readonly value="₹0.00">
+                                        <input type="text" class="form-control form-control-sm row-total-tax-input bg-light fw-bold text-dark" readonly value="₹0">
                                     </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-light border text-danger remove-row-btn"><i class="bi bi-trash"></i></button>
@@ -228,13 +228,13 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="discount_amount" class="form-label small fw-semibold">Discount (₹)</label>
-                    <input type="number" class="form-control form-control-sm" id="discount_amount" name="discount_amount" value="{{ old('discount_amount', '0.00') }}">
+                    <label for="discount_amount" class="form-label small fw-semibold">Discount Amount (₹)</label>
+                    <input type="number" class="form-control form-control-sm" id="discount_amount" name="discount_amount" value="{{ old('discount_amount', '0') }}">
                 </div>
 
                 <div class="mb-3">
                     <label for="shipping_cost" class="form-label small fw-semibold">Shipping Cost (₹)</label>
-                    <input type="number" class="form-control form-control-sm" id="shipping_cost" name="shipping_cost" value="{{ old('shipping_cost', '0.00') }}">
+                    <input type="number" class="form-control form-control-sm" id="shipping_cost" name="shipping_cost" value="{{ old('shipping_cost', '0') }}">
                 </div>
 
                 <hr>
@@ -255,12 +255,12 @@
 
                 <div class="mb-3">
                     <label for="paid_amount" class="form-label small fw-semibold text-dark">Amount Paid (₹) <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" class="form-control" id="paid_amount" name="paid_amount" value="{{ old('paid_amount', '0.00') }}" required readonly>
+                    <input type="number" class="form-control" id="paid_amount" name="paid_amount" value="{{ old('paid_amount', '0') }}" required readonly>
                 </div>
 
                 <div class="mb-3">
-                    <label for="notes" class="form-label small fw-semibold">Notes / Vendor References</label>
-                    <textarea class="form-control form-control-sm" id="notes" name="notes" rows="2" placeholder="e.g. Fire safety stock received via Flame Express Logistics">{{ old('notes') }}</textarea>
+                    <label for="notes" class="form-label small fw-semibold">Purchase Order Notes / Remark</label>
+                    <textarea class="form-control form-control-sm" id="notes" name="notes" rows="2" placeholder="Optional Notes...">{{ old('notes') }}</textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-2 font-outfit fw-semibold mt-2">
@@ -339,7 +339,7 @@
         if (document.getElementById('supplier_id')) {
             supplierSelect = new TomSelect('#supplier_id', {
                 create: false,
-                placeholder: 'Search or select supplier...',
+                placeholder: 'Search or Select Supplier',
                 plugins: ['dropdown_input']
             });
         }
@@ -434,16 +434,16 @@
                     <input type="number" name="products[${rowCount}][qty]" class="form-control form-control-sm qty-input" min="1" value="1" required>
                 </td>
                 <td>
-                    <input type="number" step="0.01" min="0.01" name="products[${rowCount}][cost]" class="form-control form-control-sm cost-input" value="" placeholder="e.g. 100.00" required>
+                    <input type="number" min="0" name="products[${rowCount}][cost]" class="form-control form-control-sm cost-input" value="" placeholder="e.g. 100" required>
                 </td>
                 <td>
-                    <input type="number" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" min="0">
+                    <input type="number" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0" min="0">
                 </td>
                 <td>
-                    <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0.00">
+                    <input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0">
                 </td>
                 <td>
-                    <input type="text" class="form-control form-control-sm row-total-tax-input bg-light fw-bold text-dark" readonly value="₹0.00">
+                    <input type="text" class="form-control form-control-sm row-total-tax-input bg-light fw-bold text-dark" readonly value="₹0">
                 </td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-light border text-danger remove-row-btn"><i class="bi bi-trash"></i></button>
@@ -533,7 +533,7 @@
                 paidInput.value = grandTotalValue.toFixed(2);
                 paidInput.readOnly = true;
             } else if (status === 'unpaid') {
-                paidInput.value = '0.00';
+                paidInput.value = '0';
                 paidInput.readOnly = true;
             } else {
                 paidInput.readOnly = false;

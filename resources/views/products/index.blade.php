@@ -17,14 +17,14 @@
 <!-- Search & Filter Bar -->
 <div class="card card-custom border-0 p-3 mb-4">
     <form method="GET" action="{{ route('products.index') }}" class="row g-2 align-items-center">
-        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-3' : 'col-md-5' }}">
+        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-3' : 'col-md-3' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search product title, HSN code..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search Product Name, HSN Code..." value="{{ request('search') }}">
             </div>
         </div>
         @if(auth()->user()->isSuperAdmin())
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-2">
             <select name="firm_id" class="form-select bg-light">
                 <option value="">All Firms</option>
                 @foreach($firms as $firm)
@@ -42,10 +42,18 @@
             </select>
         </div>
         <div class="col-12 col-md-2">
-            <div class="form-check pt-2">
+            <select name="brand_id" class="form-select bg-light">
+                <option value="">All Brands</option>
+                @foreach($brands as $brand)
+                    <option value="{{ $brand->id }}" {{ request('brand_id') == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-1' : 'col-md-1' }}">
+            <div class="form-check pt-1">
                 <input class="form-check-input" type="checkbox" name="low_stock" value="1" id="low_stock" {{ request('low_stock') ? 'checked' : '' }}>
                 <label class="form-check-label small text-dark fw-medium" for="low_stock">
-                    Low Stock Only
+                    Low Stock
                 </label>
             </div>
         </div>
@@ -66,13 +74,15 @@
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
-                    <th>Category / Brand</th>
+                    <th>Category</th>
+                    <th>Brand</th>
                     <th>HSN Code</th>
-                    <th>Measurement Type</th>
+                    <th>Type</th>
                     <th>Cost Price</th>
                     <th>Selling Price</th>
                     <th>Tax (%)</th>
                     <th>In Stock</th>
+                    <th>Low Stock</th>
                     <th>Status</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
@@ -82,8 +92,12 @@
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="bi bi-box-seam"></i>
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-product" style="width: 40px; height: 40px;">
+                                    @if(!empty($product->image) && file_exists(public_path('storage/' . $product->image)))
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="rounded-circle w-100 h-100 object-fit-cover">
+                                    @else
+                                        <i class="bi bi-box-seam fs-5"></i>
+                                    @endif
                                 </div>
                                 <div>
                                     <a href="{{ route('products.show', $product) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
@@ -98,45 +112,53 @@
                             </td>
                         @endif
                         <td>
-                            <span class="badge bg-light text-dark border rounded-pill px-3">{{ $product->category->name }}</span>
+                            <span class="badge bg-primary text-white rounded-pill px-3 py-1 fw-semibold"><i class="bi bi-tag-fill me-1"></i>{{ $product->category->name }}</span>
+                        </td>
+                        <td>
                             @if($product->brand)
-                                <div class="mt-1"><span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1 small"><i class="bi bi-award-fill me-1"></i>{{ $product->brand->name }}</span></div>
+                                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #6f42c1;"><i class="bi bi-award-fill me-1"></i>{{ $product->brand->name }}</span>
+                            @else
+                                <span class="text-muted small">N/A</span>
                             @endif
                         </td>
                         <td class="small font-monospace">
                             @if($product->hsn_code)
-                                <span class="badge bg-light text-dark border font-monospace">{{ $product->hsn_code }}</span>
+                                <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 font-monospace fw-semibold"><i class="bi bi-hash me-1 text-warning"></i>{{ $product->hsn_code }}</span>
                             @else
                                 <span class="text-muted">N/A</span>
                             @endif
                         </td>
                         <td>
-                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">{{ $product->unit }}</span>
+                            <span class="badge bg-info text-white rounded-pill px-3 py-1 fw-semibold"><i class="bi bi-rulers me-1"></i>{{ $product->unit }}</span>
                         </td>
-                        <td class="text-muted small">₹{{ number_format($product->cost_price, 2) }}</td>
+                        <td class="text-dark small">₹{{ number_format($product->cost_price, 2) }}</td>
                         <td class="fw-bold text-dark">₹{{ number_format($product->selling_price, 2) }}</td>
                         <td>
-                            <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle rounded-pill px-3 py-1 fw-semibold">
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold">
                                 {{ number_format($product->tax_percent, 2) }}%
                             </span>
                         </td>
                         <td>
                             @if($product->isLowStock())
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-bold">
-                                    <i class="bi bi-exclamation-triangle me-1"></i>{{ $product->stock_quantity }} {{ $product->unit }}
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-bold">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $product->stock_quantity }} {{ $product->unit }}
                                 </span>
                             @else
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold">
-                                    {{ $product->stock_quantity }} {{ $product->unit }}
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1 fw-bold">
+                                    <i class="bi bi-check-circle-fill me-1"></i>{{ $product->stock_quantity }} {{ $product->unit }}
                                 </span>
                             @endif
                         </td>
-                        <td class="small text-muted">{{ $product->alert_quantity }} {{ $product->unit }}</td>
+                        <td>
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1 fw-bold">
+                                <i class="bi bi-bell-fill me-1"></i>{{ $product->alert_quantity }} {{ $product->unit }}
+                            </span>
+                        </td>
                         <td>
                             @if($product->status === 'active')
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1">Active</span>
                             @else
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">Inactive</span>
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
                             @endif
                         </td>
                         <td class="text-end pe-4">
@@ -148,7 +170,7 @@
                                     <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-light border" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete product from inventory?')">
+                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete product from catalog?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">
@@ -161,7 +183,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" class="text-center py-5 text-muted">
+                        <td colspan="13" class="text-center py-5 text-muted">
                             <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary"></i>
                             No products found in catalog. Click "Add Product" to add stock items.
                         </td>

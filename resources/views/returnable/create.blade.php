@@ -42,7 +42,7 @@
                     <div class="col-12 col-md-6">
                         <label for="customer_id" class="form-label fw-semibold text-dark">Select Customer Name <span class="text-danger">*</span></label>
                         <select class="form-select @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id" required>
-                            <option value="">Choose Customer Name</option>
+                            <option value="">Select or Search Customer Name</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->company_name }}</option>
                             @endforeach
@@ -51,8 +51,8 @@
                     </div>
 
                     <div class="col-12 col-md-3">
-                        <label for="return_number" class="form-label fw-semibold text-dark">Challan No <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control font-monospace @error('return_number') is-invalid @enderror" id="return_number" name="return_number" value="{{ old('return_number') }}" required>
+                        <label for="return_number" class="form-label fw-semibold text-dark">Return No <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control font-monospace @error('return_number') is-invalid @enderror" id="return_number" name="return_number" value="{{ old('return_number', $autoReturnNumber) }}" required>
                         @error('return_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -140,16 +140,16 @@
                                             <input type="number" name="products[{{ $index }}][qty]" class="form-control form-control-sm qty-input" min="1" value="{{ $oldProduct['qty'] ?? 1 }}" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" min="0" name="products[{{ $index }}][price]" class="form-control form-control-sm price-input" value="{{ $oldProduct['price'] ?? '' }}" placeholder="e.g. 150.00" required>
+                                            <input type="number" min="0" name="products[{{ $index }}][price]" class="form-control form-control-sm price-input" value="{{ $oldProduct['price'] ?? '' }}" placeholder="e.g. 150" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" min="0" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $oldProduct['tax_percent'] ?? 0 }}" placeholder="0.00">
+                                            <input type="number" min="0" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $oldProduct['tax_percent'] ?? 0 }}" placeholder="0">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0.00">
+                                            <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control form-control-sm line-total-tax bg-light fw-bold text-primary" readonly value="0.00">
+                                            <input type="text" class="form-control form-control-sm line-total-tax bg-light fw-bold text-primary" readonly value="0">
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" title="Remove"><i class="bi bi-trash"></i></button>
@@ -186,16 +186,16 @@
                                         <input type="number" name="products[0][qty]" class="form-control form-control-sm qty-input" min="1" value="1" required>
                                     </td>
                                     <td>
-                                        <input type="number" step="0.01" min="0" name="products[0][price]" class="form-control form-control-sm price-input" placeholder="e.g. 150.00" required>
+                                        <input type="number" min="0" name="products[0][price]" class="form-control form-control-sm price-input" placeholder="e.g. 150" required>
                                     </td>
                                     <td>
-                                        <input type="number" step="0.01" min="0" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" placeholder="0.00">
+                                        <input type="number" min="0" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0" placeholder="0">
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0.00">
+                                        <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0">
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm line-total-tax bg-light fw-bold text-primary" readonly value="0.00">
+                                        <input type="text" class="form-control form-control-sm line-total-tax bg-light fw-bold text-primary" readonly value="0">
                                     </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" title="Remove"><i class="bi bi-trash"></i></button>
@@ -205,11 +205,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div class="mt-3">
-                    <label for="notes" class="form-label fw-semibold text-dark">Notes / Return Condition Details</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Enter return material reason, condition or remarks...">{{ old('notes') }}</textarea>
-                </div>
             </div>
         </div>
 
@@ -218,31 +213,37 @@
             <div class="card card-custom border-0 p-4 sticky-top" style="top: 90px;">
                 <h5 class="fw-bold font-outfit text-dark mb-3">Return Summary</h5>
 
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Items Subtotal:</span>
-                    <span class="fw-bold text-dark" id="displaySubtotal">₹0.00</span>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Subtotal:</span>
+                    <span class="fw-bold font-outfit text-dark fs-6" id="displaySubtotal">₹0.00</span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Total Tax:</span>
+                    <span class="fw-bold font-outfit text-dark fs-6" id="displayTax">₹0.00</span>
+                </div>
+                <input type="hidden" id="tax_amount" name="tax_amount" value="{{ old('tax_amount', '0') }}">
+
+                <div class="mb-3">
+                    <label for="discount_amount" class="form-label small fw-semibold">Discount Amount (₹)</label>
+                    <input type="number" min="0" class="form-control form-control-sm" id="discount_amount" name="discount_amount" value="{{ old('discount_amount', '0') }}">
                 </div>
 
                 <div class="mb-3">
-                    <label for="discount_amount" class="form-label small text-muted mb-1">Discount Amount (₹)</label>
-                    <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="discount_amount" name="discount_amount" value="{{ old('discount_amount', '0.00') }}">
-                </div>
-
-                <div class="mb-3">
-                    <label for="tax_amount" class="form-label small text-muted mb-1">Total Tax Amount (₹)</label>
-                    <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="tax_amount" name="tax_amount" value="{{ old('tax_amount', '0.00') }}" placeholder="Auto calculated if empty">
-                </div>
-
-                <div class="mb-3">
-                    <label for="shipping_cost" class="form-label small text-muted mb-1">Freight / Transport Charges (₹)</label>
-                    <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="shipping_cost" name="shipping_cost" value="{{ old('shipping_cost', '0.00') }}">
+                    <label for="shipping_cost" class="form-label small fw-semibold">Shipping Cost (₹)</label>
+                    <input type="number" min="0" class="form-control form-control-sm" id="shipping_cost" name="shipping_cost" value="{{ old('shipping_cost', '0') }}">
                 </div>
 
                 <hr class="my-3">
 
-                <div class="d-flex justify-content-between mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="fw-bold text-dark fs-5">Grand Total:</span>
                     <span class="fw-bold text-primary fs-4" id="displayGrandTotal">₹0.00</span>
+                </div>
+
+                <div class="mb-4">
+                    <label for="notes" class="form-label fw-semibold text-dark">Return Order Notes / Remarks</label>
+                    <textarea class="form-control form-control-sm" id="notes" name="notes" rows="3" placeholder="Enter return material reason, condition or remarks...">{{ old('notes') }}</textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill font-outfit fw-bold shadow-sm">
@@ -261,7 +262,7 @@
         if (document.getElementById('customer_id')) {
             new TomSelect('#customer_id', {
                 create: false,
-                placeholder: 'Choose Customer Name...',
+                placeholder: 'Select or Search Customer Name',
                 plugins: ['dropdown_input']
             });
         }
@@ -434,24 +435,17 @@
             const discount = parseFloat(document.getElementById('discount_amount').value || 0);
             const shipping = parseFloat(document.getElementById('shipping_cost').value || 0);
             
-            const userTaxInput = document.getElementById('tax_amount');
-            let finalTax = calculatedTax;
-            if (userTaxInput && userTaxInput.value !== '' && userTaxInput.dataset.userEdited === 'true') {
-                finalTax = parseFloat(userTaxInput.value || 0);
-            } else if (userTaxInput) {
-                userTaxInput.value = calculatedTax.toFixed(2);
+            const taxInput = document.getElementById('tax_amount');
+            if (taxInput) {
+                taxInput.value = calculatedTax.toFixed(2);
             }
 
-            const grandTotal = subtotal - discount + finalTax + shipping;
+            const grandTotal = Math.max(0, subtotal - discount + calculatedTax + shipping);
 
             document.getElementById('displaySubtotal').innerText = '₹' + subtotal.toFixed(2);
+            document.getElementById('displayTax').innerText = '₹' + calculatedTax.toFixed(2);
             document.getElementById('displayGrandTotal').innerText = '₹' + grandTotal.toFixed(2);
         }
-
-        document.getElementById('tax_amount').addEventListener('change', function() {
-            this.dataset.userEdited = 'true';
-            calculateTotals();
-        });
 
         // Initial auto-fill for old input rows if redirected back with error
         document.querySelectorAll('.item-row').forEach(row => {

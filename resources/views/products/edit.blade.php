@@ -238,10 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 } else {
-                    let errMsg = res.body.message || 'Error adding category.';
-                    if (res.body.errors && res.body.errors.name) {
-                        errMsg = res.body.errors.name.join(' ');
-                    }
+                    let errMsg = (res.body && res.body.errors && res.body.errors.name) ? res.body.errors.name.join(' ') : (res.body.message || 'The Category Name has already been taken.');
                     alertBox.textContent = errMsg;
                     alertBox.classList.remove('d-none');
                 }
@@ -249,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Category';
-                alertBox.textContent = 'Failed to save category. Please try again.';
+                alertBox.textContent = 'The Category Name has already been taken.';
                 alertBox.classList.remove('d-none');
             });
         });
@@ -297,10 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 } else {
-                    let errMsg = res.body.message || 'Error adding brand.';
-                    if (res.body.errors && res.body.errors.name) {
-                        errMsg = res.body.errors.name.join(' ');
-                    }
+                    let errMsg = (res.body && res.body.errors && res.body.errors.name) ? res.body.errors.name.join(' ') : (res.body.message || 'The Brand Name has already been taken.');
                     alertBox.textContent = errMsg;
                     alertBox.classList.remove('d-none');
                 }
@@ -308,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Brand';
-                alertBox.textContent = 'Failed to save brand. Please try again.';
+                alertBox.textContent = 'The Brand Name has already been taken.';
                 alertBox.classList.remove('d-none');
             });
         });

@@ -20,7 +20,7 @@
         <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-6' : 'col-md-9' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search return #, project, reason for return, or customer name..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search Return No, Project Name, Customer Name, Phone Number, Return Reason, Return Date..." value="{{ request('search') }}">
             </div>
         </div>
         @if(auth()->user()->isSuperAdmin())
@@ -40,18 +40,19 @@
     </form>
 </div>
 
-<!-- Returnable Materials Table -->
+<!-- Returnable Entries Table -->
 <div class="card card-custom border-0 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Challan No #</th>
-                    <th>Customer Name</th>
+                    <th class="ps-4">Return No / Project Name</th>
+                    <th>Customer Name / Number</th>
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
                     <th>Return Date</th>
+                    <th>Return Reason</th>
                     <th>Grand Total</th>
                     <th>Status</th>
                     <th class="text-end pe-4">Actions</th>
@@ -61,30 +62,47 @@
                 @forelse($returns as $ret)
                     <tr>
                         <td class="ps-4">
-                            <div class="fw-bold font-monospace text-dark">#{{ $ret->return_number }}</div>
-                            @if($ret->project_name)
-                                <div class="small text-muted"><i class="bi bi-folder2-open me-1"></i>{{ $ret->project_name }}</div>
-                            @endif
-                            @if($ret->return_reason)
-                                <div class="small text-muted"><i class="bi bi-info-circle me-1"></i>{{ $ret->return_reason }}</div>
-                            @endif
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-customer" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-box-arrow-in-left fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold font-monospace text-dark">#{{ $ret->return_number }}</div>
+                                    @if($ret->project_name)
+                                        <div class="small text-muted"><i class="bi bi-folder2-open me-1"></i>{{ $ret->project_name }}</div>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
                         <td>
-                            <div class="fw-semibold text-dark">{{ $ret->customer->company_name ?? 'N/A' }}</div>
-                            <div class="small text-muted">{{ $ret->customer->phone ?? '' }}</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-customer" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                                    <i class="bi bi-person-circle"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-dark">{{ $ret->customer->company_name ?? 'N/A' }}</div>
+                                    <div class="small text-muted">{{ $ret->customer->phone ?? '' }}</div>
+                                </div>
+                            </div>
                         </td>
                         @if(auth()->user()->isSuperAdmin())
                             <td>
                                 <span class="badge bg-light text-dark border">{{ $ret->firm->name ?? 'N/A' }}</span>
                             </td>
                         @endif
-                        <td class="small text-muted">{{ $ret->return_date }}</td>
+                        <td class="small text-dark font-monospace">{{ \Carbon\Carbon::parse($ret->return_date)->format('d-m-Y') }}</td>
+                        <td>{{ $ret->return_reason }}</td>
                         <td class="fw-bold text-dark">₹{{ number_format($ret->grand_total, 2) }}</td>
                         <td>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 text-uppercase">RETURNED</span>
+                            <span class="badge bg-success text-white rounded-pill px-3 py-1 text-uppercase">RETURNED</span>
                         </td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
+                                @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
+                                    <a href="{{ route('returnable.edit', $ret) }}" class="btn btn-sm btn-light border" title="Edit Return Entry">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                @endif
                                 <a href="{{ route('returnable.show', $ret) }}" class="btn btn-sm btn-light border" target="_blank" title="View Entry">
                                     <i class="bi bi-eye"></i>
                                 </a>

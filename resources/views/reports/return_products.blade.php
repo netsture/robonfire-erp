@@ -26,27 +26,27 @@
 <!-- KPI Metric Cards -->
 <div class="row g-3 mb-4">
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Total Return Entries</span>
-            <h3 class="fw-bold font-outfit text-dark mt-2 mb-0">{{ number_format($totalReturnCount) }}</h3>
+        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Return Entries</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">{{ number_format($totalReturnCount) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Total Units Returned</span>
-            <h3 class="fw-bold font-outfit text-success mt-2 mb-0">+{{ number_format($totalUnitsReturned) }}</h3>
+        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Units Returned</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">+{{ number_format($totalUnitsReturned) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 bg-light">
-            <span class="text-muted small fw-semibold text-uppercase">Subtotal Value</span>
-            <h3 class="fw-bold font-outfit text-dark mt-2 mb-0">₹{{ number_format($totalSubtotal, 2) }}</h3>
+        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Subtotal Value</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalSubtotal, 2) }}</h3>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-xl-3">
         <div class="card card-custom border-0 p-3 bg-primary text-white">
-            <span class="text-white-50 small fw-semibold text-uppercase">Grand Total Returned Value</span>
-            <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($totalGrandTotal, 2) }}</h3>
+            <span class="text-white small fw-semibold text-uppercase" style="color: #ffffff !important;">Grand Total Returned Value</span>
+            <h3 class="fw-bold font-outfit text-white mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalGrandTotal, 2) }}</h3>
         </div>
     </div>
 </div>
@@ -67,7 +67,7 @@
         @endif
 
         <div class="col-12 col-md-3">
-            <label class="form-label small fw-semibold text-muted mb-1">Search Return # / Customer / Project</label>
+            <label class="form-label small fw-semibold text-muted mb-1">Search Return No / Customer Name / Project Name</label>
             <div class="input-group input-group-sm">
                 <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
                 <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}">
@@ -75,17 +75,23 @@
         </div>
 
         <div class="col-12 col-md-2">
-            <label class="form-label small fw-semibold text-muted mb-1">Start Date</label>
-            <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}">
+            <label class="form-label small fw-semibold text-muted mb-1">Start Date (dd-mm-yyyy)</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="bi bi-calendar3"></i></span>
+                <input type="text" name="start_date" class="form-control form-control-sm datepicker-ddmmyyyy" placeholder="dd-mm-yyyy" value="{{ request('start_date') ? (\Carbon\Carbon::canBeCreatedFromFormat(request('start_date'), 'd-m-Y') ? request('start_date') : \Carbon\Carbon::parse(request('start_date'))->format('d-m-Y')) : '' }}" autocomplete="off">
+            </div>
         </div>
 
         <div class="col-12 col-md-2">
-            <label class="form-label small fw-semibold text-muted mb-1">End Date</label>
-            <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}">
+            <label class="form-label small fw-semibold text-muted mb-1">End Date (dd-mm-yyyy)</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="bi bi-calendar3"></i></span>
+                <input type="text" name="end_date" class="form-control form-control-sm datepicker-ddmmyyyy" placeholder="dd-mm-yyyy" value="{{ request('end_date') ? (\Carbon\Carbon::canBeCreatedFromFormat(request('end_date'), 'd-m-Y') ? request('end_date') : \Carbon\Carbon::parse(request('end_date'))->format('d-m-Y')) : '' }}" autocomplete="off">
+            </div>
         </div>
 
         <div class="col-12 col-md-3">
-            <label class="form-label small fw-semibold text-muted mb-1">Customer</label>
+            <label class="form-label small fw-semibold text-muted mb-1">Search Customer Name</label>
             <select name="customer_id" class="form-select form-select-sm">
                 <option value="">All Customers</option>
                 @foreach($customers as $cust)
@@ -107,47 +113,54 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Return No #</th>
-                    <th>Customer Name</th>
+                    <th class="ps-4">#</th>
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
+                    <th>Return No</th>
                     <th>Return Date</th>
+                    <th>Customer Name</th>                                        
+                    <th>Project Name</th>
                     <th>Returned Items</th>
-                    <th>Subtotal (₹)</th>
-                    <th>Tax (₹)</th>
-                    <th>Grand Total (₹)</th>
+                    <th class="text-end">Subtotal (₹)</th>
+                    <th class="text-end">Tax (₹)</th>
+                    <th class="text-end">Grand Total (₹)</th>
                     <th class="text-end pe-4 no-print">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($returns as $ret)
+                @forelse($returns as $idx => $ret)
                     <tr>
-                        <td class="ps-4">
-                            <div class="fw-bold font-monospace text-dark">#{{ $ret->return_number }}</div>
-                            @if($ret->project_name)
-                                <div class="small text-muted"><i class="bi bi-folder2-open me-1"></i>{{ $ret->project_name }}</div>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="fw-semibold text-dark">{{ $ret->customer->company_name ?? 'N/A' }}</div>
-                        </td>
+                        <td class="ps-4 text-muted small">{{ ($returns->currentPage() - 1) * $returns->perPage() + $idx + 1 }}</td>
                         @if(auth()->user()->isSuperAdmin())
                             <td>
                                 <span class="badge bg-light text-dark border">{{ $ret->firm->name ?? 'N/A' }}</span>
                             </td>
-                        @endif
-                        <td class="small text-muted">{{ date('d M Y', strtotime($ret->return_date)) }}</td>
+                        @endif 
                         <td>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">
-                                {{ $ret->items->sum('quantity') }} units ({{ $ret->items->count() }} items)
+                            <div class="fw-bold font-monospace text-dark">#{{ $ret->return_number }}</div>
+                        </td>
+                        <td class="small text-muted font-monospace">{{ \Carbon\Carbon::parse($ret->return_date)->format('d-m-Y') }}</td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ $ret->customer->company_name ?? 'N/A' }}</div>
+                        </td>                                               
+                        <td>
+                            @if($ret->project_name)
+                                <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #4f46e5;"><i class="bi bi-folder-check me-1"></i>{{ $ret->project_name }}</span>
+                            @else
+                                <span class="text-muted small">N/A</span>
+                            @endif
+                        </td>
+                        <td>
+                            <span class="badge bg-success text-white rounded-pill px-3 py-1 fw-bold">
+                                <i class="bi bi-box-arrow-in-down-left me-1"></i>{{ $ret->items->sum('quantity') }} units ({{ $ret->items->count() }} items)
                             </span>
                         </td>
-                        <td class="small">₹{{ number_format($ret->subtotal, 2) }}</td>
-                        <td class="small text-muted">₹{{ number_format($ret->tax_amount, 2) }}</td>
-                        <td class="fw-bold text-primary">₹{{ number_format($ret->grand_total, 2) }}</td>
+                        <td class="text-end font-monospace">₹{{ number_format($ret->subtotal, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">₹{{ number_format($ret->tax_amount, 2) }}</td>
+                        <td class="text-end font-monospace fw-bold text-primary">₹{{ number_format($ret->grand_total, 2) }}</td>
                         <td class="text-end pe-4 no-print">
-                            <a href="{{ route('returnable.show', $ret) }}" class="btn btn-sm btn-light border" title="View Details">
+                            <a href="{{ route('returnable.show', $ret) }}" class="btn btn-sm btn-light border" target="_blank" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </a>
                             <a href="{{ route('returnable.print', $ret) }}" class="btn btn-sm btn-light border text-primary" target="_blank" title="Print Receipt">
@@ -157,7 +170,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 11 : 10 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-box-arrow-in-left fs-1 d-block mb-2 text-secondary"></i>
                             No return material entries matching the filters.
                         </td>

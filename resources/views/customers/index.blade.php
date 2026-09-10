@@ -20,7 +20,7 @@
         <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-6' : 'col-md-9' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search customer name, GST number, email..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search Customer Name, GST Number, Email, Phone Number, Address..." value="{{ request('search') }}">
             </div>
         </div>
         @if(auth()->user()->isSuperAdmin())
@@ -46,13 +46,13 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Customer Name</th>
+                    <th class="ps-4">Company Name</th>
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
-                    <th>Contact Info</th>
-                    <th>Billing Address</th>
                     <th>GST Number</th>
+                    <th>Billing Address</th>
+                    <th>Contact Info</th>
                     <th>Status</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
@@ -62,8 +62,8 @@
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="bi bi-building"></i>
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-customer" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-building fs-5"></i>
                                 </div>
                                 <div>
                                     <a href="{{ route('customers.show', $customer) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
@@ -77,6 +77,16 @@
                                 <span class="badge bg-light text-dark border">{{ $customer->firm->name ?? 'N/A' }}</span>
                             </td>
                         @endif
+                        <td class="small font-monospace">
+                            {{ $customer->gst_number ?? 'N/A' }}
+                        </td>
+                        <td class="small text-muted">
+                            @if($customer->address)
+                                <div class="fw-medium text-dark"><i class="bi bi-geo-alt text-muted me-1"></i>{{ $customer->address }}</div>
+                            @else
+                                N/A
+                            @endif
+                        </td>
                         <td>
                             @if($customer->phone)
                                 <div class="small"><i class="bi bi-telephone text-muted me-1"></i>{{ $customer->phone }}</div>
@@ -88,21 +98,11 @@
                                 <span class="text-muted small">N/A</span>
                             @endif
                         </td>
-                        <td class="small text-muted">
-                            @if($customer->address)
-                                <div class="fw-medium text-dark"><i class="bi bi-geo-alt text-muted me-1"></i>{{ $customer->address }}</div>
-                            @else
-                                N/A
-                            @endif
-                        </td>
-                        <td class="small font-monospace">
-                            {{ $customer->gst_number ?? 'N/A' }}
-                        </td>
                         <td>
                             @if($customer->status === 'active')
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Active</span>
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1">Active</span>
                             @else
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">Inactive</span>
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
                             @endif
                         </td>
                         <td class="text-end pe-4">

@@ -81,13 +81,19 @@
         @endif
 
         <div class="col-12 col-md-3">
-            <label class="form-label small fw-semibold text-muted mb-1">Start Date</label>
-            <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}">
+            <label class="form-label small fw-semibold text-muted mb-1">Start Date (dd-mm-yyyy)</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="bi bi-calendar3"></i></span>
+                <input type="text" name="start_date" class="form-control form-control-sm datepicker-ddmmyyyy" placeholder="dd-mm-yyyy" value="{{ request('start_date') ? (\Carbon\Carbon::canBeCreatedFromFormat(request('start_date'), 'd-m-Y') ? request('start_date') : \Carbon\Carbon::parse(request('start_date'))->format('d-m-Y')) : '' }}" autocomplete="off">
+            </div>
         </div>
 
         <div class="col-12 col-md-3">
-            <label class="form-label small fw-semibold text-muted mb-1">End Date</label>
-            <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}">
+            <label class="form-label small fw-semibold text-muted mb-1">End Date (dd-mm-yyyy)</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="bi bi-calendar3"></i></span>
+                <input type="text" name="end_date" class="form-control form-control-sm datepicker-ddmmyyyy" placeholder="dd-mm-yyyy" value="{{ request('end_date') ? (\Carbon\Carbon::canBeCreatedFromFormat(request('end_date'), 'd-m-Y') ? request('end_date') : \Carbon\Carbon::parse(request('end_date'))->format('d-m-Y')) : '' }}" autocomplete="off">
+            </div>
         </div>
 
         <div class="col-12 col-md-3 d-flex gap-1">

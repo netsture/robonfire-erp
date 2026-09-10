@@ -22,14 +22,18 @@
     <div class="col-12 col-md-4">
         <div class="card card-custom border-0 p-4 h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                    <i class="bi bi-box-seam fs-3"></i>
+                <div class="rounded-circle dark-symbol-avatar dark-symbol-product" style="width: 54px; height: 54px;">
+                    @if(!empty($product->image) && file_exists(public_path('storage/' . $product->image)))
+                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="rounded-circle w-100 h-100 object-fit-cover">
+                    @else
+                        <i class="bi bi-box-seam fs-3"></i>
+                    @endif
                 </div>
                 <div>
                     <h5 class="fw-bold font-outfit text-dark mb-0">{{ $product->name }}</h5>
-                    <span class="badge bg-light text-dark border">{{ $product->category->name }}</span>
+                    <span class="badge bg-primary text-white rounded-pill px-3 py-1 fw-semibold"><i class="bi bi-tag-fill me-1"></i>{{ $product->category->name }}</span>
                     @if($product->brand)
-                        <span class="badge bg-info-subtle text-info border border-info-subtle ms-1"><i class="bi bi-award-fill me-1"></i>{{ $product->brand->name }}</span>
+                        <span class="badge text-white rounded-pill px-2.5 py-1 ms-1" style="background-color: #6f42c1;"><i class="bi bi-award-fill me-1"></i>{{ $product->brand->name }}</span>
                     @endif
                 </div>
             </div>
@@ -37,9 +41,9 @@
             <hr class="my-2 text-muted">
 
             <div class="d-flex flex-column gap-2 my-2">
-                <div class="small"><i class="bi bi-hash me-2 text-muted"></i>HSN / SAC: <span class="font-monospace fw-bold text-dark">{{ $product->hsn_code ?? 'N/A' }}</span></div>
-                <div class="small"><i class="bi bi-percent me-2 text-muted"></i>Tax Rate: <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle rounded-pill px-2 py-1 ms-1 fw-bold">{{ number_format($product->tax_percent, 2) }}%</span></div>
-                <div class="small"><i class="bi bi-rulers me-2 text-muted"></i>Measurement Type: <span class="fw-semibold text-dark">{{ $product->unit }}</span></div>
+                <div class="small"><i class="bi bi-hash me-2 text-muted"></i>HSN / SAC: <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 font-monospace fw-semibold ms-1"><i class="bi bi-hash me-1 text-warning"></i>{{ $product->hsn_code ?? 'N/A' }}</span></div>
+                <div class="small"><i class="bi bi-percent me-2 text-muted"></i>Tax Rate: <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 ms-1 fw-bold">{{ number_format($product->tax_percent, 2) }}%</span></div>
+                <div class="small"><i class="bi bi-rulers me-2 text-muted"></i>Measurement Type: <span class="badge bg-info text-white rounded-pill px-2.5 py-1 ms-1 fw-semibold"><i class="bi bi-rulers me-1"></i>{{ $product->unit }}</span></div>
             </div>
         </div>
     </div>
@@ -48,24 +52,24 @@
     <div class="col-12 col-md-8">
         <div class="row g-3 h-100">
             <div class="col-6 col-sm-4">
-                <div class="card card-custom border-0 p-3 bg-info text-white text-center h-100 justify-content-center">
-                    <span class="text-white-50 small fw-semibold">COST PRICE</span>
+                <div class="card card-custom border-0 p-3 text-white text-center h-100 justify-content-center" style="background-color: #e54848;">
+                    <span class="text-white small fw-semibold">COST PRICE</span>
                     <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($product->cost_price, 2) }}</h3>
                 </div>
             </div>
             <div class="col-6 col-sm-4">
-                <div class="card card-custom border-0 p-3 bg-primary text-white text-center h-100 justify-content-center">
-                    <span class="text-white-50 small fw-semibold">SELLING RETAIL PRICE</span>
-                    <h3 class="fw-bold font-outfit mt-2 mb-0">₹{{ number_format($product->selling_price, 2) }}</h3>
+                <div class="card card-custom border-0 p-3 bg-success text-white text-center h-100 justify-content-center">
+                    <span class="text-white small fw-semibold">SELLING RETAIL PRICE</span>
+                    <h3 class="fw-bold font-outfit text-white mt-2 mb-0">₹{{ number_format($product->selling_price, 2) }}</h3>
                 </div>
             </div>
             <div class="col-12 col-sm-4">
                 <div class="card card-custom border-0 p-3 bg-dark text-white text-center h-100 justify-content-center">
-                    <span class="text-white-50 small fw-semibold">CURRENT IN-STOCK</span>
+                    <span class="text-white small fw-semibold">CURRENT IN-STOCK</span>
                     <h3 class="fw-bold font-outfit mt-2 mb-0 {{ $product->isLowStock() ? 'text-danger' : 'text-success' }}">
                         {{ $product->stock_quantity }} {{ $product->unit }}
                     </h3>
-                    <span class="small text-white-50 mt-1">Alert limit: {{ $product->alert_quantity }}</span>
+                    <span class="small text-white mt-1">Alert limit: {{ $product->alert_quantity }}</span>
                 </div>
             </div>
         </div>

@@ -22,7 +22,7 @@
     <div class="col-12">
         <div class="card card-custom border-0 p-4">
             <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                <div class="rounded-circle dark-symbol-avatar dark-symbol-customer" style="width: 54px; height: 54px;">
                     <i class="bi bi-person-circle fs-3"></i>
                 </div>
                 <div>
@@ -51,7 +51,7 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>Invoice #</th>
+                    <th>Invoice No</th>
                     <th>Date</th>
                     <th>Payment Status</th>
                     <th>Total Amount</th>
@@ -64,7 +64,15 @@
                         <td class="fw-bold text-dark">#{{ $sale->invoice_number }}</td>
                         <td class="small text-muted">{{ $sale->created_at->format('M d, Y') }}</td>
                         <td>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">{{ strtoupper($sale->payment_status) }}</span>
+                            @if($sale->payment_status === 'paid')
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1">PAID</span>
+                            @elseif($sale->payment_status === 'unpaid')
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1">UNPAID</span>
+                            @elseif($sale->payment_status === 'partial')
+                                <span class="badge bg-primary text-white rounded-pill px-3 py-1">PARTIAL</span>
+                            @else
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1">PENDING</span>
+                            @endif
                         </td>
                         <td class="fw-bold text-dark">₹{{ number_format($sale->grand_total, 2) }}</td>
                         <td class="text-end">

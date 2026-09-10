@@ -5,7 +5,12 @@
 @section('page_subtitle', 'Supplier: ' . $purchase->supplier->company_name . ' | Date: ' . $purchase->purchase_date)
 
 @section('header_actions')
-    <a href="{{ route('purchases.print', $purchase) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium" target="_blank">
+    @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
+        <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <i class="bi bi-pencil me-1"></i> Edit Purchase
+        </a>
+    @endif
+    <a href="{{ route('purchases.print', $purchase) }}" class="btn btn-outline-primary rounded-pill px-3 font-outfit fw-medium" target="_blank">
         <i class="bi bi-printer me-1"></i> Print Invoice
     </a>
     <a href="{{ route('purchases.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
@@ -24,11 +29,13 @@
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     @if($purchase->payment_status === 'paid')
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-4 py-2 fs-6">PAID</span>
+                        <span class="badge bg-success text-white rounded-pill px-4 py-2 fs-6">PAID</span>
                     @elseif($purchase->payment_status === 'unpaid')
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-4 py-2 fs-6">UNPAID</span>
+                        <span class="badge bg-danger text-white rounded-pill px-4 py-2 fs-6">UNPAID</span>
+                    @elseif($purchase->payment_status === 'partial')
+                        <span class="badge bg-primary text-white rounded-pill px-4 py-2 fs-6">PARTIAL</span>
                     @else
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-4 py-2 fs-6">PENDING</span>
+                        <span class="badge bg-warning text-dark rounded-pill px-4 py-2 fs-6">PENDING</span>
                     @endif
 
                     @if(!auth()->user()->isSuperAdmin())
@@ -41,8 +48,15 @@
 
             <div class="row g-3 mb-4">
                 <div class="col-6">
-                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">VENDOR / SUPPLIER</span>
-                    <div class="fw-bold text-dark mt-2 mb-1 fs-5">{{ $purchase->supplier->company_name ?? 'N/A' }}</div>
+                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">SUPPLIER DETAILS</span>
+                    <div class="d-flex align-items-center gap-3 mt-2 mb-2">
+                        <div class="rounded-circle dark-symbol-avatar dark-symbol-supplier" style="width: 42px; height: 42px;">
+                            <i class="bi bi-truck fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark fs-5 mb-0">{{ $purchase->supplier->company_name ?? 'N/A' }}</div>
+                        </div>
+                    </div>
                     @if($purchase->supplier->address)
                         <div class="small text-muted mb-1"><i class="bi bi-geo-alt me-1 text-secondary"></i><strong>Address:</strong> {{ $purchase->supplier->address }}</div>
                     @endif
@@ -57,7 +71,7 @@
                     @endif
                 </div>
                 <div class="col-6 text-end">
-                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">ORDER METADATA</span>
+                    <span class="text-muted small fw-semibold text-uppercase tracking-wider">PURCHASE ORDER DETAILS</span>
                     <div class="small text-dark mt-2 mb-1">Purchase Date: <strong>{{ $purchase->purchase_date }}</strong></div>
                     <div class="small text-dark mb-1">Invoice No: <strong>#{{ $purchase->invoice_number }}</strong></div>
                     @if($purchase->project_name)
@@ -72,6 +86,7 @@
                 <table class="table table-bordered align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th class="text-center" style="width: 55px;">Symbol</th>
                             <th>Category</th>
                             <th>Product Item (Brand)</th>
                             <th>HSN Code</th>
@@ -93,9 +108,18 @@
                                 $totalWithTax = $item->subtotal + $lineTax;
                             @endphp
                             <tr>
+                                <td class="text-center">
+                                    <div class="rounded-circle dark-symbol-avatar dark-symbol-product mx-auto" style="width: 38px; height: 38px;">
+                                        @if(!empty($prod->image) && file_exists(public_path('storage/' . $prod->image)))
+                                            <img src="{{ asset('storage/' . $prod->image) }}" alt="{{ $prod->name }}" class="rounded-circle w-100 h-100 object-fit-cover">
+                                        @else
+                                            <i class="bi bi-box-seam fs-6"></i>
+                                        @endif
+                                    </div>
+                                </td>
                                 <td><span class="badge bg-light text-dark border">{{ $prod->category->name ?? 'N/A' }}</span></td>
                                 <td class="fw-semibold text-dark">{{ $prod->name ?? 'N/A' }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}</td>
-                                <td class="small font-monospace text-muted">{{ $prod->hsn_code ?? 'N/A' }}</td>
+                                <td class="small font-monospace text-dark">{{ $prod->hsn_code ?? 'N/A' }}</td>
                                 <td><span class="badge bg-secondary-subtle text-secondary border px-2">{{ $prod->unit ?? 'Pcs' }}</span></td>
                                 <td class="text-center fw-bold">{{ $item->quantity }}</td>
                                 <td class="text-end">₹{{ number_format($item->unit_cost, 2) }}</td>
@@ -121,7 +145,7 @@
                             <span class="text-dark">+₹{{ number_format($purchase->tax_amount ?? 0, 2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Discount:</span>
+                            <span class="text-muted">Discount Amount:</span>
                             <span class="text-dark">-₹{{ number_format($purchase->discount_amount, 2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
@@ -158,7 +182,7 @@
                 <div class="modal-body">
                     <div class="mb-3 p-3 bg-light rounded-3">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted small">Invoice #:</span>
+                            <span class="text-muted small">Invoice No:</span>
                             <span class="fw-bold font-monospace">{{ $purchase->invoice_number }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-1">
@@ -180,7 +204,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Paid Amount (₹)</label>
-                        <input type="number" step="0.01" name="paid_amount" id="modal_paid_show" class="form-control" value="{{ number_format($purchase->paid_amount, 2, '.', '') }}" {{ $purchase->payment_status !== 'partial' ? 'readonly' : '' }}>
+                        <input type="number" name="paid_amount" id="modal_paid_show" class="form-control" value="{{ (float)$purchase->paid_amount == 0 ? 0 : (float)$purchase->paid_amount }}" {{ $purchase->payment_status !== 'partial' ? 'readonly' : '' }}>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
@@ -201,7 +225,7 @@
             input.value = grandTotal.toFixed(2);
             input.readOnly = true;
         } else if (val === 'unpaid') {
-            input.value = '0.00';
+            input.value = '0';
             input.readOnly = true;
         } else {
             input.readOnly = false;

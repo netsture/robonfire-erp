@@ -5,7 +5,7 @@
 @section('page_subtitle', 'Configure system roles and fine-grained module permissions')
 
 @section('header_actions')
-    @if(!auth()->user()->isSuperAdmin())
+    @if(auth()->user()->isAdmin())
         <a href="{{ route('roles.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
             <i class="bi bi-shield-plus me-1"></i> Create New Role
         </a>
@@ -19,8 +19,8 @@
         <div class="col-12 col-md-6 col-xl-4">
             <div class="card card-custom border-0 h-100 p-4">
                 <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="rounded-circle bg-indigo-subtle text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: #e0e7ff;">
-                        <i class="bi bi-shield-lock fs-4 text-primary"></i>
+                    <div class="rounded-circle dark-symbol-avatar dark-symbol-role" style="width: 48px; height: 48px;">
+                        <i class="bi bi-shield-lock fs-4"></i>
                     </div>
                     <span class="badge bg-light text-dark border rounded-pill px-3 py-1">
                         <i class="bi bi-person me-1"></i>{{ $role->users_count }} Assigned Users
@@ -42,7 +42,7 @@
 
                 <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
                     <span class="text-muted small font-monospace">slug: {{ $role->slug }}</span>
-                    @if(!auth()->user()->isSuperAdmin())
+                    @if(auth()->user()->isAdmin())
                         <div class="btn-group">
                             <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                 <i class="bi bi-pencil me-1"></i> Edit Permissions
@@ -57,6 +57,8 @@
                                 </form>
                             @endif
                         </div>
+                    @else
+                        <span class="text-muted small">View Only</span>
                     @endif
                 </div>
             </div>
