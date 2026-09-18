@@ -64,8 +64,14 @@
             <select name="product_id" id="product_id_select" class="form-select form-select-sm" required>
                 <option value="">Search or Select Product...</option>
                 @foreach($products as $prod)
+                    @php
+                        $catStr = $prod->category ? '[' . $prod->category->name . ']' : '';
+                        $brandStr = $prod->brand ? '[' . $prod->brand->name . ']' : '';
+                        $idStr = $prod->product_identifier ? '[' . $prod->product_identifier . ']' : '';
+                        $label = trim("{$prod->name} {$catStr} {$brandStr} {$idStr}");
+                    @endphp
                     <option value="{{ $prod->id }}" {{ ($selectedProduct && $selectedProduct->id == $prod->id) ? 'selected' : '' }}>
-                        {{ $prod->name }} {{ $prod->product_identifier ? '['.$prod->product_identifier.']' : '' }}
+                        {{ $label }}
                     </option>
                 @endforeach
             </select>

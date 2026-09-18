@@ -14,16 +14,6 @@
 
 @section('content')
 
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
-        <div class="d-flex align-items-center">
-            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
-            <div>{{ session('success') }}</div>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
 <!-- Summary Cards -->
 <div class="row g-3 mb-4">
     <div class="col-12 col-md-6 col-xl-4">
