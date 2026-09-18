@@ -25,6 +25,7 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('product_identifier', 'like', "%{$search}%")
                   ->orWhere('hsn_code', 'like', "%{$search}%")
                   ->orWhereHas('brand', function ($bq) use ($search) {
                       $bq->where('name', 'like', "%{$search}%");
@@ -75,7 +76,9 @@ class ProductController extends Controller
 
         $categories = $catQuery->get();
         $brands = $brandQuery->get();
-        return view('products.create', compact('categories', 'brands'));
+        $autoIdentifier = Product::generateUniqueIdentifier();
+
+        return view('products.create', compact('categories', 'brands', 'autoIdentifier'));
     }
 
     public function store(Request $request)
@@ -93,6 +96,7 @@ class ProductController extends Controller
                     ->where('category_id', $request->input('category_id'))
                     ->where('brand_id', $request->input('brand_id')),
             ],
+            'product_identifier' => ['nullable', 'string', 'max:50', \Illuminate\Validation\Rule::unique('products', 'product_identifier')],
             'hsn_code'       => ['required', 'string', 'max:50'],
             'category_id'    => ['required', 'exists:categories,id'],
             'brand_id'       => ['required', 'exists:brands,id'],
@@ -106,25 +110,29 @@ class ProductController extends Controller
             'status'         => ['required', 'in:active,inactive'],
         ], [
             'name.unique'    => 'A product with this Title, Category, and Brand combination already exists for your firm.',
+            'product_identifier.unique' => 'Product Unique Identifier already exists. Please use a unique identifier.',
         ]);
+
+        $productIdentifier = (!empty($validated['product_identifier']) && is_numeric($validated['product_identifier']) && strlen(trim($validated['product_identifier'])) === 5) ? trim($validated['product_identifier']) : Product::generateUniqueIdentifier();
 
         Product::create([
-            'firm_id'        => $firmId,
-            'name'           => $validated['name'],
-            'hsn_code'       => $validated['hsn_code'],
-            'category_id'    => $validated['category_id'],
-            'brand_id'       => $validated['brand_id'],
-            'unit'           => $validated['unit'],
-            'cost_price'     => $validated['cost_price'] ?? 0.00,
-            'selling_price'  => $validated['selling_price'] ?? 0.00,
-            'tax_percent'    => $validated['tax_percent'],
-            'alert_quantity' => $validated['alert_quantity'],
-            'stock_quantity' => $validated['stock_quantity'] ?? 0,
-            'description'    => $validated['description'] ?? null,
-            'status'         => $validated['status'],
+            'firm_id'            => $firmId,
+            'name'               => $validated['name'],
+            'product_identifier' => $productIdentifier,
+            'hsn_code'           => $validated['hsn_code'],
+            'category_id'        => $validated['category_id'],
+            'brand_id'           => $validated['brand_id'],
+            'unit'               => $validated['unit'],
+            'cost_price'         => $validated['cost_price'] ?? 0.00,
+            'selling_price'      => $validated['selling_price'] ?? 0.00,
+            'tax_percent'        => $validated['tax_percent'],
+            'alert_quantity'     => $validated['alert_quantity'],
+            'stock_quantity'     => $validated['stock_quantity'] ?? 0,
+            'description'        => $validated['description'] ?? null,
+            'status'             => $validated['status'],
         ]);
 
-        return redirect()->route('products.index')->with('success', 'Product created and added to catalog.');
+        return redirect()->route('products.index')->with('success', 'Product created and added to list.');
     }
 
     public function show(Product $product)
@@ -176,6 +184,12 @@ class ProductController extends Controller
                     ->where('brand_id', $request->input('brand_id'))
                     ->ignore($product->id),
             ],
+            'product_identifier' => [
+                'required',
+                'string',
+                'max:50',
+                \Illuminate\Validation\Rule::unique('products', 'product_identifier')->ignore($product->id),
+            ],
             'hsn_code'       => ['required', 'string', 'max:50'],
             'category_id'    => ['required', 'exists:categories,id'],
             'brand_id'       => ['required', 'exists:brands,id'],
@@ -189,8 +203,10 @@ class ProductController extends Controller
             'status'         => ['required', 'in:active,inactive'],
         ], [
             'name.unique'    => 'A product with this Title, Category, and Brand combination already exists for your firm.',
+            'product_identifier.unique' => 'Product Unique Identifier already exists. Please use a unique identifier.',
         ]);
 
+        $validated['product_identifier'] = trim($validated['product_identifier']);
         $validated['cost_price'] = $validated['cost_price'] ?? 0.00;
         $validated['selling_price'] = $validated['selling_price'] ?? 0.00;
         if (!isset($validated['stock_quantity'])) {

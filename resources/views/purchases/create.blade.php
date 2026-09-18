@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'New Purchase Order')
-@section('page_title', 'Create Purchase Order')
+@section('page_title', 'Create Purchase Invoice')
 @section('page_subtitle', 'Restock products from vendors with automatic inventory increment')
 
 @push('styles')
@@ -264,7 +264,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-2 font-outfit fw-semibold mt-2">
-                    <i class="bi bi-check-circle me-1"></i> Process Purchase Order
+                    <i class="bi bi-check-circle me-1"></i> Submit Purchase Order
                 </button>
             </div>
         </div>

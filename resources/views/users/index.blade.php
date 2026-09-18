@@ -37,7 +37,7 @@
             <select name="role" class="form-select bg-light">
                 <option value="">All Roles</option>
                 @foreach($roles as $role)
-                    <option value="{{ $role->name }}" {{ request('role') == $role->name ? 'selected' : '' }}>{{ $role->name }}</option>
+                    <option value="{{ $role->name }}" {{ request('role') == $role->name ? 'selected' : '' }}>{{ ucfirst($role->name) }}</option>
                 @endforeach
             </select>
         </div>
@@ -105,27 +105,27 @@
                         <td>
                             @if(in_array($rStr, ['superadmin', 'super admin', 'super-admin']))
                                 <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-semibold">
-                                    <i class="bi bi-shield-lock-fill me-1"></i>{{ $user->role ?? 'Superadmin' }}
+                                    <i class="bi bi-shield-lock-fill me-1"></i>{{ ucfirst($user->role ?? 'Superadmin') }}
                                 </span>
                             @elseif(in_array($rStr, ['admin', 'administrator']))
                                 <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #4f46e5;">
-                                    <i class="bi bi-shield-check me-1"></i>{{ $user->role ?? 'Admin' }}
+                                    <i class="bi bi-shield-check me-1"></i>{{ ucfirst($user->role ?? 'Admin') }}
                                 </span>
                             @elseif(in_array($rStr, ['manager', 'supervisor']))
                                 <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-semibold">
-                                    <i class="bi bi-person-badge-fill me-1"></i>{{ $user->role ?? 'Manager' }}
+                                    <i class="bi bi-person-badge-fill me-1"></i>{{ ucfirst($user->role ?? 'Manager') }}
                                 </span>
                             @elseif(in_array($rStr, ['sales', 'staff', 'biller']))
                                 <span class="badge bg-info text-white rounded-pill px-3 py-1 fw-semibold">
-                                    <i class="bi bi-person-workspace me-1"></i>{{ $user->role ?? 'Sales' }}
+                                    <i class="bi bi-person-workspace me-1"></i>{{ ucfirst($user->role ?? 'Sales') }}
                                 </span>
                             @elseif(in_array($rStr, ['user', 'standard user', 'customer']))
                                 <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
-                                    <i class="bi bi-person-check-fill me-1"></i>{{ $user->role ?? 'User' }}
+                                    <i class="bi bi-person-check-fill me-1"></i>{{ ucfirst($user->role ?? 'User') }}
                                 </span>
                             @else
                                 <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
-                                    <i class="bi bi-person-fill me-1"></i>{{ $user->role ?? 'User' }}
+                                    <i class="bi bi-person-fill me-1"></i>{{ ucfirst($user->role ?? 'User') }}
                                 </span>
                             @endif
                         </td>
@@ -150,7 +150,7 @@
                             @endif
                         </td>
                         <td class="small text-muted">
-                            {{ $user->created_at->format('M d, Y') }}
+                            {{ $user->created_at->format('d-m-Y') }}
                         </td>
                         <td class="text-end pe-4">
                             @if(auth()->user()->isAdmin())

@@ -19,10 +19,10 @@
         </form>
     @else
         <a href="{{ route('sales.index') }}" class="btn btn-primary rounded-pill px-3 shadow-sm font-outfit fw-medium">
-            <i class="bi bi-cart-plus me-1"></i> New Sale Order
+            <i class="bi bi-cart-plus me-1"></i> New Sales Order
         </a>
         <a href="{{ route('purchases.index') }}" class="btn btn-warning text-dark rounded-pill px-3 shadow-sm font-outfit fw-medium">
-            <i class="bi bi-bag-plus me-1"></i> Record Purchase
+            <i class="bi bi-bag-plus me-1"></i> New Purchase Order
         </a>
     @endif
 @endsection
@@ -54,7 +54,7 @@
         <div class="card card-custom border-0 h-100 p-3 text-white" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="fw-bold small text-uppercase tracking-wider" style="color: #ffffff !important;">Total Sales Revenue</span>
+                    <span class="fw-bold small text-uppercase tracking-wider" style="color: #ffffff !important;">Total Sales</span>
                     <h3 class="fw-bold font-outfit mt-2 mb-1" style="color: #ffffff !important;">₹{{ number_format($totalSalesAmount, 2) }}</h3>
                     <span class="badge bg-white text-success fw-bold rounded-pill">
                         <i class="bi bi-arrow-up-right me-1"></i>+14.2% MoM
@@ -74,7 +74,7 @@
                 <div>
                     <span class="fw-bold small text-uppercase tracking-wider" style="color: #ffffff !important;">Total Products</span>
                     <h3 class="fw-bold font-outfit mt-2 mb-1" style="color: #ffffff !important;">{{ number_format($totalProductsCount) }}</h3>
-                    <span class="badge bg-white text-dark fw-bold rounded-pill"><i class="bi bi-box-seam me-1"></i>In Catalog</span>
+                    <span class="badge bg-white text-dark fw-bold rounded-pill"><i class="bi bi-box-seam me-1"></i>In Product List</span>
                 </div>
                 <div class="metric-icon dark-symbol-avatar shadow-sm" style="background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
                     <i class="bi bi-boxes fs-3"></i>
@@ -197,7 +197,7 @@
                             <i class="bi bi-receipt-cutoff fs-5"></i>
                         </div>
                         <div>
-                            <div class="fw-semibold text-dark">Record Purchase</div>
+                            <div class="fw-semibold text-dark">Create Purchase Order</div>
                             <div class="text-muted small">Log vendor purchase orders & inventory</div>
                         </div>
                     </div>
@@ -213,7 +213,7 @@
     <div class="row align-items-center text-center text-md-start">
         <div class="col-md-3 mb-2 mb-md-0 border-end border-light-subtle">
             <div class="text-muted small">Active User Session</div>
-            <div class="fw-bold text-dark">{{ Auth::user()->name }} ({{ Auth::user()->role }})</div>
+            <div class="fw-bold text-dark">{{ Auth::user()->name }} ({{ ucfirst(Auth::user()->role) }})</div>
         </div>
         <div class="col-md-3 mb-2 mb-md-0 border-end border-light-subtle">
             <div class="text-muted small">Total Registered Users</div>

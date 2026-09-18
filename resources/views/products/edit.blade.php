@@ -6,7 +6,7 @@
 
 @section('header_actions')
     <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-arrow-left me-1"></i> Back to Catalog
+        <i class="bi bi-arrow-left me-1"></i> Back to Product
     </a>
 @endsection
 
@@ -19,10 +19,16 @@
                 @method('PUT')
                 
                 <div class="row g-3">
-                    <div class="col-12">
+                    <div class="col-12 col-md-8">
                         <label for="name" class="form-label fw-semibold text-dark">Product Title <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $product->name) }}" required>
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="product_identifier_display" class="form-label fw-semibold text-dark">Product Unique Identifier <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control font-monospace fw-bold text-dark border-warning" id="product_identifier_display" value="{{ old('product_identifier', $product->product_identifier) }}" style="background-color: #fef08a; color: #713f12 !important;" disabled readonly>
+                        <input type="hidden" name="product_identifier" value="{{ old('product_identifier', $product->product_identifier) }}">
                     </div>
 
                     <div class="col-12 col-md-6">
@@ -306,7 +312,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 alertBox.classList.remove('d-none');
             });
         });
-    }
 });
 </script>
 @endsection

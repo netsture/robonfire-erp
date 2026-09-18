@@ -2,7 +2,7 @@
 
 @section('title', 'Sales Order Details')
 @section('page_title', 'Sales Order: #' . $sale->invoice_number)
-@section('page_subtitle', 'Customer: ' . $sale->customer->company_name . ' | Date: ' . $sale->sale_date)
+@section('page_subtitle', 'Customer: ' . ($sale->customer->company_name ?? 'N/A') . ' | Date: ' . ($sale->sale_date ? \Carbon\Carbon::parse($sale->sale_date)->format('d-m-Y') : 'N/A'))
 
 @section('header_actions')
     @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
@@ -25,7 +25,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
                     <h4 class="fw-bold font-outfit text-dark mb-0">Delivery Invoice</h4>
-                    <span class="text-muted small font-monospace">Challan No : {{ $sale->invoice_number }}</span>
+                    <span class="text-muted small font-monospace">Invoice No : {{ $sale->invoice_number }}</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     @if($sale->payment_status === 'paid')
@@ -72,8 +72,8 @@
                 </div>
                 <div class="col-6 text-end">
                     <span class="text-muted small fw-semibold text-uppercase tracking-wider">DELIVERY DETAILS</span>
-                    <div class="small text-dark mt-2 mb-1">Challan Date: <strong>{{ $sale->sale_date }}</strong></div>
-                    <div class="small text-dark mb-1">Challan No: <strong>#{{ $sale->invoice_number }}</strong></div>
+                    <div class="small text-dark mt-2 mb-1">Invoice Date: <strong>{{ $sale->sale_date ? \Carbon\Carbon::parse($sale->sale_date)->format('d-m-Y') : 'N/A' }}</strong></div>
+                    <div class="small text-dark mb-1">Invoice No: <strong>#{{ $sale->invoice_number }}</strong></div>
                     @if($sale->project_name)
                         <div class="small text-dark mb-1">Project Name: <strong>{{ $sale->project_name }}</strong></div>
                     @endif
@@ -193,7 +193,7 @@
                 <div class="modal-body">
                     <div class="mb-3 p-3 bg-light rounded-3">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted small">Challan #:</span>
+                            <span class="text-muted small">Invoice #:</span>
                             <span class="fw-bold font-monospace">{{ $sale->invoice_number }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-1">

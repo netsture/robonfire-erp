@@ -2,7 +2,7 @@
 
 @section('title', 'Delivery Challan')
 @section('page_title', 'Delivery Challan: #' . $sale->invoice_number)
-@section('page_subtitle', 'Customer: ' . $sale->customer->company_name . ' | Date: ' . $sale->sale_date)
+@section('page_subtitle', 'Customer: ' . ($sale->customer->company_name ?? 'N/A') . ' | Date: ' . ($sale->sale_date ? \Carbon\Carbon::parse($sale->sale_date)->format('d-m-Y') : 'N/A'))
 
 @section('header_actions')
     <a href="{{ route('sales.print-challan', $sale) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium" target="_blank">
@@ -20,7 +20,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
                     <h4 class="fw-bold font-outfit text-dark mb-0">Delivery Challan</h4>
-                    <span class="text-muted small font-monospace">Challan  No : {{ $sale->invoice_number }}</span>
+                    <span class="text-muted small font-monospace">Challan No : {{ $sale->invoice_number }}</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     @if($sale->payment_status === 'paid')
@@ -52,7 +52,7 @@
                 </div>
                 <div class="col-6 text-end">
                     <span class="text-muted small fw-semibold text-uppercase tracking-wider">DELIVERY DETAILS</span>
-                    <div class="small text-dark mt-2 mb-1">Challan Date: <strong>{{ $sale->sale_date }}</strong></div>
+                    <div class="small text-dark mt-2 mb-1">Challan Date: <strong>{{ $sale->sale_date ? \Carbon\Carbon::parse($sale->sale_date)->format('d-m-Y') : 'N/A' }}</strong></div>
                     <div class="small text-dark mb-1">Challan No: <strong>#{{ $sale->invoice_number }}</strong></div>
                     @if($sale->project_name)
                         <div class="small text-dark mb-1">Project Name: <strong>{{ $sale->project_name }}</strong></div>

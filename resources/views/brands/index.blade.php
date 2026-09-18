@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Product Brands')
-@section('page_title', 'Brand Master Management')
+@section('page_title', 'Brand Management')
 @section('page_subtitle', 'Manage manufacturers, product brands, and catalog lines')
 
 @section('header_actions')

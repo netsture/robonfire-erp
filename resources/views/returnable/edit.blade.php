@@ -4,6 +4,24 @@
 @section('page_title', 'Edit Returnable Entry: #' . $returnableMaterial->return_number)
 @section('page_subtitle', 'Modify returnable entry details and line items with automatic inventory recalculation')
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<style>
+    .ts-control {
+        border-radius: 0.375rem !important;
+        padding: 0.45rem 0.75rem !important;
+        border-color: #dee2e6 !important;
+        font-size: 0.9rem;
+    }
+    .ts-dropdown {
+        border-radius: 0.5rem !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        border: 1px solid #e2e8f0 !important;
+        z-index: 1055 !important;
+    }
+</style>
+@endpush
+
 @section('header_actions')
     <a href="{{ route('returnable.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Returnable Entry
@@ -46,7 +64,15 @@
 
                     <div class="col-12 col-md-6">
                         <label for="project_name" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('project_name') is-invalid @enderror" id="project_name" name="project_name" value="{{ old('project_name', $returnableMaterial->project_name) }}" placeholder="Enter Project Name" required>
+                        <select class="form-select @error('project_name') is-invalid @enderror" id="project_name" name="project_name" required>
+                            <option value="">Select, Search or Type Project Name</option>
+                            @foreach($projectNames as $proj)
+                                <option value="{{ $proj }}" {{ old('project_name', $returnableMaterial->project_name) == $proj ? 'selected' : '' }}>{{ $proj }}</option>
+                            @endforeach
+                            @if($returnableMaterial->project_name && !$projectNames->contains($returnableMaterial->project_name))
+                                <option value="{{ $returnableMaterial->project_name }}" selected>{{ $returnableMaterial->project_name }}</option>
+                            @endif
+                        </select>
                         @error('project_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -179,8 +205,25 @@
 </form>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('customer_id')) {
+        new TomSelect('#customer_id', {
+            create: false,
+            placeholder: 'Select or Search Customer Name',
+            plugins: ['dropdown_input']
+        });
+    }
+
+    if (document.getElementById('project_name')) {
+        new TomSelect('#project_name', {
+            create: true,
+            createOnBlur: true,
+            placeholder: 'Select, Search or Type Project Name',
+            plugins: ['dropdown_input']
+        });
+    }
     let rowIndex = {{ count($itemsToDisplay) }};
     const itemsContainer = document.getElementById('itemsContainer');
     const addRowBtn = document.getElementById('addRowBtn');

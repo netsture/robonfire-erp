@@ -187,8 +187,10 @@ class SaleController extends Controller
             foreach ($itemsData as $iData) {
                 $sale->items()->create($iData);
 
-                // Auto-deduct stock quantity
-                Product::where('id', $iData['product_id'])->decrement('stock_quantity', $iData['quantity']);
+                // Auto-deduct stock quantity & update product selling price
+                $product = Product::find($iData['product_id']);
+                $product->decrement('stock_quantity', $iData['quantity']);
+                $product->update(['selling_price' => $iData['unit_price']]);
             }
         });
 
@@ -334,9 +336,10 @@ class SaleController extends Controller
             foreach ($itemsData as $iData) {
                 $sale->items()->create($iData);
 
-                // Deduct stock for new items
+                // Deduct stock for new items & update product selling price
                 $product = Product::find($iData['product_id']);
                 $product->decrement('stock_quantity', $iData['quantity']);
+                $product->update(['selling_price' => $iData['unit_price']]);
             }
         });
 

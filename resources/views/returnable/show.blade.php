@@ -2,7 +2,7 @@
 
 @section('title', 'Return Entry: #' . $returnableMaterial->return_number)
 @section('page_title', 'Returnable Entry: #' . $returnableMaterial->return_number)
-@section('page_subtitle', 'Customer: ' . ($returnableMaterial->customer->company_name ?? 'N/A') . ' | Date: ' . $returnableMaterial->return_date)
+@section('page_subtitle', 'Customer: ' . ($returnableMaterial->customer->company_name ?? 'N/A') . ' | Date: ' . ($returnableMaterial->return_date ? \Carbon\Carbon::parse($returnableMaterial->return_date)->format('d-m-Y') : 'N/A'))
 
 @section('header_actions')
     @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
@@ -61,7 +61,7 @@
                 </div>
                 <div class="col-6 text-end">
                     <span class="text-muted small fw-semibold text-uppercase tracking-wider">RETURN DETAILS</span>
-                    <div class="small text-dark mt-2 mb-1">Return Date: <strong>{{ $returnableMaterial->return_date }}</strong></div>
+                    <div class="small text-dark mt-2 mb-1">Return Date: <strong>{{ $returnableMaterial->return_date ? \Carbon\Carbon::parse($returnableMaterial->return_date)->format('d-m-Y') : 'N/A' }}</strong></div>
                     <div class="small text-dark mb-1">Return No: <strong>#{{ $returnableMaterial->return_number }}</strong></div>
                     @if($returnableMaterial->project_name)
                         <div class="small text-dark mb-1">Project Name: <strong>{{ $returnableMaterial->project_name }}</strong></div>

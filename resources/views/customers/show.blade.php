@@ -62,7 +62,7 @@
                 @forelse($customer->sales as $sale)
                     <tr>
                         <td class="fw-bold text-dark">#{{ $sale->invoice_number }}</td>
-                        <td class="small text-muted">{{ $sale->created_at->format('M d, Y') }}</td>
+                        <td class="small text-muted">{{ $sale->created_at->format('d-m-Y') }}</td>
                         <td>
                             @if($sale->payment_status === 'paid')
                                 <span class="badge bg-success text-white rounded-pill px-3 py-1">PAID</span>

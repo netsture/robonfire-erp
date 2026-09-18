@@ -27,7 +27,7 @@
                     </span>
                 </div>
 
-                <h4 class="fw-bold font-outfit text-dark mb-1">{{ $role->name }}</h4>
+                <h4 class="fw-bold font-outfit text-dark mb-1">{{ ucfirst($role->name) }}</h4>
                 <p class="text-muted small mb-3">{{ $role->description ?? 'No description provided.' }}</p>
 
                 <div class="bg-light rounded-3 p-3 mb-4">

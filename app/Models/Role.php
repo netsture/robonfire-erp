@@ -11,6 +11,11 @@ class Role extends Model
 
     protected $fillable = ['name', 'slug', 'description'];
 
+    public function getNameAttribute($value)
+    {
+        return $value ? ucfirst($value) : $value;
+    }
+
     public function permissions()
     {
         return $this->belongsToMany(Permission::class);

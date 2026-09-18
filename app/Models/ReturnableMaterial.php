@@ -28,6 +28,10 @@ class ReturnableMaterial extends Model
         'notes',
     ];
 
+    protected $casts = [
+        'return_date' => 'date',
+    ];
+
     public function firm(): BelongsTo
     {
         return $this->belongsTo(Firm::class);

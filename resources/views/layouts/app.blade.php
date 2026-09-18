@@ -358,7 +358,7 @@
                 <span>Customers</span>
             </a>
 
-            <div class="sidebar-heading">Inventory & Catalog</div>
+            <div class="sidebar-heading">Inventory & Product</div>
             <a href="{{ route('categories.index') }}" class="nav-link-custom {{ request()->routeIs('categories*') ? 'active' : '' }}">
                 <i class="bi bi-tags-fill"></i>
                 <span>Categories</span>
@@ -398,10 +398,20 @@
             <a href="{{ route('roles.index') }}" class="nav-link-custom {{ request()->routeIs('roles*') ? 'active' : '' }}">
                 <i class="bi bi-shield-lock-fill"></i>
                 <span>Roles & Permissions</span>
-            </a>
+            </a>           
             <a href="{{ route('reports.index') }}" class="nav-link-custom {{ request()->routeIs('reports*') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-line-fill"></i>
                 <span>Analytics & Reports</span>
+            </a>
+
+            <div class="sidebar-heading">Project Information</div>
+            <a href="{{ route('projects.index') }}" class="nav-link-custom {{ (request()->routeIs('projects*') && !request()->routeIs('projects.expenses*')) ? 'active' : '' }}">
+                <i class="bi bi-briefcase-fill"></i>
+                <span>Project Entry</span>
+            </a>
+            <a href="{{ route('projects.expenses.index') }}" class="nav-link-custom {{ request()->routeIs('projects.expenses*') ? 'active' : '' }}">
+                <i class="bi bi-receipt-cutoff"></i>
+                <span>Project Expense</span>
             </a>
         </div>
 
@@ -444,27 +454,27 @@
 
             @if(in_array($headerRoleStr, ['superadmin', 'super admin', 'super-admin']))
                 <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-semibold">
-                    <i class="bi bi-shield-lock-fill me-1"></i>{{ Auth::user()->role ?? 'Superadmin' }}
+                    <i class="bi bi-shield-lock-fill me-1"></i>{{ ucfirst(Auth::user()->role ?? 'Superadmin') }}
                 </span>
             @elseif(in_array($headerRoleStr, ['admin', 'administrator']))
                 <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #4f46e5;">
-                    <i class="bi bi-shield-check me-1"></i>{{ Auth::user()->role ?? 'Admin' }}
+                    <i class="bi bi-shield-check me-1"></i>{{ ucfirst(Auth::user()->role ?? 'Admin') }}
                 </span>
             @elseif(in_array($headerRoleStr, ['manager', 'supervisor']))
                 <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-semibold">
-                    <i class="bi bi-person-badge-fill me-1"></i>{{ Auth::user()->role ?? 'Manager' }}
+                    <i class="bi bi-person-badge-fill me-1"></i>{{ ucfirst(Auth::user()->role ?? 'Manager') }}
                 </span>
             @elseif(in_array($headerRoleStr, ['sales', 'staff', 'biller']))
                 <span class="badge bg-info text-white rounded-pill px-3 py-1 fw-semibold">
-                    <i class="bi bi-person-workspace me-1"></i>{{ Auth::user()->role ?? 'Sales' }}
+                    <i class="bi bi-person-workspace me-1"></i>{{ ucfirst(Auth::user()->role ?? 'Sales') }}
                 </span>
             @elseif(in_array($headerRoleStr, ['user', 'standard user', 'customer']))
                 <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
-                    <i class="bi bi-person-check-fill me-1"></i>{{ Auth::user()->role ?? 'User' }}
+                    <i class="bi bi-person-check-fill me-1"></i>{{ ucfirst(Auth::user()->role ?? 'User') }}
                 </span>
             @else
                 <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
-                    <i class="bi bi-person-fill me-1"></i>{{ Auth::user()->role ?? 'User' }}
+                    <i class="bi bi-person-fill me-1"></i>{{ ucfirst(Auth::user()->role ?? 'User') }}
                 </span>
             @endif
 
@@ -583,8 +593,10 @@
             });
 
             if (typeof flatpickr !== 'undefined') {
-                flatpickr('.datepicker-ddmmyyyy', {
-                    dateFormat: 'd-m-Y',
+                flatpickr('input[type="date"], .datepicker-ddmmyyyy', {
+                    altInput: true,
+                    altFormat: 'd-m-Y',
+                    dateFormat: 'Y-m-d',
                     allowInput: true
                 });
             }

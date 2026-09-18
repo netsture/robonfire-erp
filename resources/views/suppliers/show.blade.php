@@ -62,7 +62,7 @@
                 @forelse($supplier->purchases as $purchase)
                     <tr>
                         <td class="fw-bold text-dark">{{ $purchase->project_name }}</td>
-                        <td class="small text-muted">{{ $purchase->created_at->format('M d, Y') }}</td>
+                        <td class="small text-muted">{{ $purchase->created_at->format('d-m-Y') }}</td>
                         <td>
                             @if($purchase->payment_status === 'paid')
                                 <span class="badge bg-success text-white rounded-pill px-3 py-1">PAID</span>

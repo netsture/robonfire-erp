@@ -36,7 +36,7 @@ class RoleAndPermissionSeeder extends Seeder
                 'suppliers.delete' => 'Delete Suppliers',
             ],
             'Products' => [
-                'products.view'   => 'View Product Catalog & Inventory',
+                'products.view'   => 'View Product & Inventory',
                 'products.create' => 'Create New Products & Categories',
                 'products.edit'   => 'Edit Product Details & Stock',
                 'products.delete' => 'Delete Products',

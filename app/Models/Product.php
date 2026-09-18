@@ -14,6 +14,7 @@ class Product extends Model
     protected $fillable = [
         'firm_id',
         'name',
+        'product_identifier',
         'hsn_code',
         'category_id',
         'brand_id',
@@ -27,6 +28,15 @@ class Product extends Model
         'image',
         'status',
     ];
+
+    public static function generateUniqueIdentifier(): string
+    {
+        do {
+            $code = (string) mt_rand(10000, 99999);
+        } while (static::where('product_identifier', $code)->exists());
+
+        return $code;
+    }
 
     public function firm(): BelongsTo
     {

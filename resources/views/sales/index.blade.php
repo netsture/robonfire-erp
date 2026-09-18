@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Sales Orders')
-@section('page_title', 'Sales Invoicing')
+@section('page_title', 'Delivery Challan & Invoicing')
 @section('page_subtitle', 'Customer sales transactions, POS billing, and invoice generation')
 
 @section('header_actions')

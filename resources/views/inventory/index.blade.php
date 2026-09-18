@@ -53,7 +53,7 @@
             <tbody>
                 @forelse($adjustments as $adj)
                     <tr>
-                        <td class="ps-4 small text-muted">{{ $adj->created_at->format('M d, Y H:i A') }}</td>
+                        <td class="ps-4 small text-muted">{{ $adj->created_at->format('d-m-Y h:i A') }}</td>
                         @if(auth()->user()->isSuperAdmin())
                             <td>
                                 <span class="badge bg-light text-dark border">{{ $adj->firm->name ?? ($adj->product->firm->name ?? 'N/A') }}</span>

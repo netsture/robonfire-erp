@@ -7,6 +7,7 @@ use App\Models\ReturnableMaterialItem;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -63,21 +64,38 @@ class ReturnableMaterialController extends Controller
         $customersQuery = Customer::where('status', 'active');
         $productsQuery = Product::with(['category', 'brand'])->where('status', 'active');
         $categoriesQuery = Category::query();
+        $salesQuery = \App\Models\Sale::with(['customer', 'items.product.category', 'items.product.brand'])->latest();
 
         if (!$user->isSuperAdmin()) {
             $customersQuery->where('firm_id', $firmId);
             $productsQuery->where('firm_id', $firmId);
             $categoriesQuery->where('firm_id', $firmId);
+            $salesQuery->where('firm_id', $firmId);
         }
 
         $customers = $customersQuery->get();
         $products = $productsQuery->get();
         $categories = $categoriesQuery->get();
+        $sales = $salesQuery->get();
+
+        $salesProjects = \App\Models\Sale::whereNotNull('project_name')->where('project_name', '!=', '');
+        $returnsProjects = ReturnableMaterial::whereNotNull('project_name')->where('project_name', '!=', '');
+
+        if (!$user->isSuperAdmin()) {
+            $salesProjects->where('firm_id', $firmId);
+            $returnsProjects->where('firm_id', $firmId);
+        }
+
+        $projectNames = $salesProjects->pluck('project_name')
+            ->merge($returnsProjects->pluck('project_name'))
+            ->unique()
+            ->filter()
+            ->values();
 
         $firmSeq = ReturnableMaterial::where('firm_id', $firmId)->count() + 1;
         $autoReturnNumber = 'RET-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
 
-        return view('returnable.create', compact('customers', 'products', 'categories', 'autoReturnNumber'));
+        return view('returnable.create', compact('customers', 'products', 'categories', 'sales', 'projectNames', 'autoReturnNumber'));
     }
 
     public function store(Request $request)
@@ -169,9 +187,15 @@ class ReturnableMaterialController extends Controller
         $customers = Customer::where('status', 'active')->where('firm_id', $firmId)->get();
         $products = Product::with(['category', 'brand'])->where('status', 'active')->where('firm_id', $firmId)->get();
         $categories = Category::where('firm_id', $firmId)->get();
+        $sales = \App\Models\Sale::with(['customer', 'items.product.category', 'items.product.brand'])->where('firm_id', $firmId)->latest()->get();
+
+        $salesProjects = \App\Models\Sale::where('firm_id', $firmId)->whereNotNull('project_name')->where('project_name', '!=', '')->pluck('project_name');
+        $returnsProjects = ReturnableMaterial::where('firm_id', $firmId)->whereNotNull('project_name')->where('project_name', '!=', '')->pluck('project_name');
+        $projectNames = $salesProjects->merge($returnsProjects)->unique()->filter()->values();
+
         $returnableMaterial->load('items.product');
 
-        return view('returnable.edit', compact('returnableMaterial', 'customers', 'products', 'categories', 'firmId'));
+        return view('returnable.edit', compact('returnableMaterial', 'customers', 'products', 'categories', 'sales', 'projectNames', 'firmId'));
     }
 
     public function update(Request $request, ReturnableMaterial $returnableMaterial)

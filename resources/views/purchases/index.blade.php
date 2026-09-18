@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Purchase Orders')
-@section('page_title', 'Procurement & Purchases')
+@section('page_title', 'Purchases Invoicing')
 @section('page_subtitle', 'Record inventory restocks from suppliers and manage procurement costs')
 
 @section('header_actions')

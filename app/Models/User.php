@@ -30,6 +30,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function getRoleAttribute($value)
+    {
+        return $value ? ucfirst($value) : $value;
+    }
+
     public function firm()
     {
         return $this->belongsTo(Firm::class);

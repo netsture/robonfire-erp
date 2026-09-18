@@ -52,7 +52,7 @@
             </div>
             <div class="col-6 text-end">
                 <span class="text-muted small fw-bold text-uppercase tracking-wider">DELIVERY DETAILS</span>
-                <div class="small text-dark mt-2 mb-1">Challan Date: <strong>{{ $sale->sale_date }}</strong></div>
+                <div class="small text-dark mt-2 mb-1">Challan Date: <strong>{{ $sale->sale_date ? \Carbon\Carbon::parse($sale->sale_date)->format('d-m-Y') : 'N/A' }}</strong></div>
                 <div class="small text-dark mb-1">Challan No: <strong>#{{ $sale->invoice_number }}</strong></div>
                 @if($sale->project_name)
                     <div class="small text-dark mb-1">Project Name: <strong>{{ $sale->project_name }}</strong></div>

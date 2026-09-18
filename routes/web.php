@@ -15,6 +15,8 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ReturnableMaterialController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectExpenseController;
 use App\Http\Controllers\ReportController;
 
 // Redirect root to dashboard or login
@@ -52,12 +54,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
     Route::get('/sales/{sale}/invoice', [SaleController::class, 'printInvoice'])->name('sales.invoice');
     Route::get('/returnable', [ReturnableMaterialController::class, 'index'])->name('returnable.index');
+    Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+    Route::get('/projects/expenses', [ProjectExpenseController::class, 'index'])->name('projects.expenses.index');
 
     // Reports (View Only)
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
     Route::get('/reports/purchases', [ReportController::class, 'purchasesReport'])->name('reports.purchases');
     Route::get('/reports/inventory', [ReportController::class, 'inventoryReport'])->name('reports.inventory');
+    Route::get('/reports/product-stock', [ReportController::class, 'productStockReport'])->name('reports.product-stock');
+    Route::get('/reports/user-activity', [ReportController::class, 'userActivityReport'])->name('reports.user-activity');
     Route::get('/reports/profit-loss', [ReportController::class, 'profitLossReport'])->name('reports.profit-loss');
     Route::get('/reports/return-products', [ReportController::class, 'returnProductsReport'])->name('reports.return-products');
 
@@ -133,6 +139,19 @@ Route::middleware('auth')->group(function () {
         Route::put('/returnable/{returnable_material}', [ReturnableMaterialController::class, 'update'])->name('returnable.update');
         Route::patch('/returnable/{returnable_material}', [ReturnableMaterialController::class, 'update']);
         Route::delete('/returnable/{returnable_material}', [ReturnableMaterialController::class, 'destroy'])->name('returnable.destroy');
+
+        Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
+        Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+        Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
+        Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+        Route::patch('/projects/{project}', [ProjectController::class, 'update']);
+        Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+
+        // Project Expense write routes
+        Route::post('/projects/expenses/store', [ProjectExpenseController::class, 'storeGeneral'])->name('projects.expenses.store-general');
+        Route::post('/projects/{project}/expenses', [ProjectExpenseController::class, 'store'])->name('projects.expenses.store');
+        Route::put('/projects/{project}/expenses/{expense}', [ProjectExpenseController::class, 'update'])->name('projects.expenses.update');
+        Route::delete('/projects/{project}/expenses/{expense}', [ProjectExpenseController::class, 'destroy'])->name('projects.expenses.destroy');
     });
 
     // Parameterised show routes (defined after static /create routes)
@@ -148,4 +167,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/returnable/{returnable_material}/challan', [ReturnableMaterialController::class, 'challan'])->name('returnable.challan');
     Route::get('/returnable/{returnable_material}/invoice', [ReturnableMaterialController::class, 'printInvoice'])->name('returnable.invoice');
     Route::get('/returnable/{returnable_material}/print', [ReturnableMaterialController::class, 'printChallan'])->name('returnable.print');
+
+    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::get('/projects/{project}/expenses/{expense}/download', [ProjectExpenseController::class, 'download'])->name('projects.expenses.download');
 });

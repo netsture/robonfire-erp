@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Product Catalog')
+@section('title', 'Product List')
 @section('page_title', 'Product & Inventory Management')
 @section('page_subtitle', 'Master item list, prices, cost margins, and real-time stock levels')
 
@@ -20,7 +20,7 @@
         <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-3' : 'col-md-3' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search Product Name, HSN Code..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search Product Name, Unique ID, HSN Code..." value="{{ request('search') }}">
             </div>
         </div>
         @if(auth()->user()->isSuperAdmin())
@@ -70,7 +70,7 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Product Name</th>
+                    <th class="ps-4">Product Name /<br> Product Unique Identifier</th>
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
@@ -103,6 +103,11 @@
                                     <a href="{{ route('products.show', $product) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
                                         {{ $product->name }}
                                     </a>
+                                    @if($product->product_identifier)
+                                        <div class="mt-1">
+                                            <span class="badge text-dark fw-bold border border-warning font-monospace px-2 py-0.5" style="background-color: #fef08a; color: #713f12 !important;" title="Product Unique Identifier"><i class="bi bi-qr-code me-1"></i>{{ $product->product_identifier }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
@@ -170,7 +175,7 @@
                                     <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-light border" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete product from catalog?')">
+                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete product from List?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">
@@ -185,7 +190,7 @@
                     <tr>
                         <td colspan="13" class="text-center py-5 text-muted">
                             <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary"></i>
-                            No products found in catalog. Click "Add Product" to add stock items.
+                            No products found. Click "Add Product" to add stock items.
                         </td>
                     </tr>
                 @endforelse

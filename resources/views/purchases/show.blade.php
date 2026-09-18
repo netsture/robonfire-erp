@@ -2,7 +2,7 @@
 
 @section('title', 'Purchase Order Details')
 @section('page_title', 'Purchase Order: ' . $purchase->project_name)
-@section('page_subtitle', 'Supplier: ' . $purchase->supplier->company_name . ' | Date: ' . $purchase->purchase_date)
+@section('page_subtitle', 'Supplier: ' . ($purchase->supplier->company_name ?? 'N/A') . ' | Date: ' . ($purchase->purchase_date ? \Carbon\Carbon::parse($purchase->purchase_date)->format('d-m-Y') : 'N/A'))
 
 @section('header_actions')
     @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
@@ -72,7 +72,7 @@
                 </div>
                 <div class="col-6 text-end">
                     <span class="text-muted small fw-semibold text-uppercase tracking-wider">PURCHASE ORDER DETAILS</span>
-                    <div class="small text-dark mt-2 mb-1">Purchase Date: <strong>{{ $purchase->purchase_date }}</strong></div>
+                    <div class="small text-dark mt-2 mb-1">Purchase Date: <strong>{{ $purchase->purchase_date ? \Carbon\Carbon::parse($purchase->purchase_date)->format('d-m-Y') : 'N/A' }}</strong></div>
                     <div class="small text-dark mb-1">Invoice No: <strong>#{{ $purchase->invoice_number }}</strong></div>
                     @if($purchase->project_name)
                         <div class="small text-dark mb-1">Project Name: <strong>{{ $purchase->project_name }}</strong></div>

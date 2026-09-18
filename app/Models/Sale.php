@@ -29,6 +29,10 @@ class Sale extends Model
         'notes',
     ];
 
+    protected $casts = [
+        'sale_date' => 'date',
+    ];
+
     public function firm(): BelongsTo
     {
         return $this->belongsTo(Firm::class);

@@ -2,7 +2,7 @@
 
 @section('title', 'Product Categories')
 @section('page_title', 'Category Management')
-@section('page_subtitle', 'Organize product catalog into hierarchical categories')
+@section('page_subtitle', 'Organize product list into hierarchical categories')
 
 @section('header_actions')
     @if(!auth()->user()->isSuperAdmin())

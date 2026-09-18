@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'New Returnable Entry')
-@section('page_title', 'Returnable Entry')
+@section('page_title', 'Create Returnable Entry')
 @section('page_subtitle', 'Record returned products from customer/project and update inventory stock')
 
 @push('styles')
@@ -36,10 +36,27 @@
         <!-- Main Form Column -->
         <div class="col-12 col-xl-9 col-lg-8">
             <div class="card card-custom border-0 p-4 mb-3">
-                <h5 class="fw-bold font-outfit text-dark mb-3">Customer & Return Details</h5>
+                <h5 class="fw-bold font-outfit text-dark mb-3">Returnable Details</h5>
 
                 <div class="row g-3 mb-4">
-                    <div class="col-12 col-md-6">
+                    <!-- Row 1: Sales Challan No, Customer Name, Project Name -->
+                    <div class="col-12 col-md-4">
+                        <label for="sale_id" class="form-label fw-semibold text-dark">Select Sales Challan No</label>
+                        <select class="form-select" id="sale_id" name="sale_id">
+                            <option value="">Select or Search Sales Challan No</option>
+                            @foreach($sales as $sale)
+                                <option value="{{ $sale->id }}" 
+                                        data-customer-id="{{ $sale->customer_id }}" 
+                                        data-project-name="{{ $sale->project_name ?? '' }}"
+                                        data-items="{{ json_encode($sale->items) }}">
+                                    {{ $sale->invoice_number }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <!--<span class="text-muted small">Select a Sales Challan to auto-fill Customer, Project Name & Return Items.</span>-->
+                    </div>
+
+                    <div class="col-12 col-md-4">
                         <label for="customer_id" class="form-label fw-semibold text-dark">Select Customer Name <span class="text-danger">*</span></label>
                         <select class="form-select @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id" required>
                             <option value="">Select or Search Customer Name</option>
@@ -50,24 +67,30 @@
                         @error('customer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-md-4">
+                        <label for="project_name" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
+                        <select class="form-select @error('project_name') is-invalid @enderror" id="project_name" name="project_name" required>
+                            <option value="">Select, Search or Type Project Name</option>
+                            @foreach($projectNames as $proj)
+                                <option value="{{ $proj }}" {{ old('project_name') == $proj ? 'selected' : '' }}>{{ $proj }}</option>
+                            @endforeach
+                        </select>
+                        @error('project_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <!-- Row 2: Return No, Return Date, Reason for Return -->
+                    <div class="col-12 col-md-4">
                         <label for="return_number" class="form-label fw-semibold text-dark">Return No <span class="text-danger">*</span></label>
                         <input type="text" class="form-control font-monospace @error('return_number') is-invalid @enderror" id="return_number" name="return_number" value="{{ old('return_number', $autoReturnNumber) }}" required>
                         @error('return_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-md-4">
                         <label for="return_date" class="form-label fw-semibold text-dark">Return Date <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="return_date" name="return_date" value="{{ old('return_date', date('Y-m-d')) }}" required>
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label for="project_name" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('project_name') is-invalid @enderror" id="project_name" name="project_name" value="{{ old('project_name') }}" placeholder="Enter Project Name" required>
-                        @error('project_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <label for="return_reason" class="form-label fw-semibold text-dark">Reason for Return <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('return_reason') is-invalid @enderror" id="return_reason" name="return_reason" value="{{ old('return_reason') }}" placeholder="Enter Reason for Return" required>
                         @error('return_reason') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -247,7 +270,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill font-outfit fw-bold shadow-sm">
-                    <i class="bi bi-check-circle me-1"></i> Save Return Entry
+                    <i class="bi bi-check-circle me-1"></i> Submit Returnable Entry
                 </button>
             </div>
         </div>
@@ -259,12 +282,121 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        let customerTs = null;
         if (document.getElementById('customer_id')) {
-            new TomSelect('#customer_id', {
+            customerTs = new TomSelect('#customer_id', {
                 create: false,
                 placeholder: 'Select or Search Customer Name',
                 plugins: ['dropdown_input']
             });
+        }
+
+        let projectTs = null;
+        if (document.getElementById('project_name')) {
+            projectTs = new TomSelect('#project_name', {
+                create: true,
+                createOnBlur: true,
+                placeholder: 'Select, Search or Type Project Name',
+                plugins: ['dropdown_input']
+            });
+        }
+
+        let saleTs = null;
+        if (document.getElementById('sale_id')) {
+            saleTs = new TomSelect('#sale_id', {
+                create: false,
+                placeholder: 'Select or Search Sales Challan No',
+                plugins: ['dropdown_input']
+            });
+
+            saleTs.on('change', function (val) {
+                if (!val) return;
+                const optEl = document.querySelector('#sale_id option[value="' + val + '"]');
+                if (optEl) {
+                    const custId = optEl.getAttribute('data-customer-id');
+                    const projName = optEl.getAttribute('data-project-name');
+
+                    if (custId && customerTs) {
+                        customerTs.setValue(custId);
+                    }
+                    if (projName && projectTs) {
+                        if (!projectTs.options[projName]) {
+                            projectTs.addOption({ value: projName, text: projName });
+                        }
+                        projectTs.setValue(projName);
+                    }
+
+                    const rawItems = optEl.getAttribute('data-items');
+                    if (rawItems) {
+                        try {
+                            const items = JSON.parse(rawItems);
+                            if (items && items.length > 0) {
+                                populateSaleItems(items);
+                            }
+                        } catch(e) {}
+                    }
+                }
+            });
+        }
+
+        function populateSaleItems(items) {
+            const container = document.getElementById('itemsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            rowCount = 0;
+
+            items.forEach(item => {
+                const newRow = document.createElement('tr');
+                newRow.className = 'item-row';
+                newRow.innerHTML = `
+                    <td>
+                        <select class="form-select form-select-sm category-select" required>
+                            <option value="">Select Category...</option>
+                            ${categoryOptions}
+                        </select>
+                    </td>
+                    <td>
+                        <select name="products[${rowCount}][id]" class="form-select form-select-sm product-select" required>
+                            <option value="">Select Product...</option>
+                            ${productsOptions}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm hsn-input bg-light" readonly placeholder="HSN">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Type">
+                    </td>
+                    <td>
+                        <input type="number" name="products[${rowCount}][qty]" class="form-control form-control-sm qty-input" min="1" value="${item.quantity || 1}" required>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0" name="products[${rowCount}][price]" class="form-control form-control-sm price-input" value="${parseFloat(item.unit_price || 0).toFixed(2)}" placeholder="e.g. 150.00" required>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" placeholder="0.00">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0.00">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm line-total-tax bg-light fw-bold text-primary" readonly value="0.00">
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" title="Remove"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                container.appendChild(newRow);
+
+                const prodSelect = newRow.querySelector('.product-select');
+                if (prodSelect && item.product_id) {
+                    prodSelect.value = item.product_id;
+                    handleProductChange(newRow);
+                }
+
+                rowCount++;
+            });
+            calculateTotals();
         }
 
         let rowCount = document.querySelectorAll('.item-row').length;

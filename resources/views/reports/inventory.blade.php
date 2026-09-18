@@ -186,9 +186,19 @@
                             <td><span class="badge bg-dark-subtle text-dark border">{{ $product->firm->name ?? 'N/A' }}</span></td>
                         @endif
                         <td>
-                            <div class="fw-semibold text-dark">{{ $product->name }}</div>
-                            <div class="small text-muted font-monospace">
-                                HSN: {{ $product->hsn_code ?? 'N/A' }}
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-semibold text-dark">{{ $product->name }}</div>
+                                    <div class="small text-muted font-monospace">
+                                        @if($product->product_identifier)
+                                            <span class="badge text-dark fw-bold border border-warning py-0.5 px-1.5 me-1" style="background-color: #fef08a; color: #713f12 !important;">ID: {{ $product->product_identifier }}</span>
+                                        @endif
+                                        HSN: {{ $product->hsn_code ?? 'N/A' }}
+                                    </div>
+                                </div>
+                                <a href="{{ route('reports.product-stock', ['product_id' => $product->id]) }}" class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-0.5 small no-print ms-2" title="View Product Movement Ledger">
+                                    <i class="bi bi-clock-history me-1"></i>Ledger
+                                </a>
                             </div>
                         </td>
                         <td><span class="badge bg-primary text-white rounded-pill px-3 py-1 fw-semibold"><i class="bi bi-tag-fill me-1"></i>{{ $product->category->name ?? 'N/A' }}</span></td>

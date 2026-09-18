@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'New Sales Order')
-@section('page_title', 'Point of Sale Order')
+@section('page_title', 'Create Sales Invoice & Challan')
 @section('page_subtitle', 'Process customer sale, auto-deduct inventory stock & issue tax invoice')
 
 @push('styles')
@@ -270,7 +270,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-2 font-outfit fw-semibold mt-2">
-                    <i class="bi bi-printer me-1"></i> Issue Order & Print Invoice
+                    <i class="bi bi-check-circle me-1"></i> Submit Sales Order
                 </button>
             </div>
         </div>

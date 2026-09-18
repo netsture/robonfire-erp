@@ -5,13 +5,16 @@
 @section('page_subtitle', 'Category: ' . $product->category->name)
 
 @section('header_actions')
+    <a href="{{ route('reports.product-stock', ['product_id' => $product->id]) }}" class="btn btn-outline-info rounded-pill px-3 font-outfit fw-medium">
+        <i class="bi bi-clock-history me-1"></i> Stock Ledger Report
+    </a>
     @if(!auth()->user()->isSuperAdmin())
         <a href="{{ route('products.edit', $product) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
             <i class="bi bi-pencil me-1"></i> Edit Product
         </a>
     @endif
     <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
-        <i class="bi bi-arrow-left me-1"></i> Back to Catalog
+        <i class="bi bi-arrow-left me-1"></i> Back to Product
     </a>
 @endsection
 
@@ -41,6 +44,7 @@
             <hr class="my-2 text-muted">
 
             <div class="d-flex flex-column gap-2 my-2">
+                <div class="small"><i class="bi bi-qr-code me-2 text-muted"></i>Product Unique ID: <span class="badge text-dark rounded-pill px-2.5 py-1 font-monospace fw-bold ms-1 border border-warning" style="background-color: #fef08a; color: #713f12 !important;">{{ $product->product_identifier ?? 'N/A' }}</span></div>
                 <div class="small"><i class="bi bi-hash me-2 text-muted"></i>HSN / SAC: <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 font-monospace fw-semibold ms-1"><i class="bi bi-hash me-1 text-warning"></i>{{ $product->hsn_code ?? 'N/A' }}</span></div>
                 <div class="small"><i class="bi bi-percent me-2 text-muted"></i>Tax Rate: <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 ms-1 fw-bold">{{ number_format($product->tax_percent, 2) }}%</span></div>
                 <div class="small"><i class="bi bi-rulers me-2 text-muted"></i>Measurement Type: <span class="badge bg-info text-white rounded-pill px-2.5 py-1 ms-1 fw-semibold"><i class="bi bi-rulers me-1"></i>{{ $product->unit }}</span></div>
@@ -94,7 +98,7 @@
             <tbody>
                 @forelse($product->stockAdjustments as $adj)
                     <tr>
-                        <td class="small text-muted">{{ $adj->created_at->format('M d, Y H:i') }}</td>
+                        <td class="small text-muted">{{ $adj->created_at->format('d-m-Y h:i A') }}</td>
                         <td class="fw-semibold text-dark">{{ $adj->user->name ?? 'System' }}</td>
                         <td>
                             @if($adj->type === 'add')

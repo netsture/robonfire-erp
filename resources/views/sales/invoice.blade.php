@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Delivery Challan / Invoice No - {{ $sale->invoice_number }}</title>
+    <title>Invoice No - {{ $sale->invoice_number }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 2rem; background: #fff; color: #1e293b; }
@@ -69,7 +69,7 @@
 </head>
 <body>
     <div class="no-print text-center mb-4">
-        <button onclick="window.print()" class="btn btn-primary px-4 me-2"><i class="bi bi-printer"></i> Print Invoice No / Challan</button>
+        <button onclick="window.print()" class="btn btn-primary px-4 me-2"><i class="bi bi-printer"></i> Print Invoice</button>
         <button onclick="window.close()" class="btn btn-secondary px-4">Close</button>
     </div>
 
@@ -77,11 +77,11 @@
         <div class="invoice-header-bg d-flex justify-content-between align-items-center">
             <div>
                 <h3 class="fw-bold mb-0">{{ $sale->firm->name ?? 'ERP Solution' }}</h3>
-                <span class="small opacity-75">Delivery Challan & Invoice</span>
+                <span class="small opacity-75">Sales Invoice</span>
             </div>
             <div class="text-end">
-                <h4 class="fw-bold mb-0 text-uppercase">Delivery Challan</h4>
-                <span class="font-monospace opacity-75">Challan No: {{ $sale->invoice_number }}</span>
+                <h4 class="fw-bold mb-0 text-uppercase">Sales Invoice</h4>
+                <span class="font-monospace opacity-75">Invoice No: {{ $sale->invoice_number }}</span>
             </div>
         </div>
 
@@ -104,8 +104,8 @@
             </div>
             <div class="col-6 text-end">
                 <span class="text-muted small fw-bold text-uppercase tracking-wider">DELIVERY DETAILS</span>
-                <div class="small text-dark mt-2 mb-1">Challan Date: <strong>{{ $sale->sale_date }}</strong></div>
-                <div class="small text-dark mb-1">Challan No: <strong>#{{ $sale->invoice_number }}</strong></div>
+                <div class="small text-dark mt-2 mb-1">Invoice Date: <strong>{{ $sale->sale_date ? \Carbon\Carbon::parse($sale->sale_date)->format('d-m-Y') : 'N/A' }}</strong></div>
+                <div class="small text-dark mb-1">Invoice No: <strong>#{{ $sale->invoice_number }}</strong></div>
                 @if($sale->project_name)
                     <div class="small text-dark mb-1">Project Name: <strong>{{ $sale->project_name }}</strong></div>
                 @endif

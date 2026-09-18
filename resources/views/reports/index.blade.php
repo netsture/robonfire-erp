@@ -30,7 +30,19 @@
             <a href="{{ route('reports.sales') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #047857 !important;">View Sales Report</a>
         </div>
     </div>
-    
+
+    <!-- Return Product Report Card -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card card-custom border-0 p-4 h-100 text-white" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="rounded-circle dark-symbol-avatar shadow-sm mb-3" style="width: 52px; height: 52px; background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
+                <i class="bi bi-box-arrow-in-left fs-4"></i>
+            </div>
+            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Return Product Report</h5>
+            <p class="text-white small mb-3" style="color: #ffffff !important; opacity: 0.95;">Itemized returned materials history by date range, customer, and valuation.</p>
+            <a href="{{ route('reports.return-products') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #d97706 !important;">View Return Report</a>
+        </div>
+    </div>
+
     <!-- Inventory Valuation Card -->
     <div class="col-12 col-md-6 col-xl-3">
         <div class="card card-custom border-0 p-4 h-100 text-white" style="background: linear-gradient(135deg, #6f42c1 0%, #4c1d95 100%);">
@@ -43,15 +55,27 @@
         </div>
     </div>
 
-    <!-- Return Product Report Card -->
+    <!-- Product Stock Details Report Card -->
     <div class="col-12 col-md-6 col-xl-3">
-        <div class="card card-custom border-0 p-4 h-100 text-white" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+        <div class="card card-custom border-0 p-4 h-100 text-white" style="background: linear-gradient(135deg, #a62c2c 0%, #b82a6d  100%);">
             <div class="rounded-circle dark-symbol-avatar shadow-sm mb-3" style="width: 52px; height: 52px; background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
-                <i class="bi bi-box-arrow-in-left fs-4"></i>
+                <i class="bi bi-clock-history fs-4"></i>
             </div>
-            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Return Product Report</h5>
-            <p class="text-white small mb-3" style="color: #ffffff !important; opacity: 0.95;">Itemized returned materials history by date range, customer, and valuation.</p>
-            <a href="{{ route('reports.return-products') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #d97706 !important;">View Return Report</a>
+            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Stock Product Report</h5>
+            <p class="text-white small mb-3" style="color: #ffffff !important; opacity: 0.95;">Single-page detailed product ledger covering purchases, sales, returns & movement.</p>
+            <a href="{{ route('reports.product-stock') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #0f766e !important;">View Product Details</a>
+        </div>
+    </div>
+
+    <!-- User-Wise Activity Report Card -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card card-custom border-0 p-4 h-100 text-white" style="background: linear-gradient(135deg, #ad872f 0%, #9e8810 100%);">
+            <div class="rounded-circle dark-symbol-avatar shadow-sm mb-3" style="width: 52px; height: 52px; background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
+                <i class="bi bi-person-lines-fill fs-4"></i>
+            </div>
+            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">User-Wise Entry Report</h5>
+            <p class="text-white small mb-3" style="color: #ffffff !important; opacity: 0.95;">Track sales, purchases, and returns entered by each individual staff member.</p>
+            <a href="{{ route('reports.user-activity') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #3730a3 !important;">View User Entries</a>
         </div>
     </div>
 
