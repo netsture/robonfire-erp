@@ -5,6 +5,9 @@
 @section('page_subtitle', 'Master item list, prices, cost margins, and real-time stock levels')
 
 @section('header_actions')
+    <a href="{{ route('products.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
+        <i class="bi bi-printer me-1"></i> Print Report
+    </a>
     @if(!auth()->user()->isSuperAdmin())
         <a href="{{ route('products.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
             <i class="bi bi-box-seam-fill me-1"></i> Add Product

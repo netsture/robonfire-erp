@@ -5,6 +5,9 @@
 @section('page_subtitle', 'Manage vendors, manufacturers, and procurement ledgers')
 
 @section('header_actions')
+    <a href="{{ route('suppliers.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
+        <i class="bi bi-printer me-1"></i> Print Report
+    </a>
     @if(!auth()->user()->isSuperAdmin())
         <a href="{{ route('suppliers.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
             <i class="bi bi-truck me-1"></i> Add New Supplier

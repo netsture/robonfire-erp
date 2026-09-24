@@ -47,10 +47,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/users/print', [UserController::class, 'printReport'])->name('users.print');
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/print', [CustomerController::class, 'printReport'])->name('customers.print');
     Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+    Route::get('/suppliers/print', [SupplierController::class, 'printReport'])->name('suppliers.print');
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/print', [ProductController::class, 'printReport'])->name('products.print');
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/{purchase}/print', [PurchaseController::class, 'printInvoice'])->name('purchases.print');

@@ -90,6 +90,78 @@ class ProductController extends Controller
         return view('products.index', compact('products', 'categories', 'brands', 'firms'));
     }
 
+    public function printReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = Product::with('category', 'brand', 'firm');
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('products.firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('products.firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.product_identifier', 'like', "%{$search}%")
+                  ->orWhere('products.hsn_code', 'like', "%{$search}%")
+                  ->orWhereHas('brand', function ($bq) use ($search) {
+                      $bq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('category', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('products.category_id', $request->category_id);
+        }
+
+        if ($request->filled('brand_id')) {
+            $query->where('products.brand_id', $request->brand_id);
+        }
+
+        if ($request->boolean('low_stock')) {
+            $query->whereColumn('products.stock_quantity', '<=', 'products.alert_quantity');
+        }
+
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'category_name') {
+                $query->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                      ->select('products.*')
+                      ->orderBy('categories.name', $sortOrder);
+            } elseif ($sortBy === 'brand_name') {
+                $query->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
+                      ->select('products.*')
+                      ->orderBy('brands.name', $sortOrder);
+            } elseif ($sortBy === 'firm_name') {
+                $query->leftJoin('firms', 'products.firm_id', '=', 'firms.id')
+                      ->select('products.*')
+                      ->orderBy('firms.name', $sortOrder);
+            } elseif (in_array($sortBy, ['name', 'product_identifier', 'hsn_code', 'unit', 'cost_price', 'selling_price', 'tax_percent', 'stock_quantity', 'alert_quantity', 'status', 'created_at'])) {
+                $query->orderBy("products.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('products.created_at');
+            }
+        } else {
+            $query->latest('products.created_at');
+        }
+
+        $products = $query->get();
+        $totalProducts = $products->count();
+        $totalStock = $products->sum('stock_quantity');
+        $lowStockCount = $products->filter(function($p) { return $p->stock_quantity <= $p->alert_quantity; })->count();
+
+        return view('products.print', compact('products', 'totalProducts', 'totalStock', 'lowStockCount'));
+    }
+
     public function create()
     {
         $user = auth()->user();

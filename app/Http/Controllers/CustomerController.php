@@ -54,6 +54,54 @@ class CustomerController extends Controller
         return view('customers.index', compact('customers', 'firms'));
     }
 
+    public function printReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = Customer::with('firm');
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('customers.firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('customers.firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('customers.company_name', 'like', "%{$search}%")
+                  ->orWhere('customers.gst_number', 'like', "%{$search}%")
+                  ->orWhere('customers.email', 'like', "%{$search}%")
+                  ->orWhere('customers.phone', 'like', "%{$search}%")
+                  ->orWhere('customers.address', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'firm_name') {
+                $query->leftJoin('firms', 'customers.firm_id', '=', 'firms.id')
+                      ->select('customers.*')
+                      ->orderBy('firms.name', $sortOrder);
+            } elseif (in_array($sortBy, ['company_name', 'gst_number', 'address', 'email', 'phone', 'status', 'created_at'])) {
+                $query->orderBy("customers.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('customers.created_at');
+            }
+        } else {
+            $query->latest('customers.created_at');
+        }
+
+        $customers = $query->get();
+        $totalCustomers = $customers->count();
+        $activeCustomers = $customers->where('status', 'active')->count();
+        $inactiveCustomers = $totalCustomers - $activeCustomers;
+
+        return view('customers.print', compact('customers', 'totalCustomers', 'activeCustomers', 'inactiveCustomers'));
+    }
+
     public function create()
     {
         return view('customers.create');

@@ -5,6 +5,9 @@
 @section('page_subtitle', 'Maintain client directory and financial ledgers')
 
 @section('header_actions')
+    <a href="{{ route('customers.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
+        <i class="bi bi-printer me-1"></i> Print Report
+    </a>
     @if(!auth()->user()->isSuperAdmin())
         <a href="{{ route('customers.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
             <i class="bi bi-person-plus-fill me-1"></i> Add New Customer
