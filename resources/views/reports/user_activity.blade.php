@@ -23,9 +23,9 @@
 @endpush
 
 @section('header_actions')
-    <button onclick="window.print()" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2">
+    <a href="{{ route('reports.user-activity.print', request()->query()) }}" target="_blank" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
         <i class="bi bi-printer me-1"></i> Print Report
-    </button>
+    </a>
     <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Reports
     </a>
@@ -45,6 +45,60 @@
     <span class="small text-muted font-monospace">Generated on: {{ now()->format('d-m-Y, h:i A') }}</span>
     <hr class="my-3">
 </div>
+
+<!-- Summary Statistics Cards -->
+<div class="row g-3 mb-4">
+    <!-- Purchase Entries Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Purchases Entered</span>
+                <i class="bi bi-cart-plus-fill fs-4" style="color: #ffffff !important;"></i>
+            </div>
+            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">{{ number_format($summary['purchase_count']) }} Orders</h3>
+            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Total Value: ₹{{ number_format($summary['purchase_amount'], 2) }}</span>
+        </div>
+    </div>
+
+    <!-- Sales Entries Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Sales Entered</span>
+                <i class="bi bi-bag-check-fill fs-4" style="color: #ffffff !important;"></i>
+            </div>
+            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">{{ number_format($summary['sale_count']) }} Orders</h3>
+            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Total Revenue: ₹{{ number_format($summary['sale_amount'], 2) }}</span>
+        </div>
+    </div>
+
+    <!-- Returns Entries Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Returns Entered</span>
+                <i class="bi bi-box-arrow-in-left fs-4" style="color: #ffffff !important;"></i>
+            </div>
+            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">{{ number_format($summary['return_count']) }} Returns</h3>
+            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Valuation: ₹{{ number_format($summary['return_amount'], 2) }}</span>
+        </div>
+    </div>
+
+    <!-- Total Activity Entries Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-custom border-0 p-3 bg-dark text-white h-100 justify-content-center">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-white small fw-semibold text-uppercase">TOTAL USER ENTRIES</span>
+                <i class="bi bi-card-checklist fs-4 text-warning"></i>
+            </div>
+            <h3 class="fw-bold font-outfit mt-1 mb-0 text-white">
+                {{ number_format($summary['total_entries']) }} Entries
+            </h3>
+            <span class="small text-white-50 mt-1">Audit log entries recorded</span>
+        </div>
+    </div>
+</div>
+
 
 <!-- User Selection & Filter Bar -->
 <div class="card card-custom border-0 p-3 mb-4 no-print">
@@ -113,59 +167,6 @@
     </div>
 @endif
 
-<!-- Summary Statistics Cards -->
-<div class="row g-3 mb-4">
-    <!-- Purchase Entries Card -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Purchases Entered</span>
-                <i class="bi bi-cart-plus-fill fs-4" style="color: #ffffff !important;"></i>
-            </div>
-            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">{{ number_format($summary['purchase_count']) }} Orders</h3>
-            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Total Value: ₹{{ number_format($summary['purchase_amount'], 2) }}</span>
-        </div>
-    </div>
-
-    <!-- Sales Entries Card -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Sales Entered</span>
-                <i class="bi bi-bag-check-fill fs-4" style="color: #ffffff !important;"></i>
-            </div>
-            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">{{ number_format($summary['sale_count']) }} Orders</h3>
-            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Total Revenue: ₹{{ number_format($summary['sale_amount'], 2) }}</span>
-        </div>
-    </div>
-
-    <!-- Returns Entries Card -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Returns Entered</span>
-                <i class="bi bi-box-arrow-in-left fs-4" style="color: #ffffff !important;"></i>
-            </div>
-            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">{{ number_format($summary['return_count']) }} Returns</h3>
-            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Valuation: ₹{{ number_format($summary['return_amount'], 2) }}</span>
-        </div>
-    </div>
-
-    <!-- Total Activity Entries Card -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 bg-dark text-white h-100 justify-content-center">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-white small fw-semibold text-uppercase">TOTAL USER ENTRIES</span>
-                <i class="bi bi-card-checklist fs-4 text-warning"></i>
-            </div>
-            <h3 class="fw-bold font-outfit mt-1 mb-0 text-white">
-                {{ number_format($summary['total_entries']) }} Entries
-            </h3>
-            <span class="small text-white-50 mt-1">Audit log entries recorded</span>
-        </div>
-    </div>
-</div>
-
 <!-- User Entry Ledger Table -->
 <div class="card card-custom border-0 overflow-hidden">
     <div class="card-header bg-white border-0 py-3 px-4 d-flex align-items-center justify-content-between">
@@ -181,15 +182,99 @@
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
+                @php
+                    $sort = request('sort_by', 'raw_date');
+                    $order = request('sort_order', 'desc');
+                @endphp
                 <tr>
-                    <th class="ps-4">Date</th>
-                    <th>Entry Type</th>
-                    <th>Invoice / Ref No.</th>
-                    <th>Party / Customer / Supplier</th>
-                    <th>Products & Items</th>
-                    <th>Status</th>
-                    <th class="text-end">Total Amount (₹)</th>
-                    <th class="pe-4">Entered By</th>
+                    <th class="ps-4">
+                        @php $nextOrder = ($sort === 'raw_date' && $order === 'asc') ? 'desc' : 'asc'; @endphp
+                        <a href="{{ route('reports.user-activity', array_merge(request()->query(), ['sort_by' => 'raw_date', 'sort_order' => $nextOrder])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Date
+                            @if($sort === 'raw_date')
+                                <i class="bi bi-arrow-{{ $order === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted ms-1 small opacity-50"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php $nextOrder = ($sort === 'entry_type' && $order === 'asc') ? 'desc' : 'asc'; @endphp
+                        <a href="{{ route('reports.user-activity', array_merge(request()->query(), ['sort_by' => 'entry_type', 'sort_order' => $nextOrder])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Entry Type
+                            @if($sort === 'entry_type')
+                                <i class="bi bi-arrow-{{ $order === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted ms-1 small opacity-50"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php $nextOrder = ($sort === 'ref_no' && $order === 'asc') ? 'desc' : 'asc'; @endphp
+                        <a href="{{ route('reports.user-activity', array_merge(request()->query(), ['sort_by' => 'ref_no', 'sort_order' => $nextOrder])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Invoice / Ref No.
+                            @if($sort === 'ref_no')
+                                <i class="bi bi-arrow-{{ $order === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted ms-1 small opacity-50"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php $nextOrder = ($sort === 'party' && $order === 'asc') ? 'desc' : 'asc'; @endphp
+                        <a href="{{ route('reports.user-activity', array_merge(request()->query(), ['sort_by' => 'party', 'sort_order' => $nextOrder])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Party / Customer / Supplier
+                            @if($sort === 'party')
+                                <i class="bi bi-arrow-{{ $order === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted ms-1 small opacity-50"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php $nextOrder = ($sort === 'products_summary' && $order === 'asc') ? 'desc' : 'asc'; @endphp
+                        <a href="{{ route('reports.user-activity', array_merge(request()->query(), ['sort_by' => 'products_summary', 'sort_order' => $nextOrder])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Products & Items
+                            @if($sort === 'products_summary')
+                                <i class="bi bi-arrow-{{ $order === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted ms-1 small opacity-50"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php $nextOrder = ($sort === 'status' && $order === 'asc') ? 'desc' : 'asc'; @endphp
+                        <a href="{{ route('reports.user-activity', array_merge(request()->query(), ['sort_by' => 'status', 'sort_order' => $nextOrder])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Status
+                            @if($sort === 'status')
+                                <i class="bi bi-arrow-{{ $order === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted ms-1 small opacity-50"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        @php $nextOrder = ($sort === 'amount' && $order === 'asc') ? 'desc' : 'asc'; @endphp
+                        <a href="{{ route('reports.user-activity', array_merge(request()->query(), ['sort_by' => 'amount', 'sort_order' => $nextOrder])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center justify-content-end">
+                            Total Amount (₹)
+                            @if($sort === 'amount')
+                                <i class="bi bi-arrow-{{ $order === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted ms-1 small opacity-50"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="pe-4">
+                        @php $nextOrder = ($sort === 'entered_by' && $order === 'asc') ? 'desc' : 'asc'; @endphp
+                        <a href="{{ route('reports.user-activity', array_merge(request()->query(), ['sort_by' => 'entered_by', 'sort_order' => $nextOrder])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Entered By
+                            @if($sort === 'entered_by')
+                                <i class="bi bi-arrow-{{ $order === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted ms-1 small opacity-50"></i>
+                            @endif
+                        </a>
+                    </th>
                 </tr>
             </thead>
             <tbody>

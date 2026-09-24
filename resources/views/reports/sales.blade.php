@@ -5,9 +5,9 @@
 @section('page_subtitle', 'Comprehensive analysis of sales revenue, collections, outstanding balances, and order performance')
 
 @section('header_actions')
-    <button onclick="window.print()" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2">
+    <a href="{{ route('reports.sales.print', request()->query()) }}" target="_blank" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
         <i class="bi bi-printer me-1"></i> Print Report
-    </button>
+    </a>
     <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Reports
     </a>

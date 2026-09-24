@@ -5,9 +5,9 @@
 @section('page_subtitle', 'Comprehensive history and valuation of returnable materials and customer product returns')
 
 @section('header_actions')
-    <button onclick="window.print()" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2">
+    <a href="{{ route('reports.return-products.print', request()->query()) }}" target="_blank" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
         <i class="bi bi-printer me-1"></i> Print Report
-    </button>
+    </a>
     <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Reports
     </a>
@@ -124,6 +124,8 @@
                     <th>Returned Items</th>
                     <th class="text-end">Subtotal (₹)</th>
                     <th class="text-end">Tax (₹)</th>
+                    <th class="text-end">Discount (₹)</th>
+                    <th class="text-end">Shipping Cost (₹)</th>
                     <th class="text-end">Grand Total (₹)</th>
                     <th class="text-end pe-4 no-print">Actions</th>
                 </tr>
@@ -157,7 +159,9 @@
                             </span>
                         </td>
                         <td class="text-end font-monospace">₹{{ number_format($ret->subtotal, 2) }}</td>
-                        <td class="text-end font-monospace text-muted">₹{{ number_format($ret->tax_amount, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">+₹{{ number_format($ret->tax_amount, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">-₹{{ number_format($ret->discount_amount ?? 0, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">+₹{{ number_format($ret->shipping_cost ?? 0, 2) }}</td>
                         <td class="text-end font-monospace fw-bold text-primary">₹{{ number_format($ret->grand_total, 2) }}</td>
                         <td class="text-end pe-4 no-print">
                             <a href="{{ route('returnable.show', $ret) }}" class="btn btn-sm btn-light border" target="_blank" title="View Details">
@@ -170,13 +174,26 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 11 : 10 }}" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 13 : 12 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-box-arrow-in-left fs-1 d-block mb-2 text-secondary"></i>
                             No return material entries matching the filters.
                         </td>
                     </tr>
                 @endforelse
             </tbody>
+            @if(count($returns) > 0)
+                <tfoot class="table-light border-top font-outfit fw-bold">
+                    <tr>
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 7 : 6 }}" class="ps-4 text-end">TOTALS:</td>
+                        <td class="text-end font-monospace">₹{{ number_format($totalSubtotal, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">+₹{{ number_format($totalTaxAmount, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">-₹{{ number_format($totalDiscountAmount, 2) }}</td>
+                        <td class="text-end font-monospace text-muted">+₹{{ number_format($totalShippingCost, 2) }}</td>
+                        <td class="text-end font-monospace text-primary fs-6">₹{{ number_format($totalGrandTotal, 2) }}</td>
+                        <td class="no-print"></td>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
     </div>
     @if($returns->hasPages())

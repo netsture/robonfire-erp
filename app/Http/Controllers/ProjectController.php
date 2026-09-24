@@ -49,10 +49,95 @@ class ProjectController extends Controller
         $totalExpensesAmount = (float) \App\Models\ProjectExpense::whereIn('project_id', $projectIds)->sum('amount');
         $totalFinalAmount = $totalPoAmount - $totalExpensesAmount;
 
-        $projects = $query->latest()->paginate(10);
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'total_expenses') {
+                $query->withSum('expenses', 'amount')
+                      ->orderBy('expenses_sum_amount', $sortOrder);
+            } elseif ($sortBy === 'final_amount') {
+                $query->withSum('expenses', 'amount')
+                      ->orderByRaw("(po_amount - COALESCE(expenses_sum_amount, 0)) {$sortOrder}");
+            } elseif (in_array($sortBy, ['project_name', 'po_number', 'po_date', 'po_amount', 'created_at'])) {
+                $query->orderBy($sortBy, $sortOrder);
+            } else {
+                $query->latest();
+            }
+        } else {
+            $query->latest();
+        }
+
+        $projects = $query->paginate(10)->withQueryString();
         $firms = $user->isSuperAdmin() ? Firm::all() : collect();
 
         return view('projects.index', compact('projects', 'firms', 'totalProjects', 'totalPoAmount', 'totalExpensesAmount', 'totalFinalAmount'));
+    }
+
+    public function printReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = Project::with(['firm', 'expenses']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('project_name', 'like', "%{$search}%")
+                  ->orWhere('po_number', 'like', "%{$search}%")
+                  ->orWhere('po_amount', 'like', "%{$search}%")
+                  ->orWhere('po_date', 'like', "%{$search}%")
+                  ->orWhereRaw("DATE_FORMAT(po_date, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(po_date, '%m-%d-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(po_date, '%d/%m/%Y') LIKE ?", ["%{$search}%"]);
+
+                if (preg_match('/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/', $search, $matches)) {
+                    $day   = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+                    $month = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
+                    $year  = $matches[3];
+                    $dateFormatted = "{$year}-{$month}-{$day}";
+                    $q->orWhere('po_date', 'like', "%{$dateFormatted}%");
+                }
+            });
+        }
+
+        $totalQuery = clone $query;
+        $totalProjects = $totalQuery->count();
+        $totalPoAmount = (float) $totalQuery->sum('po_amount');
+
+        $projectIds = (clone $query)->pluck('id');
+        $totalExpensesAmount = (float) \App\Models\ProjectExpense::whereIn('project_id', $projectIds)->sum('amount');
+        $totalFinalAmount = $totalPoAmount - $totalExpensesAmount;
+
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'total_expenses') {
+                $query->withSum('expenses', 'amount')
+                      ->orderBy('expenses_sum_amount', $sortOrder);
+            } elseif ($sortBy === 'final_amount') {
+                $query->withSum('expenses', 'amount')
+                      ->orderByRaw("(po_amount - COALESCE(expenses_sum_amount, 0)) {$sortOrder}");
+            } elseif (in_array($sortBy, ['project_name', 'po_number', 'po_date', 'po_amount'])) {
+                $query->orderBy($sortBy, $sortOrder);
+            } else {
+                $query->latest();
+            }
+        } else {
+            $query->latest();
+        }
+
+        $projects = $query->get();
+
+        return view('projects.print', compact('projects', 'totalProjects', 'totalPoAmount', 'totalExpensesAmount', 'totalFinalAmount'));
     }
 
     public function create()

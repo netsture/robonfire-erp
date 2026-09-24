@@ -19,21 +19,21 @@ class PurchaseController extends Controller
         $query = Purchase::with('supplier', 'user', 'firm');
 
         if (!$user->isSuperAdmin()) {
-            $query->where('firm_id', $user->firm_id);
+            $query->where('purchases.firm_id', $user->firm_id);
         } elseif ($request->filled('firm_id')) {
-            $query->where('firm_id', $request->firm_id);
+            $query->where('purchases.firm_id', $request->firm_id);
         }
 
         if ($request->filled('search')) {
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
-                $q->where('project_name', 'like', "%{$search}%")
-                  ->orWhere('invoice_number', 'like', "%{$search}%")
-                  ->orWhere('purchase_date', 'like', "%{$search}%")
-                  ->orWhereRaw("DATE_FORMAT(purchase_date, '%m-%d-%Y') LIKE ?", ["%{$search}%"])
-                  ->orWhereRaw("DATE_FORMAT(purchase_date, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
-                  ->orWhereRaw("DATE_FORMAT(purchase_date, '%m/%d/%Y') LIKE ?", ["%{$search}%"])
-                  ->orWhereRaw("DATE_FORMAT(purchase_date, '%d/%m/%Y') LIKE ?", ["%{$search}%"])
+                $q->where('purchases.project_name', 'like', "%{$search}%")
+                  ->orWhere('purchases.invoice_number', 'like', "%{$search}%")
+                  ->orWhere('purchases.purchase_date', 'like', "%{$search}%")
+                  ->orWhereRaw("DATE_FORMAT(purchases.purchase_date, '%m-%d-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(purchases.purchase_date, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(purchases.purchase_date, '%m/%d/%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(purchases.purchase_date, '%d/%m/%Y') LIKE ?", ["%{$search}%"])
                   ->orWhereHas('supplier', function ($sq) use ($search) {
                       $sq->where('company_name', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%");
@@ -44,12 +44,36 @@ class PurchaseController extends Controller
                     $day   = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
                     $year  = $matches[3];
                     $dateFormatted = "{$year}-{$month}-{$day}";
-                    $q->orWhere('purchase_date', 'like', "%{$dateFormatted}%");
+                    $q->orWhere('purchases.purchase_date', 'like', "%{$dateFormatted}%");
                 }
             });
         }
 
-        $purchases = $query->latest()->paginate(10);
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'invoice_number') {
+                $query->orderBy('purchases.invoice_number', $sortOrder);
+            } elseif ($sortBy === 'supplier_name') {
+                $query->leftJoin('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
+                      ->select('purchases.*')
+                      ->orderBy('suppliers.company_name', $sortOrder);
+            } elseif ($sortBy === 'firm_name') {
+                $query->leftJoin('firms', 'purchases.firm_id', '=', 'firms.id')
+                      ->select('purchases.*')
+                      ->orderBy('firms.name', $sortOrder);
+            } elseif (in_array($sortBy, ['purchase_date', 'grand_total', 'paid_amount', 'payment_status', 'created_at'])) {
+                $query->orderBy("purchases.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('purchases.created_at');
+            }
+        } else {
+            $query->latest('purchases.created_at');
+        }
+
+        $purchases = $query->paginate(10)->withQueryString();
         $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
         return view('purchases.index', compact('purchases', 'firms'));

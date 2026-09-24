@@ -16,27 +16,27 @@ class UserController extends Controller
         $query = User::with(['roles', 'firm']);
 
         if (!$authUser->isSuperAdmin()) {
-            $query->where('firm_id', $authUser->firm_id)
+            $query->where('users.firm_id', $authUser->firm_id)
                   ->where(function ($q) {
-                      $q->whereNull('role')
+                      $q->whereNull('users.role')
                         ->orWhere(function ($subQ) {
-                            $subQ->where('role', '!=', 'superadmin')
-                                 ->where('role', '!=', 'Superadmin');
+                            $subQ->where('users.role', '!=', 'superadmin')
+                                 ->where('users.role', '!=', 'Superadmin');
                         });
                   })
                   ->whereDoesntHave('roles', function ($q) {
                       $q->where('slug', 'superadmin');
                   });
         } elseif ($request->filled('firm_id')) {
-            $query->where('firm_id', $request->firm_id);
+            $query->where('users.firm_id', $request->firm_id);
         }
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('users.email', 'like', "%{$search}%")
+                  ->orWhere('users.phone', 'like', "%{$search}%")
                   ->orWhereHas('firm', function ($fq) use ($search) {
                       $fq->where('name', 'like', "%{$search}%");
                   });
@@ -44,10 +44,33 @@ class UserController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->where('role', $request->role);
+            $query->where('users.role', $request->role);
         }
 
-        $users = $query->latest()->paginate(10);
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'firm_name') {
+                $query->leftJoin('firms', 'users.firm_id', '=', 'firms.id')
+                      ->select('users.*')
+                      ->orderBy('firms.name', $sortOrder);
+            } elseif (in_array($sortBy, ['name', 'email', 'role', 'status', 'created_at'])) {
+                $query->orderBy("users.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('users.created_at');
+            }
+        } else {
+            $query->latest('users.created_at');
+        }
+
+        $allMatchingUsers = (clone $query)->get();
+        $totalUsers = $allMatchingUsers->count();
+        $activeUsers = $allMatchingUsers->where('status', 'active')->count();
+        $inactiveUsers = $totalUsers - $activeUsers;
+
+        $users = $query->paginate(10)->withQueryString();
 
         $rolesQuery = Role::query();
         if (!$authUser->isSuperAdmin()) {
@@ -56,7 +79,70 @@ class UserController extends Controller
         $roles = $rolesQuery->get();
         $firms = $authUser->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
-        return view('users.index', compact('users', 'roles', 'firms'));
+        return view('users.index', compact('users', 'roles', 'firms', 'totalUsers', 'activeUsers', 'inactiveUsers'));
+    }
+
+    public function printReport(Request $request)
+    {
+        $authUser = auth()->user();
+        $query = User::with(['roles', 'firm']);
+
+        if (!$authUser->isSuperAdmin()) {
+            $query->where('users.firm_id', $authUser->firm_id)
+                  ->where(function ($q) {
+                      $q->whereNull('users.role')
+                        ->orWhere(function ($subQ) {
+                            $subQ->where('users.role', '!=', 'superadmin')
+                                 ->where('users.role', '!=', 'Superadmin');
+                        });
+                  })
+                  ->whereDoesntHave('roles', function ($q) {
+                      $q->where('slug', 'superadmin');
+                  });
+        } elseif ($request->filled('firm_id')) {
+            $query->where('users.firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('users.email', 'like', "%{$search}%")
+                  ->orWhere('users.phone', 'like', "%{$search}%")
+                  ->orWhereHas('firm', function ($fq) use ($search) {
+                      $fq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->where('users.role', $request->role);
+        }
+
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'firm_name') {
+                $query->leftJoin('firms', 'users.firm_id', '=', 'firms.id')
+                      ->select('users.*')
+                      ->orderBy('firms.name', $sortOrder);
+            } elseif (in_array($sortBy, ['name', 'email', 'role', 'status', 'created_at'])) {
+                $query->orderBy("users.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('users.created_at');
+            }
+        } else {
+            $query->latest('users.created_at');
+        }
+
+        $users = $query->get();
+        $totalUsers = $users->count();
+        $activeUsers = $users->where('status', 'active')->count();
+        $inactiveUsers = $totalUsers - $activeUsers;
+
+        return view('users.print', compact('users', 'totalUsers', 'activeUsers', 'inactiveUsers'));
     }
 
     public function create()

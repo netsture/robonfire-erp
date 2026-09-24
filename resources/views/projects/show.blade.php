@@ -6,11 +6,14 @@
 
 @section('header_actions')
     <div class="d-flex align-items-center gap-2">
-        <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
+        <button onclick="window.print()" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-1 no-print">
+            <i class="bi bi-printer me-1"></i> Print
+        </button>
+        <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium no-print">
             <i class="bi bi-arrow-left me-1"></i> Back to Projects
         </a>
         @if(!auth()->user()->isSuperAdmin())
-            <a href="{{ route('projects.edit', $project) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+            <a href="{{ route('projects.edit', $project) }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium no-print">
                 <i class="bi bi-pencil-square me-1"></i> Edit Project
             </a>
         @endif
@@ -18,6 +21,14 @@
 @endsection
 
 @section('content')
+
+<!-- Print Header Branding -->
+<div class="d-none d-print-block mb-4 text-center">
+    <h3 class="fw-bold font-outfit mb-1">{{ auth()->user()->firm->name ?? 'ERP Solution' }}</h3>
+    <h5 class="text-muted font-outfit mb-0">Project Details Report - {{ $project->project_name }}</h5>
+    <span class="small text-muted font-monospace">Generated on: {{ now()->format('d M Y, h:i A') }}</span>
+    <hr class="my-3">
+</div>
 
 @if($errors->any())
     <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
@@ -415,5 +426,18 @@
         </div>
     @endforeach
 @endif
+
+<style>
+@media print {
+    .no-print, nav, sidebar, #sidebar, header, #topbar, .btn, .header_actions, .modal, .nav-tabs { display: none !important; }
+    i, i.bi, .rounded-circle, .currency-symbol { display: none !important; }
+    body { background: #fff !important; padding: 0 !important; color: #000 !important; }
+    #main-content { margin-left: 0 !important; padding: 0 !important; }
+    .card { border: none !important; box-shadow: none !important; background: transparent !important; }
+    .table { width: 100% !important; border: 1px solid #dee2e6 !important; }
+    .table-responsive { overflow: visible !important; }
+    .tab-pane { display: block !important; opacity: 1 !important; }
+}
+</style>
 
 @endsection

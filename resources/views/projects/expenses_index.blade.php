@@ -5,6 +5,9 @@
 @section('page_subtitle', 'Track, record, and filter project expenses entry wise')
 
 @section('header_actions')
+    <a href="{{ route('projects.expenses.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
+        <i class="bi bi-printer me-1"></i> Print Report
+    </a>
     @if(!auth()->user()->isSuperAdmin())
         <button type="button" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium" data-bs-toggle="modal" data-bs-target="#addGeneralExpenseModal">
             <i class="bi bi-plus-circle me-1"></i> Add Project Expense
@@ -13,6 +16,29 @@
 @endsection
 
 @section('content')
+
+<!-- Print Header Branding -->
+<div class="d-none d-print-block mb-4 text-center">
+    <h3 class="fw-bold font-outfit mb-1">{{ auth()->user()->firm->name ?? 'ERP Solution' }}</h3>
+    <h5 class="text-muted font-outfit mb-0">Project Expense Management Report</h5>
+    <span class="small text-muted font-monospace">Generated on: {{ now()->format('d M Y, h:i A') }}</span>
+    <hr class="my-3">
+</div>
+
+<!-- Print Summary Single Line -->
+<div class="d-none d-print-block mb-4 p-3 border rounded text-center">
+    <div class="row text-center fw-bold font-outfit fs-6">
+        <div class="col-4">
+            Total Expenses Logged: {{ number_format($totalExpensesCount) }}
+        </div>
+        <div class="col-4 border-start border-end">
+            Total Expense Amount: {{ number_format($totalExpensesAmount, 2) }}
+        </div>
+        <div class="col-4">
+            Projects Tracked: {{ number_format($projects->count()) }}
+        </div>
+    </div>
+</div>
 
 @if($errors->any())
     <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
@@ -30,42 +56,42 @@
 @endif
 
 <!-- Summary Cards -->
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4 no-print">
     <div class="col-12 col-md-6 col-xl-4">
-        <div class="card card-custom border-0 p-3 h-100">
+        <div class="card card-custom border-0 p-3 h-100 text-white" style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small text-uppercase fw-semibold font-outfit">Total Expenses Logged</span>
-                    <h3 class="fw-bold font-outfit text-dark mb-0 mt-1">{{ number_format($totalExpensesCount) }}</h3>
+                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Expenses Logged</span>
+                    <h3 class="fw-bold font-outfit text-white mb-0 mt-1" style="color: #ffffff !important;">{{ number_format($totalExpensesCount) }}</h3>
                 </div>
-                <div class="rounded-circle p-3 text-primary bg-primary bg-opacity-10">
-                    <i class="bi bi-receipt-cutoff fs-4"></i>
+                <div class="rounded-circle dark-symbol-avatar shadow-sm" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                    <i class="bi bi-receipt-cutoff"></i>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-12 col-md-6 col-xl-4">
-        <div class="card card-custom border-0 p-3 h-100">
+        <div class="card card-custom border-0 p-3 h-100 text-white" style="background: linear-gradient(135deg, #e11d48 0%, #9f1239 100%);">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small text-uppercase fw-semibold font-outfit">Total Expense Amount</span>
-                    <h3 class="fw-bold font-outfit text-danger mb-0 mt-1">₹{{ number_format($totalExpensesAmount, 2) }}</h3>
+                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Expense Amount</span>
+                    <h3 class="fw-bold font-outfit text-white mb-0 mt-1" style="color: #ffffff !important;">₹{{ number_format($totalExpensesAmount, 2) }}</h3>
                 </div>
-                <div class="rounded-circle p-3 text-danger bg-danger bg-opacity-10">
-                    <i class="bi bi-currency-rupee fs-4"></i>
+                <div class="rounded-circle dark-symbol-avatar shadow-sm" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                    <i class="bi bi-currency-rupee"></i>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-12 col-md-6 col-xl-4">
-        <div class="card card-custom border-0 p-3 h-100">
+        <div class="card card-custom border-0 p-3 h-100 text-white" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small text-uppercase fw-semibold font-outfit">Projects Tracked</span>
-                    <h3 class="fw-bold font-outfit text-success mb-0 mt-1">{{ number_format($projects->count()) }}</h3>
+                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Projects Tracked</span>
+                    <h3 class="fw-bold font-outfit text-white mb-0 mt-1" style="color: #ffffff !important;">{{ number_format($projects->count()) }}</h3>
                 </div>
-                <div class="rounded-circle p-3 text-success bg-success bg-opacity-10">
-                    <i class="bi bi-briefcase-fill fs-4"></i>
+                <div class="rounded-circle dark-symbol-avatar shadow-sm" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                    <i class="bi bi-briefcase-fill"></i>
                 </div>
             </div>
         </div>
@@ -73,7 +99,7 @@
 </div>
 
 <!-- Search & Filter Bar -->
-<div class="card card-custom border-0 p-3 mb-4">
+<div class="card card-custom border-0 p-3 mb-4 no-print">
     <form method="GET" action="{{ route('projects.expenses.index') }}" class="row g-2 align-items-center">
         <div class="col-12 col-md-4">
             <div class="input-group">
@@ -115,16 +141,71 @@
             <thead class="table-light">
                 <tr>
                     <th class="ps-4">#</th>
-                    <th>Project Entry</th>
-                    <th>Date</th>
-                    <th>Item Name</th>
-                    <th>Description</th>
-                    <th class="text-end">Amount (₹)</th>
+                    <th>
+                        <a href="{{ route('projects.expenses.index', array_merge(request()->query(), ['sort_by' => 'project_name', 'sort_order' => request('sort_by') === 'project_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Project Entry
+                            @if(request('sort_by') === 'project_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('projects.expenses.index', array_merge(request()->query(), ['sort_by' => 'expense_date', 'sort_order' => request('sort_by') === 'expense_date' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Date
+                            @if(request('sort_by') === 'expense_date')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('projects.expenses.index', array_merge(request()->query(), ['sort_by' => 'item_name', 'sort_order' => request('sort_by') === 'item_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Item Name
+                            @if(request('sort_by') === 'item_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('projects.expenses.index', array_merge(request()->query(), ['sort_by' => 'description', 'sort_order' => request('sort_by') === 'description' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Description
+                            @if(request('sort_by') === 'description')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="{{ route('projects.expenses.index', array_merge(request()->query(), ['sort_by' => 'amount', 'sort_order' => request('sort_by') === 'amount' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center ms-auto">
+                            Amount (₹)
+                            @if(request('sort_by') === 'amount')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                     <th class="text-center">Uploaded Document</th>
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
-                    <th class="text-end pe-4">Actions</th>
+                    <th>
+                        <a href="{{ route('projects.expenses.index', array_merge(request()->query(), ['sort_by' => 'created_at', 'sort_order' => request('sort_by') === 'created_at' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Created Date
+                            @if(request('sort_by') === 'created_at')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end pe-4 no-print">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -161,13 +242,14 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <span class="fw-bold text-danger">₹{{ number_format($expense->amount, 2) }}</span>
+                            <span class="fw-bold text-danger"><span class="currency-symbol">₹</span>{{ number_format($expense->amount, 2) }}</span>
                         </td>
                         <td class="text-center">
                             @if($expense->document_path)
-                                <a href="{{ route('projects.expenses.download', [$expense->project, $expense]) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="Download Uploaded Document">
+                                <a href="{{ route('projects.expenses.download', [$expense->project, $expense]) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 no-print" title="Download Uploaded Document">
                                     <i class="bi bi-file-earmark-arrow-down me-1"></i> Download
                                 </a>
+                                <span class="badge bg-light text-primary border d-none d-print-inline font-outfit fw-normal">Attached</span>
                             @else
                                 <span class="badge bg-light text-muted border font-outfit fw-normal">No File</span>
                             @endif
@@ -177,7 +259,8 @@
                                 <span class="badge bg-light text-dark border">{{ $expense->project->firm->name ?? 'N/A' }}</span>
                             </td>
                         @endif
-                        <td class="text-end pe-4">
+                        <td class="small text-muted font-monospace">{{ $expense->created_at ? $expense->created_at->format('d-m-Y') : 'N/A' }}</td>
+                        <td class="text-end pe-4 no-print">
                             <div class="d-flex align-items-center justify-content-end gap-1">
                                 <a href="{{ route('projects.show', ['project' => $expense->project, 'tab' => 'expenses']) }}" class="btn btn-sm btn-light border text-dark" title="View Project Details">
                                     <i class="bi bi-eye"></i>
@@ -195,7 +278,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 9 : 8 }}" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 10 : 9 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-receipt fs-1 d-block mb-2 text-secondary"></i>
                             No project expense records found.
                         </td>
@@ -206,7 +289,7 @@
     </div>
 
     @if($expenses->hasPages())
-        <div class="p-3 border-top d-flex justify-content-end">
+        <div class="p-3 border-top d-flex justify-content-end no-print">
             {{ $expenses->links() }}
         </div>
     @endif
@@ -371,5 +454,17 @@
         </div>
     @endforeach
 @endif
+
+<style>
+@media print {
+    .no-print, nav, sidebar, #sidebar, header, #topbar, .btn, .header_actions, .modal { display: none !important; }
+    i, i.bi, .rounded-circle, .currency-symbol { display: none !important; }
+    body { background: #fff !important; padding: 0 !important; color: #000 !important; }
+    #main-content { margin-left: 0 !important; padding: 0 !important; }
+    .card { border: none !important; box-shadow: none !important; background: transparent !important; }
+    .table { width: 100% !important; border: 1px solid #dee2e6 !important; }
+    .table-responsive { overflow: visible !important; }
+}
+</style>
 
 @endsection

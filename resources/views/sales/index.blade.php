@@ -46,16 +46,98 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Challan No / Project Name</th>
-                    <th>Customer Name / Number</th>
+                    <th class="ps-4">
+                        <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'invoice_number', 'sort_order' => request('sort_by') === 'invoice_number' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Challan No / Project Name
+                            @if(request('sort_by') === 'invoice_number')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'customer_name', 'sort_order' => request('sort_by') === 'customer_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Customer Name / Number
+                            @if(request('sort_by') === 'customer_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                     @if(auth()->user()->isSuperAdmin())
-                        <th>Firm</th>
+                        <th>
+                            <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'firm_name', 'sort_order' => request('sort_by') === 'firm_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                                Firm
+                                @if(request('sort_by') === 'firm_name')
+                                    <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                                @else
+                                    <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                                @endif
+                            </a>
+                        </th>
                     @endif
-                    <th>Challan Date</th>
-                    <th>Vehicle Number</th>
-                    <th>Grand Total</th>
-                    <th>Paid Amount</th>
-                    <th>Payment Status</th>
+                    <th>
+                        <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'sale_date', 'sort_order' => request('sort_by') === 'sale_date' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Challan Date
+                            @if(request('sort_by') === 'sale_date')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'vehicle_number', 'sort_order' => request('sort_by') === 'vehicle_number' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Vehicle Number
+                            @if(request('sort_by') === 'vehicle_number')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'grand_total', 'sort_order' => request('sort_by') === 'grand_total' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Grand Total
+                            @if(request('sort_by') === 'grand_total')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'paid_amount', 'sort_order' => request('sort_by') === 'paid_amount' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Paid Amount
+                            @if(request('sort_by') === 'paid_amount')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'payment_status', 'sort_order' => request('sort_by') === 'payment_status' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Payment Status
+                            @if(request('sort_by') === 'payment_status')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('sales.index', array_merge(request()->query(), ['sort_by' => 'created_at', 'sort_order' => request('sort_by') === 'created_at' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Created Date
+                            @if(request('sort_by') === 'created_at')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
             </thead>
@@ -109,6 +191,7 @@
                                 <span class="badge bg-warning text-dark rounded-pill px-3 py-1">PENDING</span>
                             @endif
                         </td>
+                        <td class="small text-muted font-monospace">{{ $sale->created_at ? $sale->created_at->format('d-m-Y') : 'N/A' }}</td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
                                 @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
@@ -197,7 +280,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 10 : 9 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-bag fs-1 d-block mb-2 text-secondary"></i>
                             No sales orders recorded. Click "New Sales Order / POS" to issue an invoice.
                         </td>

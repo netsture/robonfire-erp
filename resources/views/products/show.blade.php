@@ -48,6 +48,7 @@
                 <div class="small"><i class="bi bi-hash me-2 text-muted"></i>HSN / SAC: <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 font-monospace fw-semibold ms-1"><i class="bi bi-hash me-1 text-warning"></i>{{ $product->hsn_code ?? 'N/A' }}</span></div>
                 <div class="small"><i class="bi bi-percent me-2 text-muted"></i>Tax Rate: <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 ms-1 fw-bold">{{ number_format($product->tax_percent, 2) }}%</span></div>
                 <div class="small"><i class="bi bi-rulers me-2 text-muted"></i>Measurement Type: <span class="badge bg-info text-white rounded-pill px-2.5 py-1 ms-1 fw-semibold"><i class="bi bi-rulers me-1"></i>{{ $product->unit }}</span></div>
+                <div class="small"><i class="bi bi-calendar-event me-2 text-muted"></i>Created Date: <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1 ms-1 font-monospace fw-semibold">{{ $product->created_at ? $product->created_at->format('d-m-Y') : 'N/A' }}</span></div>
             </div>
         </div>
     </div>

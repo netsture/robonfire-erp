@@ -19,22 +19,22 @@ class ReturnableMaterialController extends Controller
         $query = ReturnableMaterial::with('customer', 'user', 'firm');
 
         if (!$user->isSuperAdmin()) {
-            $query->where('firm_id', $user->firm_id);
+            $query->where('returnable_materials.firm_id', $user->firm_id);
         } elseif ($request->filled('firm_id')) {
-            $query->where('firm_id', $request->firm_id);
+            $query->where('returnable_materials.firm_id', $request->firm_id);
         }
 
         if ($request->filled('search')) {
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
-                $q->where('return_number', 'like', "%{$search}%")
-                  ->orWhere('project_name', 'like', "%{$search}%")
-                  ->orWhere('return_reason', 'like', "%{$search}%")
-                  ->orWhere('return_date', 'like', "%{$search}%")
-                  ->orWhereRaw("DATE_FORMAT(return_date, '%m-%d-%Y') LIKE ?", ["%{$search}%"])
-                  ->orWhereRaw("DATE_FORMAT(return_date, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
-                  ->orWhereRaw("DATE_FORMAT(return_date, '%m/%d/%Y') LIKE ?", ["%{$search}%"])
-                  ->orWhereRaw("DATE_FORMAT(return_date, '%d/%m/%Y') LIKE ?", ["%{$search}%"])
+                $q->where('returnable_materials.return_number', 'like', "%{$search}%")
+                  ->orWhere('returnable_materials.project_name', 'like', "%{$search}%")
+                  ->orWhere('returnable_materials.return_reason', 'like', "%{$search}%")
+                  ->orWhere('returnable_materials.return_date', 'like', "%{$search}%")
+                  ->orWhereRaw("DATE_FORMAT(returnable_materials.return_date, '%m-%d-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(returnable_materials.return_date, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(returnable_materials.return_date, '%m/%d/%Y') LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("DATE_FORMAT(returnable_materials.return_date, '%d/%m/%Y') LIKE ?", ["%{$search}%"])
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('company_name', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%");
@@ -45,12 +45,36 @@ class ReturnableMaterialController extends Controller
                     $day   = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
                     $year  = $matches[3];
                     $dateFormatted = "{$year}-{$month}-{$day}";
-                    $q->orWhere('return_date', 'like', "%{$dateFormatted}%");
+                    $q->orWhere('returnable_materials.return_date', 'like', "%{$dateFormatted}%");
                 }
             });
         }
 
-        $returns = $query->latest()->paginate(10);
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'return_number') {
+                $query->orderBy('returnable_materials.return_number', $sortOrder);
+            } elseif ($sortBy === 'customer_name') {
+                $query->leftJoin('customers', 'returnable_materials.customer_id', '=', 'customers.id')
+                      ->select('returnable_materials.*')
+                      ->orderBy('customers.company_name', $sortOrder);
+            } elseif ($sortBy === 'firm_name') {
+                $query->leftJoin('firms', 'returnable_materials.firm_id', '=', 'firms.id')
+                      ->select('returnable_materials.*')
+                      ->orderBy('firms.name', $sortOrder);
+            } elseif (in_array($sortBy, ['return_date', 'return_reason', 'grand_total', 'created_at'])) {
+                $query->orderBy("returnable_materials.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('returnable_materials.created_at');
+            }
+        } else {
+            $query->latest('returnable_materials.created_at');
+        }
+
+        $returns = $query->paginate(10)->withQueryString();
         $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
         return view('returnable.index', compact('returns', 'firms'));

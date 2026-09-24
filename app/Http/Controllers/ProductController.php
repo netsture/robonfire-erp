@@ -16,17 +16,17 @@ class ProductController extends Controller
         $query = Product::with('category', 'brand', 'firm');
 
         if (!$user->isSuperAdmin()) {
-            $query->where('firm_id', $user->firm_id);
+            $query->where('products.firm_id', $user->firm_id);
         } elseif ($request->filled('firm_id')) {
-            $query->where('firm_id', $request->firm_id);
+            $query->where('products.firm_id', $request->firm_id);
         }
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('product_identifier', 'like', "%{$search}%")
-                  ->orWhere('hsn_code', 'like', "%{$search}%")
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.product_identifier', 'like', "%{$search}%")
+                  ->orWhere('products.hsn_code', 'like', "%{$search}%")
                   ->orWhereHas('brand', function ($bq) use ($search) {
                       $bq->where('name', 'like', "%{$search}%");
                   })
@@ -37,18 +37,44 @@ class ProductController extends Controller
         }
 
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $query->where('products.category_id', $request->category_id);
         }
 
         if ($request->filled('brand_id')) {
-            $query->where('brand_id', $request->brand_id);
+            $query->where('products.brand_id', $request->brand_id);
         }
 
         if ($request->boolean('low_stock')) {
-            $query->whereColumn('stock_quantity', '<=', 'alert_quantity');
+            $query->whereColumn('products.stock_quantity', '<=', 'products.alert_quantity');
         }
 
-        $products = $query->latest()->paginate(10);
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'category_name') {
+                $query->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                      ->select('products.*')
+                      ->orderBy('categories.name', $sortOrder);
+            } elseif ($sortBy === 'brand_name') {
+                $query->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
+                      ->select('products.*')
+                      ->orderBy('brands.name', $sortOrder);
+            } elseif ($sortBy === 'firm_name') {
+                $query->leftJoin('firms', 'products.firm_id', '=', 'firms.id')
+                      ->select('products.*')
+                      ->orderBy('firms.name', $sortOrder);
+            } elseif (in_array($sortBy, ['name', 'product_identifier', 'hsn_code', 'unit', 'cost_price', 'selling_price', 'tax_percent', 'stock_quantity', 'alert_quantity', 'status', 'created_at'])) {
+                $query->orderBy("products.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('products.created_at');
+            }
+        } else {
+            $query->latest('products.created_at');
+        }
+
+        $products = $query->paginate(10)->withQueryString();
 
         $catQuery = Category::query();
         $brandQuery = Brand::query();

@@ -70,20 +70,138 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Product Name /<br> Product Unique Identifier</th>
+                    <th class="ps-4">
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'name', 'sort_order' => request('sort_by') === 'name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Product Name /<br> Unique ID
+                            @if(request('sort_by') === 'name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                     @if(auth()->user()->isSuperAdmin())
-                        <th>Firm</th>
+                        <th>
+                            <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'firm_name', 'sort_order' => request('sort_by') === 'firm_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                                Firm
+                                @if(request('sort_by') === 'firm_name')
+                                    <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                                @else
+                                    <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                                @endif
+                            </a>
+                        </th>
                     @endif
-                    <th>Category</th>
-                    <th>Brand</th>
-                    <th>HSN Code</th>
-                    <th>Type</th>
-                    <th>Cost Price</th>
-                    <th>Selling Price</th>
-                    <th>Tax (%)</th>
-                    <th>In Stock</th>
-                    <th>Low Stock</th>
-                    <th>Status</th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'category_name', 'sort_order' => request('sort_by') === 'category_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Category
+                            @if(request('sort_by') === 'category_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'brand_name', 'sort_order' => request('sort_by') === 'brand_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Brand
+                            @if(request('sort_by') === 'brand_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'hsn_code', 'sort_order' => request('sort_by') === 'hsn_code' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            HSN Code
+                            @if(request('sort_by') === 'hsn_code')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'unit', 'sort_order' => request('sort_by') === 'unit' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Type
+                            @if(request('sort_by') === 'unit')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'cost_price', 'sort_order' => request('sort_by') === 'cost_price' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Cost Price
+                            @if(request('sort_by') === 'cost_price')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'selling_price', 'sort_order' => request('sort_by') === 'selling_price' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Selling Price
+                            @if(request('sort_by') === 'selling_price')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'tax_percent', 'sort_order' => request('sort_by') === 'tax_percent' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Tax (%)
+                            @if(request('sort_by') === 'tax_percent')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'stock_quantity', 'sort_order' => request('sort_by') === 'stock_quantity' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            In Stock
+                            @if(request('sort_by') === 'stock_quantity')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'alert_quantity', 'sort_order' => request('sort_by') === 'alert_quantity' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Low Stock
+                            @if(request('sort_by') === 'alert_quantity')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'status', 'sort_order' => request('sort_by') === 'status' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Status
+                            @if(request('sort_by') === 'status')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'created_at', 'sort_order' => request('sort_by') === 'created_at' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Created Date
+                            @if(request('sort_by') === 'created_at')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
             </thead>
@@ -166,6 +284,9 @@
                                 <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
                             @endif
                         </td>
+                        <td class="small font-monospace">
+                            {{ $product->created_at ? $product->created_at->format('d-m-Y') : 'N/A' }}
+                        </td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
                                 <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-light border" title="View Audit Trail">
@@ -188,7 +309,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="13" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 14 : 13 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary"></i>
                             No products found. Click "Add Product" to add stock items.
                         </td>

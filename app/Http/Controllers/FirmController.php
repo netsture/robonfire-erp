@@ -25,16 +25,78 @@ class FirmController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                $q->where('firms.name', 'like', "%{$search}%")
+                  ->orWhere('firms.email', 'like', "%{$search}%")
+                  ->orWhere('firms.phone', 'like', "%{$search}%")
+                  ->orWhere('firms.address', 'like', "%{$search}%");
             });
         }
 
-        $firms = $query->latest()->paginate(10);
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'users_count') {
+                $query->orderBy('users_count', $sortOrder);
+            } elseif ($sortBy === 'products_count') {
+                $query->orderBy('products_count', $sortOrder);
+            } elseif (in_array($sortBy, ['name', 'email', 'phone', 'address', 'status', 'created_at'])) {
+                $query->orderBy("firms.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('firms.created_at');
+            }
+        } else {
+            $query->latest('firms.created_at');
+        }
+
+        $firms = $query->paginate(10)->withQueryString();
 
         return view('firms.index', compact('firms'));
+    }
+
+    public function printReport(Request $request)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Only Superadmin can manage Firms.');
+        }
+
+        $query = Firm::withCount('users', 'products', 'sales', 'purchases');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('firms.name', 'like', "%{$search}%")
+                  ->orWhere('firms.email', 'like', "%{$search}%")
+                  ->orWhere('firms.phone', 'like', "%{$search}%")
+                  ->orWhere('firms.address', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'users_count') {
+                $query->orderBy('users_count', $sortOrder);
+            } elseif ($sortBy === 'products_count') {
+                $query->orderBy('products_count', $sortOrder);
+            } elseif (in_array($sortBy, ['name', 'email', 'phone', 'address', 'status', 'created_at'])) {
+                $query->orderBy("firms.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('firms.created_at');
+            }
+        } else {
+            $query->latest('firms.created_at');
+        }
+
+        $firms = $query->get();
+        $totalFirms = $firms->count();
+        $activeFirms = $firms->where('status', 'active')->count();
+        $inactiveFirms = $totalFirms - $activeFirms;
+
+        return view('firms.print', compact('firms', 'totalFirms', 'activeFirms', 'inactiveFirms'));
     }
 
     public function create()

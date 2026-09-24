@@ -18,6 +18,7 @@ use App\Http\Controllers\ReturnableMaterialController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectExpenseController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\DatabaseBackupController;
 
 // Redirect root to dashboard or login
 Route::get('/', function () {
@@ -38,10 +39,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Firms Management (Superadmin can Create, Update, Delete)
+    Route::get('/firms/print', [FirmController::class, 'printReport'])->name('firms.print');
     Route::resource('firms', FirmController::class);
 
     // Read-only View routes for Superadmin, full access for Admins/Users
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/print', [UserController::class, 'printReport'])->name('users.print');
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
@@ -55,17 +58,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales/{sale}/invoice', [SaleController::class, 'printInvoice'])->name('sales.invoice');
     Route::get('/returnable', [ReturnableMaterialController::class, 'index'])->name('returnable.index');
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+    Route::get('/projects/print', [ProjectController::class, 'printReport'])->name('projects.print');
     Route::get('/projects/expenses', [ProjectExpenseController::class, 'index'])->name('projects.expenses.index');
+    Route::get('/projects/expenses/print', [ProjectExpenseController::class, 'printReport'])->name('projects.expenses.print');
+    Route::get('/database/download', [DatabaseBackupController::class, 'download'])->name('database.download');
 
     // Reports (View Only)
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
+    Route::get('/reports/sales/print', [ReportController::class, 'printSalesReport'])->name('reports.sales.print');
     Route::get('/reports/purchases', [ReportController::class, 'purchasesReport'])->name('reports.purchases');
+    Route::get('/reports/purchases/print', [ReportController::class, 'printPurchasesReport'])->name('reports.purchases.print');
     Route::get('/reports/inventory', [ReportController::class, 'inventoryReport'])->name('reports.inventory');
+    Route::get('/reports/inventory/print', [ReportController::class, 'printInventoryReport'])->name('reports.inventory.print');
     Route::get('/reports/product-stock', [ReportController::class, 'productStockReport'])->name('reports.product-stock');
+    Route::get('/reports/product-stock/print', [ReportController::class, 'printProductStockReport'])->name('reports.product-stock.print');
     Route::get('/reports/user-activity', [ReportController::class, 'userActivityReport'])->name('reports.user-activity');
+    Route::get('/reports/user-activity/print', [ReportController::class, 'printUserActivityReport'])->name('reports.user-activity.print');
     Route::get('/reports/profit-loss', [ReportController::class, 'profitLossReport'])->name('reports.profit-loss');
     Route::get('/reports/return-products', [ReportController::class, 'returnProductsReport'])->name('reports.return-products');
+    Route::get('/reports/return-products/print', [ReportController::class, 'printReturnProductsReport'])->name('reports.return-products.print');
 
     // Write Routes (Restricted for Superadmin - view-only enforcement)
     Route::middleware([\App\Http\Middleware\RestrictSuperadminWrite::class])->group(function () {

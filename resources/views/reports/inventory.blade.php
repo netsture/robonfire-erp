@@ -5,9 +5,9 @@
 @section('page_subtitle', 'Comprehensive analysis of warehouse stock, asset valuation, profit margins, and inventory health')
 
 @section('header_actions')
-    <button onclick="window.print()" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2">
+    <a href="{{ route('reports.inventory.print', request()->query()) }}" target="_blank" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
         <i class="bi bi-printer me-1"></i> Print Report
-    </button>
+    </a>
     <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Reports
     </a>
@@ -161,16 +161,116 @@
                     @if(auth()->user()->isSuperAdmin())
                         <th>Firm</th>
                     @endif
-                    <th>Product Name & Details</th>
-                    <th>Category</th>
-                    <th>Brand</th>
-                    <th>Type</th>
-                    <th class="text-center">Stock Quantity</th>
-                    <th class="text-end">Unit Cost (₹)</th>
-                    <th class="text-end">Selling Price (₹)</th>
-                    <th class="text-end">Total Cost Value (₹)</th>
-                    <th class="text-end">Total Retail Value (₹)</th>
-                    <th class="text-end pe-4">Potential Profit (₹)</th>
+                    <th>
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'name', 'sort_order' => request('sort_by') === 'name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Product Name & Details
+                            @if(request('sort_by') === 'name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'hsn_code', 'sort_order' => request('sort_by') === 'hsn_code' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            HSN Code
+                            @if(request('sort_by') === 'hsn_code')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'category_name', 'sort_order' => request('sort_by') === 'category_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Category
+                            @if(request('sort_by') === 'category_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'brand_name', 'sort_order' => request('sort_by') === 'brand_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Brand
+                            @if(request('sort_by') === 'brand_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'unit', 'sort_order' => request('sort_by') === 'unit' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Type
+                            @if(request('sort_by') === 'unit')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-center">
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'stock_quantity', 'sort_order' => request('sort_by') === 'stock_quantity' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Stock Quantity
+                            @if(request('sort_by') === 'stock_quantity')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'cost_price', 'sort_order' => request('sort_by') === 'cost_price' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center ms-auto">
+                            Unit Cost (₹)
+                            @if(request('sort_by') === 'cost_price')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'selling_price', 'sort_order' => request('sort_by') === 'selling_price' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center ms-auto">
+                            Selling Price (₹)
+                            @if(request('sort_by') === 'selling_price')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'total_cost_value', 'sort_order' => request('sort_by') === 'total_cost_value' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center ms-auto">
+                            Total Cost Value (₹)
+                            @if(request('sort_by') === 'total_cost_value')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'total_retail_value', 'sort_order' => request('sort_by') === 'total_retail_value' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center ms-auto">
+                            Total Retail Value (₹)
+                            @if(request('sort_by') === 'total_retail_value')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end pe-4">
+                        <a href="{{ route('reports.inventory', array_merge(request()->query(), ['sort_by' => 'potential_profit', 'sort_order' => request('sort_by') === 'potential_profit' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center ms-auto">
+                            Potential Profit (₹)
+                            @if(request('sort_by') === 'potential_profit')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -189,17 +289,25 @@
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
                                     <div class="fw-semibold text-dark">{{ $product->name }}</div>
-                                    <div class="small text-muted font-monospace">
-                                        @if($product->product_identifier)
-                                            <span class="badge text-dark fw-bold border border-warning py-0.5 px-1.5 me-1" style="background-color: #fef08a; color: #713f12 !important;">ID: {{ $product->product_identifier }}</span>
-                                        @endif
-                                        HSN: {{ $product->hsn_code ?? 'N/A' }}
-                                    </div>
+                                    @if($product->product_identifier)
+                                        <div class="small font-monospace mt-0.5">
+                                            <span class="badge text-dark fw-bold border border-warning py-0.5 px-1.5" style="background-color: #fef08a; color: #713f12 !important;">ID: {{ $product->product_identifier }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <a href="{{ route('reports.product-stock', ['product_id' => $product->id]) }}" class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-0.5 small no-print ms-2" title="View Product Movement Ledger">
                                     <i class="bi bi-clock-history me-1"></i>Ledger
                                 </a>
                             </div>
+                        </td>
+                        <td>
+                            @if($product->hsn_code)
+                                <span class="badge font-monospace px-2.5 py-1 fs-6 fw-semibold" style="background-color: #e0e7ff; color: #3730a3 !important; border: 1px solid #c7d2fe !important;">
+                                    {{ $product->hsn_code }}
+                                </span>
+                            @else
+                                <span class="text-muted small">N/A</span>
+                            @endif
                         </td>
                         <td><span class="badge bg-primary text-white rounded-pill px-3 py-1 fw-semibold"><i class="bi bi-tag-fill me-1"></i>{{ $product->category->name ?? 'N/A' }}</span></td>
                         <td>
@@ -229,7 +337,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 12 : 11 }}" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 13 : 12 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary"></i>
                             No inventory products match the selected criteria.
                         </td>
@@ -239,7 +347,7 @@
             @if(count($products) > 0)
                 <tfoot class="table-light border-top">
                     <tr class="fw-bold">
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 6 : 5 }}" class="ps-4 text-end">TOTALS:</td>
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 7 : 6 }}" class="ps-4 text-end">TOTALS:</td>
                         <td class="text-center text-primary fs-6">{{ number_format($totalUnitsInStock) }}</td>
                         <td colspan="2"></td>
                         <td class="text-end font-monospace text-dark">₹{{ number_format($totalCostValue, 2) }}</td>

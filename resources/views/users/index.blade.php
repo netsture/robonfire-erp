@@ -5,6 +5,9 @@
 @section('page_subtitle', 'Manage system users, assign roles and configure access status')
 
 @section('header_actions')
+    <a href="{{ route('users.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
+        <i class="bi bi-printer me-1"></i> Print Report
+    </a>
     @if(auth()->user()->isAdmin())
         <a href="{{ route('users.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
             <i class="bi bi-person-plus-fill me-1"></i> Add New User
@@ -14,8 +17,79 @@
 
 @section('content')
 
+<!-- Print Header Branding -->
+<div class="d-none d-print-block mb-4 text-center">
+    <h3 class="fw-bold font-outfit mb-1">{{ auth()->user()->firm->name ?? 'ERP Solution' }}</h3>
+    <h5 class="text-muted font-outfit mb-0">User Accounts & Access Management Report</h5>
+    <span class="small text-muted font-monospace">Generated on: {{ now()->format('d M Y, h:i A') }}</span>
+    <hr class="my-3">
+</div>
+
+<!-- Print Summary Single Line -->
+<div class="d-none d-print-block mb-4 p-3 border rounded text-center">
+    <div class="row text-center fw-bold font-outfit fs-6">
+        <div class="col-4">
+            Total User: {{ number_format($totalUsers) }}
+        </div>
+        <div class="col-4 border-start border-end">
+            Active User: {{ number_format($activeUsers) }}
+        </div>
+        <div class="col-4">
+            Inactive User: {{ number_format($inactiveUsers) }}
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics Cards -->
+<div class="row g-3 mb-4 no-print">
+    <!-- Total User Card -->
+    <div class="col-12 col-md-4">
+        <div class="card card-custom border-0 p-3 h-100 text-white" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total User</span>
+                    <h3 class="fw-bold font-outfit text-white mb-0 mt-1" style="color: #ffffff !important;">{{ number_format($totalUsers) }}</h3>
+                </div>
+                <div class="rounded-circle dark-symbol-avatar shadow-sm" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active User Card -->
+    <div class="col-12 col-md-4">
+        <div class="card card-custom border-0 p-3 h-100 text-white" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Active User</span>
+                    <h3 class="fw-bold font-outfit text-white mb-0 mt-1" style="color: #ffffff !important;">{{ number_format($activeUsers) }}</h3>
+                </div>
+                <div class="rounded-circle dark-symbol-avatar shadow-sm" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inactive User Card -->
+    <div class="col-12 col-md-4">
+        <div class="card card-custom border-0 p-3 h-100 text-white" style="background: linear-gradient(135deg, #e11d48 0%, #9f1239 100%);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Inactive User</span>
+                    <h3 class="fw-bold font-outfit text-white mb-0 mt-1" style="color: #ffffff !important;">{{ number_format($inactiveUsers) }}</h3>
+                </div>
+                <div class="rounded-circle dark-symbol-avatar shadow-sm" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                    <i class="bi bi-person-x-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Filter Bar -->
-<div class="card card-custom border-0 p-3 mb-4">
+<div class="card card-custom border-0 p-3 mb-4 no-print">
     <form method="GET" action="{{ route('users.index') }}" class="row g-2 align-items-center">
         <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-4' : 'col-md-5' }}">
             <div class="input-group">
@@ -54,13 +128,67 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">User</th>
-                    <th>Firm / Organization</th>
-                    <th>Contact Info</th>
-                    <th>Assigned Role</th>
-                    <th>Status</th>
-                    <th>Joined Date</th>
-                    <th class="text-end pe-4">Actions</th>
+                    <th class="ps-4">
+                        <a href="{{ route('users.index', array_merge(request()->query(), ['sort_by' => 'name', 'sort_order' => request('sort_by') === 'name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            User
+                            @if(request('sort_by') === 'name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('users.index', array_merge(request()->query(), ['sort_by' => 'firm_name', 'sort_order' => request('sort_by') === 'firm_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Firm / Organization
+                            @if(request('sort_by') === 'firm_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('users.index', array_merge(request()->query(), ['sort_by' => 'email', 'sort_order' => request('sort_by') === 'email' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Contact Info
+                            @if(request('sort_by') === 'email')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('users.index', array_merge(request()->query(), ['sort_by' => 'role', 'sort_order' => request('sort_by') === 'role' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Assigned Role
+                            @if(request('sort_by') === 'role')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('users.index', array_merge(request()->query(), ['sort_by' => 'status', 'sort_order' => request('sort_by') === 'status' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Status
+                            @if(request('sort_by') === 'status')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('users.index', array_merge(request()->query(), ['sort_by' => 'created_at', 'sort_order' => request('sort_by') === 'created_at' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Joined Date
+                            @if(request('sort_by') === 'created_at')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="text-end pe-4 no-print">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -152,7 +280,7 @@
                         <td class="small text-muted">
                             {{ $user->created_at->format('d-m-Y') }}
                         </td>
-                        <td class="text-end pe-4">
+                        <td class="text-end pe-4 no-print">
                             @if(auth()->user()->isAdmin())
                                 <div class="btn-group">
                                     <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-light border" title="Edit User">
@@ -185,7 +313,7 @@
         </table>
     </div>
     @if($users->hasPages())
-        <div class="p-3 border-top">
+        <div class="p-3 border-top no-print">
             {{ $users->links() }}
         </div>
     @endif

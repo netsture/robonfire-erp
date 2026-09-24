@@ -61,7 +61,25 @@ class ProjectExpenseController extends Controller
         $totalExpensesAmount = $totalExpensesQuery->sum('amount');
         $totalExpensesCount  = $totalExpensesQuery->count();
 
-        $expenses = $query->latest('expense_date')->paginate(10);
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'project_name') {
+                $query->join('projects', 'project_expenses.project_id', '=', 'projects.id')
+                      ->select('project_expenses.*')
+                      ->orderBy('projects.project_name', $sortOrder);
+            } elseif (in_array($sortBy, ['expense_date', 'item_name', 'description', 'amount', 'created_at'])) {
+                $query->orderBy($sortBy, $sortOrder);
+            } else {
+                $query->latest('expense_date');
+            }
+        } else {
+            $query->latest('expense_date');
+        }
+
+        $expenses = $query->paginate(10)->withQueryString();
 
         $projectQuery = Project::query();
         if (!$user->isSuperAdmin()) {
@@ -75,6 +93,70 @@ class ProjectExpenseController extends Controller
             'expenses',
             'projects',
             'firms',
+            'totalExpensesAmount',
+            'totalExpensesCount'
+        ));
+    }
+
+    public function printReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = ProjectExpense::with(['project', 'project.firm']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->whereHas('project', function ($q) use ($user) {
+                $q->where('firm_id', $user->firm_id);
+            });
+        } elseif ($request->filled('firm_id')) {
+            $query->whereHas('project', function ($q) use ($request) {
+                $q->where('firm_id', $request->firm_id);
+            });
+        }
+
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('item_name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('amount', 'like', "%{$search}%")
+                  ->orWhere('expense_date', 'like', "%{$search}%")
+                  ->orWhereHas('project', function ($pq) use ($search) {
+                      $pq->where('project_name', 'like', "%{$search}%")
+                         ->orWhere('po_number', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $totalExpensesQuery = clone $query;
+        $totalExpensesAmount = $totalExpensesQuery->sum('amount');
+        $totalExpensesCount  = $totalExpensesQuery->count();
+
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'project_name') {
+                $query->join('projects', 'project_expenses.project_id', '=', 'projects.id')
+                      ->select('project_expenses.*')
+                      ->orderBy('projects.project_name', $sortOrder);
+            } elseif (in_array($sortBy, ['expense_date', 'item_name', 'description', 'amount'])) {
+                $query->orderBy($sortBy, $sortOrder);
+            } else {
+                $query->latest('expense_date');
+            }
+        } else {
+            $query->latest('expense_date');
+        }
+
+        $expenses = $query->get();
+
+        return view('projects.expenses_print', compact(
+            'expenses',
             'totalExpensesAmount',
             'totalExpensesCount'
         ));

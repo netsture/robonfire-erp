@@ -395,10 +395,12 @@
                 <i class="bi bi-person-gear"></i>
                 <span>User Accounts</span>
             </a>
+            @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
             <a href="{{ route('roles.index') }}" class="nav-link-custom {{ request()->routeIs('roles*') ? 'active' : '' }}">
                 <i class="bi bi-shield-lock-fill"></i>
                 <span>Roles & Permissions</span>
-            </a>           
+            </a>  
+            @endif
             <a href="{{ route('reports.index') }}" class="nav-link-custom {{ request()->routeIs('reports*') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-line-fill"></i>
                 <span>Analytics & Reports</span>
@@ -413,6 +415,14 @@
                 <i class="bi bi-receipt-cutoff"></i>
                 <span>Project Expense</span>
             </a>
+
+            @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+                <div class="sidebar-heading">Database Information</div>
+                <a href="{{ route('database.download') }}" class="nav-link-custom">
+                    <i class="bi bi-database-fill-down"></i>
+                    <span>Export Database</span>
+                </a>
+            @endif
         </div>
 
         <div class="p-3 border-top border-secondary border-opacity-20 text-center">

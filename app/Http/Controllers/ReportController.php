@@ -255,39 +255,67 @@ class ReportController extends Controller
         $query = Product::with(['category', 'brand', 'firm']);
 
         if (!$user->isSuperAdmin()) {
-            $query->where('firm_id', $user->firm_id);
+            $query->where('products.firm_id', $user->firm_id);
         } elseif ($request->filled('firm_id')) {
-            $query->where('firm_id', $request->firm_id);
+            $query->where('products.firm_id', $request->firm_id);
         }
 
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $query->where('products.category_id', $request->category_id);
         }
 
         if ($request->filled('brand_id')) {
-            $query->where('brand_id', $request->brand_id);
+            $query->where('products.brand_id', $request->brand_id);
         }
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('hsn_code', 'like', "%{$search}%");
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.hsn_code', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('stock_status')) {
             if ($request->stock_status === 'out_of_stock') {
-                $query->where('stock_quantity', '<=', 0);
+                $query->where('products.stock_quantity', '<=', 0);
             } elseif ($request->stock_status === 'low_stock') {
-                $query->whereColumn('stock_quantity', '<=', 'alert_quantity')
-                      ->where('stock_quantity', '>', 0);
+                $query->whereColumn('products.stock_quantity', '<=', 'products.alert_quantity')
+                      ->where('products.stock_quantity', '>', 0);
             } elseif ($request->stock_status === 'in_stock') {
-                $query->whereColumn('stock_quantity', '>', 'alert_quantity');
+                $query->whereColumn('products.stock_quantity', '>', 'products.alert_quantity');
             }
         }
 
-        $products = $query->latest()->get();
+        // Sorting logic
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy) {
+            if ($sortBy === 'category_name') {
+                $query->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                      ->select('products.*')
+                      ->orderBy('categories.name', $sortOrder);
+            } elseif ($sortBy === 'brand_name') {
+                $query->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
+                      ->select('products.*')
+                      ->orderBy('brands.name', $sortOrder);
+            } elseif ($sortBy === 'total_cost_value') {
+                $query->orderByRaw("(products.stock_quantity * products.cost_price) {$sortOrder}");
+            } elseif ($sortBy === 'total_retail_value') {
+                $query->orderByRaw("(products.stock_quantity * products.selling_price) {$sortOrder}");
+            } elseif ($sortBy === 'potential_profit') {
+                $query->orderByRaw("((products.stock_quantity * products.selling_price) - (products.stock_quantity * products.cost_price)) {$sortOrder}");
+            } elseif (in_array($sortBy, ['name', 'hsn_code', 'unit', 'stock_quantity', 'cost_price', 'selling_price', 'created_at'])) {
+                $query->orderBy("products.{$sortBy}", $sortOrder);
+            } else {
+                $query->latest('products.created_at');
+            }
+        } else {
+            $query->latest('products.created_at');
+        }
+
+        $products = $query->get();
 
         $totalProducts = $products->count();
         $totalUnitsInStock = $products->sum('stock_quantity');
@@ -661,7 +689,25 @@ class ReportController extends Controller
                 ]);
             }
 
-            $movementHistory = $movementHistory->sortByDesc('raw_date')->values();
+            $sortBy = $request->get('sort_by');
+            $sortOrder = strtolower($request->get('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+            if ($sortBy && in_array($sortBy, ['raw_date', 'type', 'ref_no', 'party', 'quantity', 'rate', 'amount'])) {
+                $isDesc = $sortOrder === 'desc';
+                $callback = function($item) use ($sortBy) {
+                    $val = $item[$sortBy] ?? '';
+                    if ($sortBy === 'raw_date') {
+                        return \Carbon\Carbon::parse($val)->timestamp;
+                    }
+                    if (is_string($val)) {
+                        return strtolower($val);
+                    }
+                    return $val;
+                };
+                $movementHistory = $isDesc ? $movementHistory->sortByDesc($callback)->values() : $movementHistory->sortBy($callback)->values();
+            } else {
+                $movementHistory = $movementHistory->sortByDesc(fn($item) => \Carbon\Carbon::parse($item['raw_date'])->timestamp)->values();
+            }
 
             $summary['current_stock'] = $selectedProduct->stock_quantity;
             $summary['cost_price']    = $selectedProduct->cost_price;
@@ -869,7 +915,25 @@ class ReportController extends Controller
             ]);
         }
 
-        $entriesLedger = $entriesLedger->sortByDesc('raw_date')->values();
+        $sortBy = $request->get('sort_by');
+        $sortOrder = strtolower($request->get('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy && in_array($sortBy, ['raw_date', 'entry_type', 'ref_no', 'party', 'products_summary', 'status', 'amount', 'entered_by'])) {
+            $isDesc = $sortOrder === 'desc';
+            $callback = function($item) use ($sortBy) {
+                $val = $item[$sortBy] ?? '';
+                if ($sortBy === 'raw_date') {
+                    return \Carbon\Carbon::parse($val)->timestamp;
+                }
+                if (is_string($val)) {
+                    return strtolower($val);
+                }
+                return $val;
+            };
+            $entriesLedger = $isDesc ? $entriesLedger->sortByDesc($callback)->values() : $entriesLedger->sortBy($callback)->values();
+        } else {
+            $entriesLedger = $entriesLedger->sortByDesc(fn($item) => \Carbon\Carbon::parse($item['raw_date'])->timestamp)->values();
+        }
 
         $firms = $authUser->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 
@@ -880,6 +944,548 @@ class ReportController extends Controller
             'entriesLedger',
             'firms'
         ));
+    }
+
+    public function printSalesReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = Sale::with(['customer', 'firm']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('start_date')) {
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('sale_date', '>=', $startDate);
+            }
+        }
+        if ($request->filled('end_date')) {
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('sale_date', '<=', $endDate);
+            }
+        }
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhere('project_name', 'like', "%{$search}%")
+                  ->orWhere('vehicle_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function($cQ) use ($search) {
+                      $cQ->where('company_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $allMatchingSales = $query->latest()->get();
+
+        $totalOrdersCount   = $allMatchingSales->count();
+        $totalSubtotal      = $allMatchingSales->sum('subtotal');
+        $totalTaxAmount     = $allMatchingSales->sum('tax_amount');
+        $totalDiscountAmount= $allMatchingSales->sum('discount_amount');
+        $totalShippingCost  = $allMatchingSales->sum('shipping_cost');
+        $totalGrandTotal    = $allMatchingSales->sum('grand_total');
+        $totalPaidAmount    = $allMatchingSales->sum('paid_amount');
+        $totalPendingAmount = $totalGrandTotal - $totalPaidAmount;
+
+        return view('reports.sales_print', [
+            'sales' => $allMatchingSales,
+            'totalOrdersCount' => $totalOrdersCount,
+            'totalSubtotal' => $totalSubtotal,
+            'totalTaxAmount' => $totalTaxAmount,
+            'totalDiscountAmount' => $totalDiscountAmount,
+            'totalShippingCost' => $totalShippingCost,
+            'totalGrandTotal' => $totalGrandTotal,
+            'totalPaidAmount' => $totalPaidAmount,
+            'totalPendingAmount' => $totalPendingAmount,
+        ]);
+    }
+
+    public function printPurchasesReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = Purchase::with(['supplier', 'firm']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('start_date')) {
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('purchase_date', '>=', $startDate);
+            }
+        }
+        if ($request->filled('end_date')) {
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('purchase_date', '<=', $endDate);
+            }
+        }
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhere('project_name', 'like', "%{$search}%")
+                  ->orWhereHas('supplier', function($sQ) use ($search) {
+                      $sQ->where('company_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $allMatchingPurchases = $query->latest()->get();
+
+        $totalOrdersCount   = $allMatchingPurchases->count();
+        $totalSubtotal      = $allMatchingPurchases->sum('subtotal');
+        $totalTaxAmount     = $allMatchingPurchases->sum('tax_amount');
+        $totalDiscountAmount= $allMatchingPurchases->sum('discount_amount');
+        $totalShippingCost  = $allMatchingPurchases->sum('shipping_cost');
+        $totalGrandTotal    = $allMatchingPurchases->sum('grand_total');
+        $totalPaidAmount    = $allMatchingPurchases->sum('paid_amount');
+        $totalPendingAmount = $totalGrandTotal - $totalPaidAmount;
+
+        return view('reports.purchases_print', [
+            'purchases' => $allMatchingPurchases,
+            'totalOrdersCount' => $totalOrdersCount,
+            'totalSubtotal' => $totalSubtotal,
+            'totalTaxAmount' => $totalTaxAmount,
+            'totalDiscountAmount' => $totalDiscountAmount,
+            'totalShippingCost' => $totalShippingCost,
+            'totalGrandTotal' => $totalGrandTotal,
+            'totalPaidAmount' => $totalPaidAmount,
+            'totalPendingAmount' => $totalPendingAmount,
+        ]);
+    }
+
+    public function printReturnProductsReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = ReturnableMaterial::with(['customer', 'firm', 'items.product']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('start_date')) {
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('return_date', '>=', $startDate);
+            }
+        }
+        if ($request->filled('end_date')) {
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('return_date', '<=', $endDate);
+            }
+        }
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('return_number', 'like', "%{$search}%")
+                  ->orWhere('project_name', 'like', "%{$search}%")
+                  ->orWhere('return_reason', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function($cQ) use ($search) {
+                      $cQ->where('company_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $allMatchingReturns = $query->latest()->get();
+        $totalReturnCount   = $allMatchingReturns->count();
+        $totalSubtotal      = $allMatchingReturns->sum('subtotal');
+        $totalTaxAmount     = $allMatchingReturns->sum('tax_amount');
+        $totalDiscountAmount= $allMatchingReturns->sum('discount_amount');
+        $totalShippingCost  = $allMatchingReturns->sum('shipping_cost');
+        $totalGrandTotal    = $allMatchingReturns->sum('grand_total');
+        $returnIds          = $allMatchingReturns->pluck('id');
+        $totalUnitsReturned = ReturnableMaterialItem::whereIn('returnable_material_id', $returnIds)->sum('quantity');
+
+        return view('reports.return_products_print', [
+            'returns' => $allMatchingReturns,
+            'totalReturnCount' => $totalReturnCount,
+            'totalUnitsReturned' => $totalUnitsReturned,
+            'totalSubtotal' => $totalSubtotal,
+            'totalTaxAmount' => $totalTaxAmount,
+            'totalDiscountAmount' => $totalDiscountAmount,
+            'totalShippingCost' => $totalShippingCost,
+            'totalGrandTotal' => $totalGrandTotal,
+        ]);
+    }
+
+    public function printInventoryReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = Product::with(['category', 'brand', 'firm']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('products.firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('products.firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('products.category_id', $request->category_id);
+        }
+        if ($request->filled('brand_id')) {
+            $query->where('products.brand_id', $request->brand_id);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.hsn_code', 'like', "%{$search}%");
+            });
+        }
+        if ($request->filled('stock_status')) {
+            if ($request->stock_status === 'out_of_stock') {
+                $query->where('products.stock_quantity', '<=', 0);
+            } elseif ($request->stock_status === 'low_stock') {
+                $query->whereColumn('products.stock_quantity', '<=', 'products.alert_quantity')
+                      ->where('products.stock_quantity', '>', 0);
+            } elseif ($request->stock_status === 'in_stock') {
+                $query->whereColumn('products.stock_quantity', '>', 'products.alert_quantity');
+            }
+        }
+
+        $products = $query->latest('products.created_at')->get();
+        $totalProducts = $products->count();
+        $totalUnitsInStock = $products->sum('stock_quantity');
+        $totalCostValue = $products->sum(fn($p) => $p->stock_quantity * $p->cost_price);
+        $totalRetailValue = $products->sum(fn($p) => $p->stock_quantity * $p->selling_price);
+
+        return view('reports.inventory_print', compact(
+            'products',
+            'totalProducts',
+            'totalUnitsInStock',
+            'totalCostValue',
+            'totalRetailValue'
+        ));
+    }
+
+    public function printProductStockReport(Request $request)
+    {
+        $user = auth()->user();
+        $firmId = !$user->isSuperAdmin() ? $user->firm_id : ($request->input('firm_id') ?? null);
+
+        $productsQuery = Product::with(['category', 'brand', 'firm']);
+        if (!$user->isSuperAdmin()) {
+            $productsQuery->where('firm_id', $user->firm_id);
+        } elseif ($firmId) {
+            $productsQuery->where('firm_id', $firmId);
+        }
+
+        $products = $productsQuery->orderBy('name')->get();
+
+        $selectedProductId = $request->input('product_id');
+        $selectedProduct = null;
+        if ($selectedProductId) {
+            $selectedProduct = $products->firstWhere('id', $selectedProductId);
+        }
+        if (!$selectedProduct && $products->count() > 0) {
+            $selectedProduct = $products->first();
+        }
+
+        $movementHistory = collect();
+        $summary = [
+            'total_purchased_qty' => 0,
+            'total_purchased_amount' => 0,
+            'total_sold_qty' => 0,
+            'total_sold_amount' => 0,
+            'total_returned_qty' => 0,
+            'total_returned_amount' => 0,
+            'total_adjusted_add_qty' => 0,
+            'total_adjusted_sub_qty' => 0,
+            'current_stock' => 0,
+            'cost_price' => 0,
+            'selling_price' => 0,
+        ];
+
+        if ($selectedProduct) {
+            $startDate = $this->parseDateInput($request->input('start_date'));
+            $endDate   = $this->parseDateInput($request->input('end_date'));
+
+            $purchaseItemsQuery = \App\Models\PurchaseItem::where('product_id', $selectedProduct->id)
+                ->whereHas('purchase', function ($q) use ($firmId, $startDate, $endDate) {
+                    if ($firmId) $q->where('firm_id', $firmId);
+                    if ($startDate) $q->whereDate('purchase_date', '>=', $startDate);
+                    if ($endDate) $q->whereDate('purchase_date', '<=', $endDate);
+                })
+                ->with(['purchase.supplier', 'purchase.firm']);
+
+            foreach ($purchaseItemsQuery->get() as $pi) {
+                if (!$pi->purchase) continue;
+                $summary['total_purchased_qty'] += $pi->quantity;
+                $summary['total_purchased_amount'] += $pi->subtotal;
+                $movementHistory->push([
+                    'timestamp' => $pi->purchase->purchase_date ? \Carbon\Carbon::parse($pi->purchase->purchase_date)->format('d-m-Y') : $pi->created_at->format('d-m-Y'),
+                    'raw_date'  => $pi->purchase->purchase_date ?? $pi->created_at,
+                    'type'      => 'Purchase',
+                    'direction' => 'IN',
+                    'ref_no'    => $pi->purchase->invoice_number,
+                    'party'     => $pi->purchase->supplier->company_name ?? 'N/A',
+                    'quantity'  => $pi->quantity,
+                    'rate'      => $pi->unit_cost,
+                    'amount'    => $pi->subtotal,
+                ]);
+            }
+
+            $saleItemsQuery = \App\Models\SaleItem::where('product_id', $selectedProduct->id)
+                ->whereHas('sale', function ($q) use ($firmId, $startDate, $endDate) {
+                    if ($firmId) $q->where('firm_id', $firmId);
+                    if ($startDate) $q->whereDate('sale_date', '>=', $startDate);
+                    if ($endDate) $q->whereDate('sale_date', '<=', $endDate);
+                })
+                ->with(['sale.customer', 'sale.firm']);
+
+            foreach ($saleItemsQuery->get() as $si) {
+                if (!$si->sale) continue;
+                $summary['total_sold_qty'] += $si->quantity;
+                $summary['total_sold_amount'] += $si->subtotal;
+                $movementHistory->push([
+                    'timestamp' => $si->sale->sale_date ? \Carbon\Carbon::parse($si->sale->sale_date)->format('d-m-Y') : $si->created_at->format('d-m-Y'),
+                    'raw_date'  => $si->sale->sale_date ?? $si->created_at,
+                    'type'      => 'Sale',
+                    'direction' => 'OUT',
+                    'ref_no'    => $si->sale->invoice_number,
+                    'party'     => $si->sale->customer->company_name ?? 'N/A',
+                    'quantity'  => $si->quantity,
+                    'rate'      => $si->unit_price,
+                    'amount'    => $si->subtotal,
+                ]);
+            }
+
+            $returnItemsQuery = \App\Models\ReturnableMaterialItem::where('product_id', $selectedProduct->id)
+                ->whereHas('returnableMaterial', function ($q) use ($firmId, $startDate, $endDate) {
+                    if ($firmId) $q->where('firm_id', $firmId);
+                    if ($startDate) $q->whereDate('return_date', '>=', $startDate);
+                    if ($endDate) $q->whereDate('return_date', '<=', $endDate);
+                })
+                ->with(['returnableMaterial.customer', 'returnableMaterial.firm']);
+
+            foreach ($returnItemsQuery->get() as $ri) {
+                if (!$ri->returnableMaterial) continue;
+                $summary['total_returned_qty'] += $ri->quantity;
+                $summary['total_returned_amount'] += $ri->subtotal;
+                $movementHistory->push([
+                    'timestamp' => $ri->returnableMaterial->return_date ? \Carbon\Carbon::parse($ri->returnableMaterial->return_date)->format('d-m-Y') : $ri->created_at->format('d-m-Y'),
+                    'raw_date'  => $ri->returnableMaterial->return_date ?? $ri->created_at,
+                    'type'      => 'Returnable',
+                    'direction' => 'IN',
+                    'ref_no'    => $ri->returnableMaterial->return_number,
+                    'party'     => $ri->returnableMaterial->customer->company_name ?? 'N/A',
+                    'quantity'  => $ri->quantity,
+                    'rate'      => $ri->unit_price,
+                    'amount'    => $ri->subtotal,
+                ]);
+            }
+
+            $adjQuery = \App\Models\StockAdjustment::where('product_id', $selectedProduct->id)->with(['user', 'firm']);
+            if ($firmId) $adjQuery->where('firm_id', $firmId);
+            if ($startDate) $adjQuery->whereDate('created_at', '>=', $startDate);
+            if ($endDate) $adjQuery->whereDate('created_at', '<=', $endDate);
+
+            foreach ($adjQuery->get() as $adj) {
+                if ($adj->type === 'add') {
+                    $summary['total_adjusted_add_qty'] += $adj->quantity;
+                } else {
+                    $summary['total_adjusted_sub_qty'] += $adj->quantity;
+                }
+                $movementHistory->push([
+                    'timestamp' => $adj->created_at->format('d-m-Y'),
+                    'raw_date'  => $adj->created_at,
+                    'type'      => 'Adjustment (' . strtoupper($adj->type) . ')',
+                    'direction' => $adj->type === 'add' ? 'IN' : 'OUT',
+                    'ref_no'    => 'ADJ-' . $adj->id,
+                    'party'     => $adj->user->name ?? 'System',
+                    'quantity'  => $adj->quantity,
+                    'rate'      => $selectedProduct->cost_price,
+                    'amount'    => $adj->quantity * $selectedProduct->cost_price,
+                ]);
+            }
+
+            $movementHistory = $movementHistory->sortByDesc(fn($item) => \Carbon\Carbon::parse($item['raw_date'])->timestamp)->values();
+            $summary['current_stock'] = $selectedProduct->stock_quantity;
+            $summary['cost_price']    = $selectedProduct->cost_price;
+            $summary['selling_price'] = $selectedProduct->selling_price;
+        }
+
+        return view('reports.product_stock_print', compact('products', 'selectedProduct', 'movementHistory', 'summary'));
+    }
+
+    public function printUserActivityReport(Request $request)
+    {
+        $authUser = auth()->user();
+        $firmId = !$authUser->isSuperAdmin() ? $authUser->firm_id : ($request->input('firm_id') ?? null);
+
+        $usersQuery = \App\Models\User::query();
+        if (!$authUser->isSuperAdmin()) {
+            $usersQuery->where('firm_id', $authUser->firm_id);
+        } elseif ($firmId) {
+            $usersQuery->where('firm_id', $firmId);
+        }
+        $users = $usersQuery->orderBy('name')->get();
+
+        $selectedUserId = $request->input('user_id');
+        $selectedUser = null;
+        if ($selectedUserId) {
+            $selectedUser = $users->firstWhere('id', $selectedUserId);
+        }
+
+        $startDate = $this->parseDateInput($request->input('start_date'));
+        $endDate   = $this->parseDateInput($request->input('end_date'));
+
+        $purchasesQuery = Purchase::with(['supplier', 'items.product', 'firm', 'user']);
+        if (!$authUser->isSuperAdmin()) {
+            $purchasesQuery->where('firm_id', $authUser->firm_id);
+        } elseif ($firmId) {
+            $purchasesQuery->where('firm_id', $firmId);
+        }
+        if ($selectedUserId) {
+            $purchasesQuery->where('user_id', $selectedUserId);
+        }
+        if ($startDate) $purchasesQuery->whereDate('purchase_date', '>=', $startDate);
+        if ($endDate) $purchasesQuery->whereDate('purchase_date', '<=', $endDate);
+
+        $purchases = $purchasesQuery->get();
+
+        $salesQuery = Sale::with(['customer', 'items.product', 'firm', 'user']);
+        if (!$authUser->isSuperAdmin()) {
+            $salesQuery->where('firm_id', $authUser->firm_id);
+        } elseif ($firmId) {
+            $salesQuery->where('firm_id', $firmId);
+        }
+        if ($selectedUserId) {
+            $salesQuery->where('user_id', $selectedUserId);
+        }
+        if ($startDate) $salesQuery->whereDate('sale_date', '>=', $startDate);
+        if ($endDate) $salesQuery->whereDate('sale_date', '<=', $endDate);
+
+        $sales = $salesQuery->get();
+
+        $returnsQuery = ReturnableMaterial::with(['customer', 'items.product', 'firm', 'user']);
+        if (!$authUser->isSuperAdmin()) {
+            $returnsQuery->where('firm_id', $authUser->firm_id);
+        } elseif ($firmId) {
+            $returnsQuery->where('firm_id', $firmId);
+        }
+        if ($selectedUserId) {
+            $returnsQuery->where('user_id', $selectedUserId);
+        }
+        if ($startDate) $returnsQuery->whereDate('return_date', '>=', $startDate);
+        if ($endDate) $returnsQuery->whereDate('return_date', '<=', $endDate);
+
+        $returns = $returnsQuery->get();
+
+        $adjQuery = \App\Models\StockAdjustment::with(['product', 'firm', 'user']);
+        if (!$authUser->isSuperAdmin()) {
+            $adjQuery->where('firm_id', $authUser->firm_id);
+        } elseif ($firmId) {
+            $adjQuery->where('firm_id', $firmId);
+        }
+        if ($selectedUserId) {
+            $adjQuery->where('user_id', $selectedUserId);
+        }
+        if ($startDate) $adjQuery->whereDate('created_at', '>=', $startDate);
+        if ($endDate) $adjQuery->whereDate('created_at', '<=', $endDate);
+
+        $adjustments = $adjQuery->get();
+
+        $summary = [
+            'purchase_count' => $purchases->count(),
+            'sale_count' => $sales->count(),
+            'return_count' => $returns->count(),
+            'adjustment_count' => $adjustments->count(),
+            'total_entries' => $purchases->count() + $sales->count() + $returns->count() + $adjustments->count(),
+        ];
+
+        $entriesLedger = collect();
+
+        foreach ($purchases as $p) {
+            $prodNames = $p->items->map(fn($item) => $item->product->name ?? 'Product')->take(2)->join(', ');
+            if ($p->items->count() > 2) {
+                $prodNames .= ' +' . ($p->items->count() - 2) . ' more';
+            }
+            $entriesLedger->push([
+                'raw_date' => $p->purchase_date ?? $p->created_at,
+                'entry_type' => 'Purchase',
+                'ref_no' => $p->invoice_number,
+                'party' => $p->supplier->company_name ?? 'N/A',
+                'products_summary' => $prodNames ?: 'No items',
+                'amount' => $p->grand_total,
+                'entered_by' => $p->user->name ?? 'Unknown',
+            ]);
+        }
+
+        foreach ($sales as $s) {
+            $prodNames = $s->items->map(fn($item) => $item->product->name ?? 'Product')->take(2)->join(', ');
+            if ($s->items->count() > 2) {
+                $prodNames .= ' +' . ($s->items->count() - 2) . ' more';
+            }
+            $entriesLedger->push([
+                'raw_date' => $s->sale_date ?? $s->created_at,
+                'entry_type' => 'Sale',
+                'ref_no' => $s->invoice_number,
+                'party' => $s->customer->company_name ?? 'N/A',
+                'products_summary' => $prodNames ?: 'No items',
+                'amount' => $s->grand_total,
+                'entered_by' => $s->user->name ?? 'Unknown',
+            ]);
+        }
+
+        foreach ($returns as $r) {
+            $prodNames = $r->items->map(fn($item) => $item->product->name ?? 'Product')->take(2)->join(', ');
+            if ($r->items->count() > 2) {
+                $prodNames .= ' +' . ($r->items->count() - 2) . ' more';
+            }
+            $entriesLedger->push([
+                'raw_date' => $r->return_date ?? $r->created_at,
+                'entry_type' => 'Returnable',
+                'ref_no' => $r->return_number,
+                'party' => $r->customer->company_name ?? 'N/A',
+                'products_summary' => $prodNames ?: 'No items',
+                'amount' => $r->grand_total,
+                'entered_by' => $r->user->name ?? 'Unknown',
+            ]);
+        }
+
+        foreach ($adjustments as $adj) {
+            $entriesLedger->push([
+                'raw_date' => $adj->created_at,
+                'entry_type' => 'Adjustment (' . strtoupper($adj->type) . ')',
+                'ref_no' => 'ADJ-' . $adj->id,
+                'party' => $adj->product->name ?? 'Product',
+                'products_summary' => ($adj->product->name ?? 'Product') . ' (' . ($adj->type === 'add' ? '+' : '-') . $adj->quantity . ')',
+                'amount' => $adj->quantity * ($adj->product->cost_price ?? 0),
+                'entered_by' => $adj->user->name ?? 'Unknown',
+            ]);
+        }
+
+        $entriesLedger = $entriesLedger->sortByDesc(fn($item) => \Carbon\Carbon::parse($item['raw_date'])->timestamp)->values();
+
+        return view('reports.user_activity_print', compact('users', 'selectedUser', 'summary', 'entriesLedger'));
     }
 }
 

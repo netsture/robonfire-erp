@@ -46,15 +46,79 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Return No / Project Name</th>
-                    <th>Customer Name / Number</th>
+                    <th class="ps-4">
+                        <a href="{{ route('returnable.index', array_merge(request()->query(), ['sort_by' => 'return_number', 'sort_order' => request('sort_by') === 'return_number' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Return No / Project Name
+                            @if(request('sort_by') === 'return_number')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('returnable.index', array_merge(request()->query(), ['sort_by' => 'customer_name', 'sort_order' => request('sort_by') === 'customer_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Customer Name / Number
+                            @if(request('sort_by') === 'customer_name')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                     @if(auth()->user()->isSuperAdmin())
-                        <th>Firm</th>
+                        <th>
+                            <a href="{{ route('returnable.index', array_merge(request()->query(), ['sort_by' => 'firm_name', 'sort_order' => request('sort_by') === 'firm_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                                Firm
+                                @if(request('sort_by') === 'firm_name')
+                                    <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                                @else
+                                    <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                                @endif
+                            </a>
+                        </th>
                     @endif
-                    <th>Return Date</th>
-                    <th>Return Reason</th>
-                    <th>Grand Total</th>
+                    <th>
+                        <a href="{{ route('returnable.index', array_merge(request()->query(), ['sort_by' => 'return_date', 'sort_order' => request('sort_by') === 'return_date' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Return Date
+                            @if(request('sort_by') === 'return_date')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('returnable.index', array_merge(request()->query(), ['sort_by' => 'return_reason', 'sort_order' => request('sort_by') === 'return_reason' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Return Reason
+                            @if(request('sort_by') === 'return_reason')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('returnable.index', array_merge(request()->query(), ['sort_by' => 'grand_total', 'sort_order' => request('sort_by') === 'grand_total' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Grand Total
+                            @if(request('sort_by') === 'grand_total')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                     <th>Status</th>
+                    <th>
+                        <a href="{{ route('returnable.index', array_merge(request()->query(), ['sort_by' => 'created_at', 'sort_order' => request('sort_by') === 'created_at' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
+                            Created Date
+                            @if(request('sort_by') === 'created_at')
+                                <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-muted opacity-50 ms-1 small"></i>
+                            @endif
+                        </a>
+                    </th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
             </thead>
@@ -96,6 +160,7 @@
                         <td>
                             <span class="badge bg-success text-white rounded-pill px-3 py-1 text-uppercase">RETURNED</span>
                         </td>
+                        <td class="small text-muted font-monospace">{{ $ret->created_at ? $ret->created_at->format('d-m-Y') : 'N/A' }}</td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
                                 @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
@@ -126,7 +191,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 9 : 8 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-box-arrow-in-left fs-1 d-block mb-2 text-secondary"></i>
                             No returnable material entries recorded. Click "New Return Material Entry" to add one.
                         </td>
