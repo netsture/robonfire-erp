@@ -9,9 +9,9 @@
         <i class="bi bi-printer me-1"></i> Print Report
     </a>
     @if(!auth()->user()->isSuperAdmin())
-        <a href="{{ route('projects.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
+        <button type="button" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium" data-bs-toggle="modal" data-bs-target="#addProjectModal">
             <i class="bi bi-plus-circle me-1"></i> Add New Project
-        </a>
+        </button>
     @endif
 @endsection
 
@@ -42,6 +42,21 @@
         </div>
     </div>
 </div>
+
+@if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
+        <div class="d-flex align-items-center mb-1">
+            <i class="bi bi-exclamation-octagon-fill me-2 fs-5"></i>
+            <div class="fw-bold">Please correct the following errors:</div>
+        </div>
+        <ul class="mb-0 ps-4 text-start">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
 <!-- Summary Cards -->
 <div class="row g-3 mb-4 no-print">
@@ -268,12 +283,77 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 @if(!auth()->user()->isSuperAdmin())
-                                    <a href="{{ route('projects.edit', $project) }}" class="btn btn-sm btn-light border text-primary" title="Edit Project">
+                                    <button type="button" class="btn btn-sm btn-light border text-primary" data-bs-toggle="modal" data-bs-target="#editProjectModal{{ $project->id }}" title="Edit Project">
                                         <i class="bi bi-pencil-square"></i>
-                                    </a>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-light border text-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal{{ $project->id }}" title="Delete Project">
                                         <i class="bi bi-trash"></i>
                                     </button>
+
+                                    <!-- Edit Project Modal -->
+                                    <div class="modal fade" id="editProjectModal{{ $project->id }}" tabindex="-1" aria-labelledby="editProjectModalLabel{{ $project->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content border-0 shadow">
+                                                <div class="modal-header border-bottom">
+                                                    <h5 class="modal-title fw-bold text-dark" id="editProjectModalLabel{{ $project->id }}">
+                                                        <i class="bi bi-pencil-square me-1 text-primary"></i> Edit Project Entry
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form action="{{ route('projects.update', $project) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="modal-body text-start">
+                                                        @if(auth()->user()->isSuperAdmin())
+                                                            <div class="mb-3">
+                                                                <label for="edit_firm_id_{{ $project->id }}" class="form-label fw-semibold text-dark">Firm Scope <span class="text-danger">*</span></label>
+                                                                <select class="form-select" id="edit_firm_id_{{ $project->id }}" name="firm_id" required>
+                                                                    <option value="">Select Firm</option>
+                                                                    @foreach($firms as $firm)
+                                                                        <option value="{{ $firm->id }}" {{ old('firm_id', $project->firm_id) == $firm->id ? 'selected' : '' }}>{{ $firm->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        @endif
+
+                                                        <div class="mb-3">
+                                                            <label for="edit_project_name_{{ $project->id }}" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="edit_project_name_{{ $project->id }}" name="project_name" value="{{ old('project_name', $project->project_name) }}" required placeholder="e.g. Metro Line 3 Fire Safety Installation">
+                                                        </div>
+
+                                                        <div class="row g-2 mb-3">
+                                                            <div class="col-12 col-md-6">
+                                                                <label for="edit_po_number_{{ $project->id }}" class="form-label fw-semibold text-dark">PO Number <span class="text-danger">*</span></label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text bg-light"><i class="bi bi-hash text-muted"></i></span>
+                                                                    <input type="text" class="form-control" id="edit_po_number_{{ $project->id }}" name="po_number" value="{{ old('po_number', $project->po_number) }}" required placeholder="e.g. PO-2026-8891">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-12 col-md-6">
+                                                                <label for="edit_po_date_{{ $project->id }}" class="form-label fw-semibold text-dark">PO Date <span class="text-danger">*</span></label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text bg-light"><i class="bi bi-calendar3 text-muted"></i></span>
+                                                                    <input type="date" class="form-control datepicker-ddmmyyyy" id="edit_po_date_{{ $project->id }}" name="po_date" value="{{ old('po_date', $project->po_date ? $project->po_date->format('Y-m-d') : '') }}" required>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="mb-2">
+                                                            <label for="edit_po_amount_{{ $project->id }}" class="form-label fw-semibold text-dark">PO Amount (₹) <span class="text-danger">*</span></label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text bg-light"><i class="bi bi-currency-rupee text-muted"></i></span>
+                                                                <input type="number" step="any" min="0" class="form-control" id="edit_po_amount_{{ $project->id }}" name="po_amount" value="{{ old('po_amount', $project->po_amount) }}" required placeholder="e.g. 150000.00">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-top">
+                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-1"></i> Update Project Entry</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <!-- Delete Confirmation Modal -->
                                     <div class="modal fade" id="deleteProjectModal{{ $project->id }}" tabindex="-1" aria-hidden="true">
@@ -320,6 +400,72 @@
         </div>
     @endif
 </div>
+
+@if(!auth()->user()->isSuperAdmin())
+    <!-- Add Project Modal -->
+    <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold text-dark" id="addProjectModalLabel">
+                        <i class="bi bi-plus-circle me-1 text-primary"></i> Add New Project Entry
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('projects.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        @if(auth()->user()->isSuperAdmin())
+                            <div class="mb-3">
+                                <label for="firm_id" class="form-label fw-semibold text-dark">Firm Scope <span class="text-danger">*</span></label>
+                                <select class="form-select" id="firm_id" name="firm_id" required>
+                                    <option value="">Select Firm</option>
+                                    @foreach($firms as $firm)
+                                        <option value="{{ $firm->id }}" {{ old('firm_id') == $firm->id ? 'selected' : '' }}>{{ $firm->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
+                        <div class="mb-3">
+                            <label for="project_name" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="project_name" name="project_name" value="{{ old('project_name') }}" required placeholder="e.g. Metro Line 3 Fire Safety Installation">
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="po_number" class="form-label fw-semibold text-dark">PO Number <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-hash text-muted"></i></span>
+                                    <input type="text" class="form-control" id="po_number" name="po_number" value="{{ old('po_number') }}" required placeholder="e.g. PO-2026-8891">
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="po_date" class="form-label fw-semibold text-dark">PO Date <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-calendar3 text-muted"></i></span>
+                                    <input type="date" class="form-control datepicker-ddmmyyyy" id="po_date" name="po_date" value="{{ old('po_date', date('Y-m-d')) }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label for="po_amount" class="form-label fw-semibold text-dark">PO Amount (₹) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-currency-rupee text-muted"></i></span>
+                                <input type="number" step="any" min="0" class="form-control" id="po_amount" name="po_amount" value="{{ old('po_amount') }}" required placeholder="e.g. 150000.00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-1"></i> Save Project Entry</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
 
 <style>
 @media print {

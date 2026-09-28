@@ -51,4 +51,31 @@ class Purchase extends Model
     {
         return $this->hasMany(PurchaseItem::class);
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(PurchasePayment::class)->orderBy('payment_date', 'asc')->orderBy('id', 'asc');
+    }
+
+    public function recalculatePaymentStatus(): void
+    {
+        $totalPaid = (float) $this->payments()->sum('amount');
+        $grandTotal = (float) $this->grand_total;
+
+        if ($totalPaid >= $grandTotal && $grandTotal > 0) {
+            $status = 'paid';
+            $paid = $grandTotal;
+        } elseif ($totalPaid > 0) {
+            $status = 'partial';
+            $paid = $totalPaid;
+        } else {
+            $status = 'unpaid';
+            $paid = 0.00;
+        }
+
+        $this->update([
+            'paid_amount'    => $paid,
+            'payment_status' => $status,
+        ]);
+    }
 }

@@ -119,6 +119,7 @@
                 <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
                 <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
                 <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                <option value="partial" {{ request('payment_status') == 'partial' ? 'selected' : '' }}>Partial</option>
             </select>
         </div>
 

@@ -15,7 +15,7 @@ class SaleController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Sale::with('customer', 'user', 'firm');
+        $query = Sale::with(['customer', 'user', 'firm', 'payments']);
 
         if (!$user->isSuperAdmin()) {
             $query->where('sales.firm_id', $user->firm_id);
@@ -186,8 +186,8 @@ class SaleController extends Controller
                 $paid = 0.00;
                 $paymentStatus = 'unpaid';
             } else {
-                $paid = 0.00;
-                $paymentStatus = 'pending';
+                $paid = (float)($validated['paid_amount'] ?? 0);
+                $paymentStatus = $statusInput;
             }
 
             $sale = Sale::create([
@@ -207,6 +207,14 @@ class SaleController extends Controller
                 'payment_status'  => $paymentStatus,
                 'notes'           => $validated['notes'] ?? null,
             ]);
+
+            if ($paid > 0) {
+                $sale->payments()->create([
+                    'payment_date' => $validated['sale_date'],
+                    'amount'       => $paid,
+                    'notes'        => 'Initial payment upon sales order creation',
+                ]);
+            }
 
             foreach ($itemsData as $iData) {
                 $sale->items()->create($iData);
@@ -230,24 +238,76 @@ class SaleController extends Controller
 
         $validated = $request->validate([
             'payment_status' => ['required', 'in:pending,paid,unpaid,due,partial'],
+            'payment_amount' => ['nullable', 'numeric', 'min:0'],
             'paid_amount'    => ['nullable', 'numeric', 'min:0'],
+            'payment_date'   => ['nullable', 'date'],
+            'notes'          => ['nullable', 'string', 'max:500'],
         ]);
 
         $status = $validated['payment_status'];
+        $amountInput = $validated['payment_amount'] ?? $validated['paid_amount'] ?? null;
+        $amount = ($amountInput !== null && $amountInput !== '') ? (float)$amountInput : null;
+        $date = $validated['payment_date'] ?? date('Y-m-d');
+        $notes = $validated['notes'] ?? null;
+
+        $currentPaid = (float) $sale->payments()->sum('amount');
+        $grandTotal  = (float) $sale->grand_total;
+        $remainingDue = max(0, $grandTotal - $currentPaid);
+
         if ($status === 'paid') {
-            $newPaid = (float)$sale->grand_total;
-        } else {
-            $newPaid = 0.00;
+            if ($remainingDue > 0) {
+                $sale->payments()->create([
+                    'payment_date' => $date,
+                    'amount'       => $remainingDue,
+                    'notes'        => $notes ?? 'Full payment completed',
+                ]);
+            }
+            $sale->recalculatePaymentStatus();
+            return back()->with('success', 'Payment status updated to Paid.');
         }
 
-        DB::transaction(function () use ($sale, $status, $newPaid) {
-            $sale->update([
-                'payment_status' => $status,
-                'paid_amount'    => $newPaid,
-            ]);
-        });
+        if ($status === 'unpaid') {
+            $sale->payments()->delete();
+            $sale->recalculatePaymentStatus();
+            return back()->with('success', 'Payment status reset to Unpaid.');
+        }
 
+        // Partial or custom payment entry
+        if ($amount !== null && $amount > 0) {
+            if ($amount > ($remainingDue + 0.001)) {
+                return back()->withErrors([
+                    'payment_amount' => 'Payment amount (₹' . number_format($amount, 2) . ') cannot exceed remaining balance of ₹' . number_format($remainingDue, 2) . '.'
+                ])->withInput();
+            }
+
+            $sale->payments()->create([
+                'payment_date' => $date,
+                'amount'       => $amount,
+                'notes'        => $notes ?? 'Partial payment',
+            ]);
+            $sale->recalculatePaymentStatus();
+            return back()->with('success', 'Partial payment of ₹' . number_format($amount, 2) . ' recorded successfully.');
+        }
+
+        $sale->recalculatePaymentStatus();
         return back()->with('success', 'Payment status updated successfully.');
+    }
+
+    public function destroyPayment(Sale $sale, \App\Models\SalePayment $payment)
+    {
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && $sale->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to firm record.');
+        }
+
+        if ($payment->sale_id !== $sale->id) {
+            abort(400, 'Invalid payment record.');
+        }
+
+        $payment->delete();
+        $sale->recalculatePaymentStatus();
+
+        return back()->with('success', 'Payment entry deleted and total recalculated successfully.');
     }
 
     public function edit(Sale $sale)
@@ -377,7 +437,7 @@ class SaleController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        $sale->load('customer', 'user', 'items.product.category', 'items.product.brand', 'firm');
+        $sale->load('customer', 'user', 'items.product.category', 'items.product.brand', 'firm', 'payments');
         return view('sales.show', compact('sale'));
     }
 

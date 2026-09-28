@@ -6,9 +6,9 @@
 
 @section('header_actions')
     <div class="d-flex align-items-center gap-2">
-        <button onclick="window.print()" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-1 no-print">
-            <i class="bi bi-printer me-1"></i> Print
-        </button>
+        <a href="{{ route('projects.print-single', $project) }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-1 no-print">
+            <i class="bi bi-printer me-1"></i> Print Report
+        </a>
         <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium no-print">
             <i class="bi bi-arrow-left me-1"></i> Back to Projects
         </a>

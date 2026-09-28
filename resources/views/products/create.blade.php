@@ -200,6 +200,7 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const categoryForm = document.getElementById('ajaxAddCategoryForm');
@@ -209,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const alertBox = document.getElementById('categoryModalAlert');
             const submitBtn = document.getElementById('saveCategoryBtn');
             alertBox.classList.add('d-none');
+            alertBox.textContent = '';
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...';
 
@@ -218,33 +220,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
                 },
                 body: formData
             })
-            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(async response => {
+                const data = await response.json().catch(() => ({}));
+                return { status: response.status, ok: response.ok, body: data };
+            })
             .then(res => {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Category';
 
-                if (res.status === 200 || res.status === 201) {
-                    if (res.body.success) {
-                        const select = document.getElementById('category_id');
+                if (res.ok && res.body.success) {
+                    const select = document.getElementById('category_id');
+                    if (select) {
                         const option = document.createElement('option');
                         option.value = res.body.category.id;
                         option.textContent = res.body.category.name;
                         option.selected = true;
                         select.appendChild(option);
+                    }
 
-                        categoryForm.reset();
-                        const modalEl = document.getElementById('addCategoryModal');
-                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                        if (modal) {
-                            modal.hide();
+                    categoryForm.reset();
+                    const modalEl = document.getElementById('addCategoryModal');
+                    if (modalEl) {
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            if (modal) modal.hide();
+                        } else {
+                            const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                            if (closeBtn) closeBtn.click();
                         }
                     }
                 } else {
-                    let errMsg = (res.body && res.body.errors && res.body.errors.name) ? res.body.errors.name.join(' ') : (res.body.message || 'The Category Name has already been taken.');
+                    let errMsg = (res.body && res.body.errors && res.body.errors.name) ? res.body.errors.name.join(' ') : (res.body && res.body.message ? res.body.message : 'Error adding category. Please try again.');
                     alertBox.textContent = errMsg;
                     alertBox.classList.remove('d-none');
                 }
@@ -252,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Category';
-                alertBox.textContent = 'The Category Name has already been taken.';
+                alertBox.textContent = 'An unexpected error occurred. Please try again.';
                 alertBox.classList.remove('d-none');
             });
         });
@@ -265,6 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const alertBox = document.getElementById('brandModalAlert');
             const submitBtn = document.getElementById('saveBrandBtn');
             alertBox.classList.add('d-none');
+            alertBox.textContent = '';
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...';
 
@@ -274,33 +286,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
                 },
                 body: formData
             })
-            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(async response => {
+                const data = await response.json().catch(() => ({}));
+                return { status: response.status, ok: response.ok, body: data };
+            })
             .then(res => {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Brand';
 
-                if (res.status === 200 || res.status === 201) {
-                    if (res.body.success) {
-                        const select = document.getElementById('brand_id');
+                if (res.ok && res.body.success) {
+                    const select = document.getElementById('brand_id');
+                    if (select) {
                         const option = document.createElement('option');
                         option.value = res.body.brand.id;
                         option.textContent = res.body.brand.name;
                         option.selected = true;
                         select.appendChild(option);
+                    }
 
-                        brandForm.reset();
-                        const modalEl = document.getElementById('addBrandModal');
-                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                        if (modal) {
-                            modal.hide();
+                    brandForm.reset();
+                    const modalEl = document.getElementById('addBrandModal');
+                    if (modalEl) {
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            if (modal) modal.hide();
+                        } else {
+                            const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                            if (closeBtn) closeBtn.click();
                         }
                     }
                 } else {
-                    let errMsg = (res.body && res.body.errors && res.body.errors.name) ? res.body.errors.name.join(' ') : (res.body.message || 'The Brand Name has already been taken.');
+                    let errMsg = (res.body && res.body.errors && res.body.errors.name) ? res.body.errors.name.join(' ') : (res.body && res.body.message ? res.body.message : 'Error adding brand. Please try again.');
                     alertBox.textContent = errMsg;
                     alertBox.classList.remove('d-none');
                 }
@@ -308,10 +329,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Brand';
-                alertBox.textContent = 'The Brand Name has already been taken.';
+                alertBox.textContent = 'An unexpected error occurred. Please try again.';
                 alertBox.classList.remove('d-none');
             });
         });
+    }
 });
 </script>
+@endpush
 @endsection

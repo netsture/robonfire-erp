@@ -19,9 +19,35 @@
 @endsection
 
 @section('content')
+@if ($errors->any())
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-9">
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    </div>
+@endif
+
+@if(session('success'))
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-9">
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    </div>
+@endif
+
 <div class="row justify-content-center">
     <div class="col-12 col-lg-9">
-        <div class="card card-custom border-0 p-4">
+        <div class="card card-custom border-0 p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
                     <h4 class="fw-bold font-outfit text-dark mb-0">Delivery Invoice</h4>
@@ -168,13 +194,114 @@
                             <span class="fw-bold text-dark">Grand Total:</span>
                             <span class="fw-bold text-primary fs-5">₹{{ number_format($sale->grand_total, 2) }}</span>
                         </div>
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Amount Received:</span>
                             <span class="fw-bold text-success">₹{{ number_format($sale->paid_amount, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Remaining Balance:</span>
+                            <span class="fw-bold text-danger">₹{{ number_format(max(0, $sale->grand_total - $sale->paid_amount), 2) }}</span>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Partial Payment Details & History Section -->
+        @php
+            $sTotal = (float)$sale->grand_total;
+            $sPaid = (float)$sale->paid_amount;
+            $sDue = max(0, $sTotal - $sPaid);
+        @endphp
+        <div class="card card-custom border-0 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold font-outfit text-dark mb-0">
+                        <i class="bi bi-receipt me-2 text-primary"></i>Payment Details & History
+                    </h5>
+                    <span class="text-muted small">Comprehensive partial payment tracking for this sales order</span>
+                </div>
+                @if(!auth()->user()->isSuperAdmin())
+                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 font-outfit" data-bs-toggle="modal" data-bs-target="#updatePaymentModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add Partial Payment
+                    </button>
+                @endif
+            </div>
+
+            <!-- Metric Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-4">
+                    <div class="p-3 bg-light rounded-3 border text-center">
+                        <span class="text-muted small d-block fw-semibold text-uppercase">Grand Total</span>
+                        <span class="fw-bold fs-5 text-dark font-monospace">₹{{ number_format($sTotal, 2) }}</span>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="p-3 bg-light rounded-3 border text-center">
+                        <span class="text-muted small d-block fw-semibold text-uppercase">Total Paid</span>
+                        <span class="fw-bold fs-5 text-success font-monospace">₹{{ number_format($sPaid, 2) }}</span>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="p-3 bg-light rounded-3 border text-center">
+                        <span class="text-muted small d-block fw-semibold text-uppercase">Remaining Due</span>
+                        <span class="fw-bold fs-5 text-danger font-monospace">₹{{ number_format($sDue, 2) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            @if($sale->payments->count() > 0)
+                <div class="table-responsive border rounded-3">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th class="ps-3">#</th>
+                                <th>Payment Date</th>
+                                <th>Amount Paid (₹)</th>
+                                <th>Cumulative Paid</th>
+                                <th>Remaining Due</th>
+                                <th>Notes / Method</th>
+                                @if(!auth()->user()->isSuperAdmin())
+                                    <th class="text-end pe-3">Action</th>
+                                @endif
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            @php $runningPaid = 0; @endphp
+                            @foreach($sale->payments as $index => $pmt)
+                                @php
+                                    $runningPaid += (float)$pmt->amount;
+                                    $runningDue = max(0, $sTotal - $runningPaid);
+                                @endphp
+                                <tr>
+                                    <td class="ps-3 text-muted">{{ $index + 1 }}</td>
+                                    <td class="font-monospace text-dark">{{ \Carbon\Carbon::parse($pmt->payment_date)->format('d-m-Y') }}</td>
+                                    <td class="fw-bold text-success font-monospace">₹{{ number_format($pmt->amount, 2) }}</td>
+                                    <td class="font-monospace text-primary">₹{{ number_format($runningPaid, 2) }}</td>
+                                    <td class="font-monospace text-danger">₹{{ number_format($runningDue, 2) }}</td>
+                                    <td class="text-muted">{{ $pmt->notes ?? '-' }}</td>
+                                    @if(!auth()->user()->isSuperAdmin())
+                                        <td class="text-end pe-3">
+                                            <form action="{{ route('sales.payments.destroy', [$sale, $pmt]) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this partial payment entry?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-link text-danger p-0 border-0" title="Delete Payment">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="alert alert-light border text-center py-4 text-muted mb-0">
+                    <i class="bi bi-info-circle fs-4 d-block mb-1 text-secondary"></i>
+                    No partial payment history entries recorded for this invoice yet.
+                </div>
+            @endif
         </div>
     </div>
 </div>
@@ -182,63 +309,94 @@
 @if(!auth()->user()->isSuperAdmin())
 <!-- Update Payment Modal -->
 <div class="modal fade" id="updatePaymentModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-4 border-0">
-            <form action="{{ route('sales.update-payment-status', $sale) }}" method="POST">
-                @csrf
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title fw-bold font-outfit">Set Payment Status</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-bottom">
+                <div>
+                    <h5 class="modal-title fw-bold font-outfit">Set Payment Status & Record Payments</h5>
+                    <div class="small text-muted font-monospace">Invoice #{{ $sale->invoice_number }} | {{ $sale->customer->company_name ?? 'N/A' }}</div>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3 p-3 bg-light rounded-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted small">Invoice #:</span>
-                            <span class="fw-bold font-monospace">{{ $sale->invoice_number }}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Summary Metrics Cards -->
+                <div class="p-3 bg-light rounded-3 mb-3 border">
+                    <div class="row text-center g-2">
+                        <div class="col-4">
+                            <span class="text-muted small d-block fw-semibold text-uppercase">Grand Total</span>
+                            <span class="fw-bold fs-6 text-dark font-monospace">₹{{ number_format($sTotal, 2) }}</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted small">Customer:</span>
-                            <span class="fw-semibold">{{ $sale->customer->company_name ?? 'N/A' }}</span>
+                        <div class="col-4 border-start">
+                            <span class="text-muted small d-block fw-semibold text-uppercase">Paid Amount</span>
+                            <span class="fw-bold fs-6 text-success font-monospace">₹{{ number_format($sPaid, 2) }}</span>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted small">Grand Total:</span>
-                            <span class="fw-bold text-primary">₹{{ number_format($sale->grand_total, 2) }}</span>
+                        <div class="col-4 border-start">
+                            <span class="text-muted small d-block fw-semibold text-uppercase">Remaining Due</span>
+                            <span class="fw-bold fs-6 text-danger font-monospace">₹{{ number_format($sDue, 2) }}</span>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
-                        <select name="payment_status" class="form-select" onchange="toggleModalPaidInput(this, {{ $sale->grand_total }}, 'modal_paid_show')">
-                            <option value="pending" {{ in_array($sale->payment_status, ['pending', 'due']) ? 'selected' : '' }}>Pending</option>
-                            <option value="paid" {{ $sale->payment_status === 'paid' ? 'selected' : '' }}>Paid</option>
-                            <option value="unpaid" {{ $sale->payment_status === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Amount Received (₹)</label>
-                        <input type="number" name="paid_amount" id="modal_paid_show" class="form-control" value="{{ (float)$sale->paid_amount == 0 ? 0 : (float)$sale->paid_amount }}" readonly>
-                    </div>
                 </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-1"></i> Save Changes</button>
-                </div>
-            </form>
+
+                <!-- Add New Payment / Update Status Form -->
+                <form action="{{ route('sales.update-payment-status', $sale) }}" method="POST">
+                    @csrf
+                    <div class="card card-body bg-light border-0 rounded-3 p-3">
+                        <h6 class="fw-bold font-outfit text-dark small text-uppercase tracking-wider mb-2">
+                            <i class="bi bi-plus-circle me-1"></i> Enter Partial Payment / Update Status
+                        </h6>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6 mb-2">
+                                <label class="form-label fw-semibold small">Payment Status <span class="text-danger">*</span></label>
+                                <select name="payment_status" class="form-select form-select-sm" onchange="toggleModalPartialInputSaleShow(this, {{ $sDue }}, 'modal_payment_amount_show')">
+                                    <option value="partial" {{ $sale->payment_status === 'partial' || $sDue > 0 ? 'selected' : '' }}>Partial</option>
+                                    <option value="paid" {{ $sale->payment_status === 'paid' ? 'selected' : '' }}>Paid (Full)</option>
+                                    <option value="unpaid" {{ $sale->payment_status === 'unpaid' ? 'selected' : '' }}>Unpaid (Reset)</option>
+                                    <option value="pending" {{ $sale->payment_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 mb-2">
+                                <label class="form-label fw-semibold small">Payment Amount (₹)</label>
+                                <input type="number" step="any" min="0.01" max="{{ $sDue }}" name="payment_amount" id="modal_payment_amount_show" class="form-control form-control-sm font-monospace" placeholder="Enter amount (Max: ₹{{ number_format($sDue, 2) }})" {{ $sDue <= 0 ? 'readonly' : '' }}>
+                                <div class="form-text small text-muted">Max payable: ₹{{ number_format($sDue, 2) }} (Cannot exceed Grand Total)</div>
+                            </div>
+                            <div class="col-12 col-md-6 mb-2">
+                                <label class="form-label fw-semibold small">Payment Date</label>
+                                <input type="date" name="payment_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="col-12 col-md-6 mb-2">
+                                <label class="form-label fw-semibold small">Notes / Payment Method</label>
+                                <input type="text" name="notes" class="form-control form-control-sm" placeholder="e.g. Cash, GPay, Bank Transfer...">
+                            </div>
+                        </div>
+                        <div class="mt-2 text-end">
+                            <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-medium">Save Payment</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top py-2">
+                <button type="button" class="btn btn-light btn-sm border rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
 
-@push('scripts')
 <script>
-    function toggleModalPaidInput(selectEl, grandTotal, targetInputId) {
-        const inputEl = document.getElementById(targetInputId);
-        if (!inputEl) return;
-        if (selectEl.value === 'paid') {
-            inputEl.value = parseFloat(grandTotal).toFixed(2);
+    function toggleModalPartialInputSaleShow(selectEl, dueAmount, inputId) {
+        var val = selectEl.value;
+        var input = document.getElementById(inputId);
+        if (!input) return;
+        if (val === 'paid') {
+            input.value = dueAmount.toFixed(2);
+            input.readOnly = true;
+        } else if (val === 'unpaid') {
+            input.value = '0';
+            input.readOnly = true;
         } else {
-            inputEl.value = '0';
+            input.value = '';
+            input.readOnly = false;
         }
     }
 </script>
-@endpush
 @endif
 @endsection

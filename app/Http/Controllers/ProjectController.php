@@ -195,6 +195,21 @@ class ProjectController extends Controller
         return view('projects.show', compact('project'));
     }
 
+    public function printSingle(Project $project)
+    {
+        $user = auth()->user();
+
+        if (!$user->isSuperAdmin() && $project->firm_id !== $user->firm_id) {
+            abort(403, 'Unauthorized access to project record.');
+        }
+
+        $project->load(['firm', 'expenses']);
+        $totalExpenses = (float) $project->expenses->sum('amount');
+        $remainingBalance = (float) ($project->po_amount - $totalExpenses);
+
+        return view('projects.single_print', compact('project', 'totalExpenses', 'remainingBalance'));
+    }
+
     public function edit(Project $project)
     {
         $user = auth()->user();

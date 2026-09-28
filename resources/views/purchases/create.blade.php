@@ -250,12 +250,13 @@
                         <option value="pending" {{ old('payment_status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="paid" {{ old('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
                         <option value="unpaid" {{ old('payment_status') == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                        <option value="partial" {{ old('payment_status') == 'partial' ? 'selected' : '' }}>Partial</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
                     <label for="paid_amount" class="form-label small fw-semibold text-dark">Amount Paid (₹) <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" id="paid_amount" name="paid_amount" value="{{ old('paid_amount', '0') }}" required readonly>
+                    <input type="number" step="any" min="0" class="form-control" id="paid_amount" name="paid_amount" value="{{ old('paid_amount', '0') }}" required readonly>
                 </div>
 
                 <div class="mb-3">

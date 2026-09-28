@@ -135,6 +135,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
         Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
         Route::post('/purchases/{purchase}/update-payment-status', [PurchaseController::class, 'updatePaymentStatus'])->name('purchases.update-payment-status');
+        Route::delete('/purchases/{purchase}/payments/{payment}', [PurchaseController::class, 'destroyPayment'])->name('purchases.payments.destroy');
         Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
         Route::put('/purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
         Route::patch('/purchases/{purchase}', [PurchaseController::class, 'update']);
@@ -143,6 +144,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
         Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
         Route::post('/sales/{sale}/update-payment-status', [SaleController::class, 'updatePaymentStatus'])->name('sales.update-payment-status');
+        Route::delete('/sales/{sale}/payments/{payment}', [SaleController::class, 'destroyPayment'])->name('sales.payments.destroy');
         Route::get('/sales/{sale}/edit', [SaleController::class, 'edit'])->name('sales.edit');
         Route::put('/sales/{sale}', [SaleController::class, 'update'])->name('sales.update');
         Route::patch('/sales/{sale}', [SaleController::class, 'update']);
@@ -184,5 +186,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/returnable/{returnable_material}/print', [ReturnableMaterialController::class, 'printChallan'])->name('returnable.print');
 
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::get('/projects/{project}/print', [ProjectController::class, 'printSingle'])->name('projects.print-single');
     Route::get('/projects/{project}/expenses/{expense}/download', [ProjectExpenseController::class, 'download'])->name('projects.expenses.download');
 });

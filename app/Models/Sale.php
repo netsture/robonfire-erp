@@ -52,4 +52,28 @@ class Sale extends Model
     {
         return $this->hasMany(SaleItem::class);
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SalePayment::class);
+    }
+
+    public function recalculatePaymentStatus(): void
+    {
+        $totalPaid = (float) $this->payments()->sum('amount');
+        $grandTotal = (float) $this->grand_total;
+
+        if ($totalPaid >= ($grandTotal - 0.001) && $grandTotal > 0) {
+            $status = 'paid';
+        } elseif ($totalPaid > 0) {
+            $status = 'partial';
+        } else {
+            $status = 'unpaid';
+        }
+
+        $this->update([
+            'paid_amount' => $totalPaid,
+            'payment_status' => $status,
+        ]);
+    }
 }
