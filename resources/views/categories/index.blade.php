@@ -56,9 +56,12 @@
                 <p class="text-muted small mb-3">{{ $category->description ?? 'No description.' }}</p>
 
                 <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-                    <span class="text-muted small font-monospace">slug: {{ $category->slug }}</span>
+                    <div class="d-flex flex-column gap-1">
+                        <span class="text-muted small font-monospace">slug: {{ $category->slug }}</span>
+                        <span class="text-muted small"><i class="bi bi-calendar-event me-1"></i>Created: {{ $category->created_at ? $category->created_at->format('d-m-Y') : 'N/A' }}</span>
+                    </div>
                     @if(!auth()->user()->isSuperAdmin())
-                        <div class="btn-group">
+                        <div class="btn-group align-self-end">
                             <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editCategoryModal_{{ $category->id }}">
                                 <i class="bi bi-pencil"></i>
                             </button>

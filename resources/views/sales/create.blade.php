@@ -252,7 +252,7 @@
 
                 <div class="mb-3">
                     <label for="payment_status" class="form-label small fw-semibold text-dark">Payment Status <span class="text-danger">*</span></label>
-                    <select class="form-select" id="payment_status" name="payment_status" required onchange="syncPaymentStatus()">
+                    <select class="form-select" id="payment_status" name="payment_status" required onchange="syncPaymentStatus(true)">
                         <option value="pending" {{ old('payment_status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="paid" {{ old('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
                         <option value="unpaid" {{ old('payment_status') == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
@@ -262,7 +262,7 @@
 
                 <div class="mb-3">
                     <label for="paid_amount" class="form-label small fw-semibold text-dark">Amount Received (₹) <span class="text-danger">*</span></label>
-                    <input type="number" step="any" min="0" class="form-control" id="paid_amount" name="paid_amount" value="{{ old('paid_amount', '0') }}" required readonly>
+                    <input type="number" step="any" min="0" class="form-control" id="paid_amount" name="paid_amount" value="{{ old('paid_amount', '0') }}" required>
                 </div>
 
                 <div class="mb-3">
@@ -523,27 +523,64 @@
             document.getElementById('subtotalDisplay').textContent = '₹' + subtotal.toFixed(2);
             document.getElementById('taxDisplay').textContent = '₹' + totalTax.toFixed(2);
             document.getElementById('grandTotalDisplay').textContent = '₹' + grandTotal.toFixed(2);
-            syncPaymentStatus(grandTotal);
+            syncPaymentStatus(false);
         }
 
-        function syncPaymentStatus(grandTotalValue) {
+        function syncPaymentStatus(isStatusChange = false) {
             const statusSelect = document.getElementById('payment_status');
             if (!statusSelect) return;
             const status = statusSelect.value;
             const paidInput = document.getElementById('paid_amount');
+            if (!paidInput) return;
 
-            if (grandTotalValue === undefined) {
-                const grandTotalText = document.getElementById('grandTotalDisplay').textContent.replace('₹', '');
-                grandTotalValue = parseFloat(grandTotalText) || 0;
-            }
+            const grandTotalText = document.getElementById('grandTotalDisplay').textContent.replace(/[^\d.]/g, '');
+            const grandTotalValue = parseFloat(grandTotalText) || 0;
 
             if (status === 'paid') {
                 paidInput.value = grandTotalValue.toFixed(2);
                 paidInput.readOnly = true;
-            } else {
+                paidInput.classList.add('bg-light');
+            } else if (status === 'unpaid' || status === 'pending') {
                 paidInput.value = '0';
                 paidInput.readOnly = true;
+                paidInput.classList.add('bg-light');
+            } else if (status === 'partial') {
+                if (isStatusChange) {
+                    paidInput.value = '0';
+                }
+                paidInput.readOnly = false;
+                paidInput.classList.remove('bg-light');
             }
+        }
+
+        window.syncPaymentStatus = syncPaymentStatus;
+
+        const paymentStatusEl = document.getElementById('payment_status');
+        if (paymentStatusEl) {
+            paymentStatusEl.addEventListener('change', function() {
+                syncPaymentStatus(true);
+            });
+        }
+
+        const saleFormEl = document.getElementById('saleForm');
+        if (saleFormEl) {
+            saleFormEl.addEventListener('submit', function(e) {
+                const statusSelect = document.getElementById('payment_status');
+                const paidInput = document.getElementById('paid_amount');
+                if (statusSelect && paidInput && statusSelect.value === 'partial') {
+                    const grandTotalText = document.getElementById('grandTotalDisplay').textContent.replace(/[^\d.]/g, '');
+                    const grandTotalValue = parseFloat(grandTotalText) || 0;
+                    const val = parseFloat(paidInput.value) || 0;
+
+                    if (val > grandTotalValue + 0.001) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('Amount Received (₹' + val.toFixed(2) + ') cannot be greater than Grand Total (₹' + grandTotalValue.toFixed(2) + ').');
+                        paidInput.focus();
+                        return false;
+                    }
+                }
+            });
         }
 
         // Initial auto-fill for old input rows if redirected back with error

@@ -116,10 +116,35 @@ class ReturnableMaterialController extends Controller
             ->filter()
             ->values();
 
-        $firmSeq = ReturnableMaterial::where('firm_id', $firmId)->count() + 1;
-        $autoReturnNumber = 'RET-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
+        $autoReturnNumber = $this->generateNextReturnNumber($firmId);
 
         return view('returnable.create', compact('customers', 'products', 'categories', 'sales', 'projectNames', 'autoReturnNumber'));
+    }
+
+    private function generateNextReturnNumber($firmId)
+    {
+        $lastReturn = ReturnableMaterial::where('firm_id', $firmId)
+            ->where('return_number', 'LIKE', 'RET-FRM' . $firmId . '-%')
+            ->orderByRaw('CAST(SUBSTRING_INDEX(return_number, "-", -1) AS UNSIGNED) DESC')
+            ->first();
+
+        $maxSeq = 0;
+        if ($lastReturn && preg_match('/(\d+)$/', $lastReturn->return_number, $matches)) {
+            $maxSeq = (int) $matches[1];
+        }
+
+        $countSeq = ReturnableMaterial::where('firm_id', $firmId)->count();
+        $nextSeq = max($maxSeq, $countSeq) + 1;
+
+        do {
+            $candidate = 'RET-FRM' . $firmId . '-' . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+            $exists = ReturnableMaterial::where('firm_id', $firmId)->where('return_number', $candidate)->exists();
+            if ($exists) {
+                $nextSeq++;
+            }
+        } while ($exists);
+
+        return $candidate;
     }
 
     public function store(Request $request)
@@ -129,7 +154,7 @@ class ReturnableMaterialController extends Controller
 
         $validated = $request->validate([
             'customer_id'     => ['required', 'exists:customers,id'],
-            'return_number'   => ['required', 'string'],
+            'return_number'   => ['nullable', 'string'],
             'project_name'    => ['required', 'string'],
             'return_reason'   => ['required', 'string'],
             'return_date'     => ['required', 'date'],
@@ -145,6 +170,15 @@ class ReturnableMaterialController extends Controller
         ], [
             'products.*.price.required' => 'Selling Price (₹) is required for all returned items.',
         ]);
+
+        if (empty($validated['return_number'])) {
+            $validated['return_number'] = $this->generateNextReturnNumber($firmId);
+        } else {
+            $exists = ReturnableMaterial::where('firm_id', $firmId)->where('return_number', $validated['return_number'])->exists();
+            if ($exists) {
+                $validated['return_number'] = $this->generateNextReturnNumber($firmId);
+            }
+        }
 
         DB::transaction(function () use ($validated, $firmId, $user, &$returnableMaterial) {
             $subtotal = 0;

@@ -56,9 +56,12 @@
                 <p class="text-muted small mb-3">{{ $brand->description ?? 'No brand description specified.' }}</p>
 
                 <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-                    <span class="text-muted small font-monospace">slug: {{ $brand->slug }}</span>
+                    <div class="d-flex flex-column gap-1">
+                        <span class="text-muted small font-monospace">slug: {{ $brand->slug }}</span>
+                        <span class="text-muted small"><i class="bi bi-calendar-event me-1"></i>Created: {{ $brand->created_at ? $brand->created_at->format('d-m-Y') : 'N/A' }}</span>
+                    </div>
                     @if(!auth()->user()->isSuperAdmin())
-                        <div class="btn-group">
+                        <div class="btn-group align-self-end">
                             <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editBrandModal_{{ $brand->id }}" title="Edit Brand">
                                 <i class="bi bi-pencil"></i>
                             </button>

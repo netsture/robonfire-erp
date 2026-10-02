@@ -98,11 +98,35 @@ class PurchaseController extends Controller
         $products = $productsQuery->get();
         $categories = $categoriesQuery->get();
 
-        // Calculate next firm-wise sequence for auto IDs
-        $firmSeq = Purchase::where('firm_id', $firmId)->count() + 1;
-        $autoInv = 'PINV-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
+        $autoInv = $this->generateNextInvoiceNumber($firmId);
 
         return view('purchases.create', compact('suppliers', 'products', 'categories', 'autoInv', 'firmId'));
+    }
+
+    private function generateNextInvoiceNumber($firmId)
+    {
+        $lastPurchase = Purchase::where('firm_id', $firmId)
+            ->where('invoice_number', 'LIKE', 'PINV-FRM' . $firmId . '-%')
+            ->orderByRaw('CAST(SUBSTRING_INDEX(invoice_number, "-", -1) AS UNSIGNED) DESC')
+            ->first();
+
+        $maxSeq = 0;
+        if ($lastPurchase && preg_match('/(\d+)$/', $lastPurchase->invoice_number, $matches)) {
+            $maxSeq = (int) $matches[1];
+        }
+
+        $countSeq = Purchase::where('firm_id', $firmId)->count();
+        $nextSeq = max($maxSeq, $countSeq) + 1;
+
+        do {
+            $candidate = 'PINV-FRM' . $firmId . '-' . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+            $exists = Purchase::where('firm_id', $firmId)->where('invoice_number', $candidate)->exists();
+            if ($exists) {
+                $nextSeq++;
+            }
+        } while ($exists);
+
+        return $candidate;
     }
 
     public function store(Request $request)
@@ -131,92 +155,99 @@ class PurchaseController extends Controller
         ]);
 
         if (empty($validated['invoice_number'])) {
-            $firmSeq = Purchase::where('firm_id', $firmId)->count() + 1;
-            $validated['invoice_number'] = 'PINV-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
+            $validated['invoice_number'] = $this->generateNextInvoiceNumber($firmId);
+        } else {
+            $existsInv = Purchase::where('firm_id', $firmId)->where('invoice_number', $validated['invoice_number'])->exists();
+            if ($existsInv) {
+                $validated['invoice_number'] = $this->generateNextInvoiceNumber($firmId);
+            }
         }
 
-        // Firm-wise uniqueness check
+        // Firm-wise uniqueness check for project_name
         $existsProj = Purchase::where('firm_id', $firmId)->where('project_name', $validated['project_name'])->exists();
         if ($existsProj) {
             return back()->withErrors(['project_name' => 'Project Name already exists for this firm.'])->withInput();
         }
 
-        $existsInv = Purchase::where('firm_id', $firmId)->where('invoice_number', $validated['invoice_number'])->exists();
-        if ($existsInv) {
-            return back()->withErrors(['invoice_number' => 'Invoice number already exists for this firm.'])->withInput();
-        }
+        try {
+            DB::transaction(function () use ($validated, $firmId, $user, &$purchase) {
+                $subtotal = 0;
+                $totalTax = 0;
+                $itemsData = [];
 
-        DB::transaction(function () use ($validated, $firmId, $user, &$purchase) {
-            $subtotal = 0;
-            $totalTax = 0;
-            $itemsData = [];
+                foreach ($validated['products'] as $item) {
+                    $itemSubtotal = $item['qty'] * $item['cost'];
+                    $taxPercent = $item['tax_percent'] ?? 0;
+                    $itemTax = ($itemSubtotal * $taxPercent) / 100;
 
-            foreach ($validated['products'] as $item) {
-                $itemSubtotal = $item['qty'] * $item['cost'];
-                $taxPercent = $item['tax_percent'] ?? 0;
-                $itemTax = ($itemSubtotal * $taxPercent) / 100;
+                    $subtotal += $itemSubtotal;
+                    $totalTax += $itemTax;
 
-                $subtotal += $itemSubtotal;
-                $totalTax += $itemTax;
+                    $itemsData[] = [
+                        'product_id' => $item['id'],
+                        'unit_cost'  => $item['cost'],
+                        'quantity'   => $item['qty'],
+                        'subtotal'   => $itemSubtotal,
+                    ];
+                }
 
-                $itemsData[] = [
-                    'product_id' => $item['id'],
-                    'unit_cost'  => $item['cost'],
-                    'quantity'   => $item['qty'],
-                    'subtotal'   => $itemSubtotal,
-                ];
-            }
+                $discount = $validated['discount_amount'] ?? 0;
+                $shipping = $validated['shipping_cost'] ?? 0;
+                $grandTotal = $subtotal + $totalTax - $discount + $shipping;
 
-            $discount = $validated['discount_amount'] ?? 0;
-            $shipping = $validated['shipping_cost'] ?? 0;
-            $grandTotal = $subtotal + $totalTax - $discount + $shipping;
+                $statusInput = $validated['payment_status'] ?? 'pending';
+                if ($statusInput === 'paid') {
+                    $paid = $grandTotal;
+                    $paymentStatus = 'paid';
+                } elseif ($statusInput === 'unpaid' || $statusInput === 'pending') {
+                    $paid = 0.00;
+                    $paymentStatus = $statusInput;
+                } else {
+                    $paid = (float)($validated['paid_amount'] ?? 0);
+                    $paymentStatus = $statusInput;
+                }
 
-            $statusInput = $validated['payment_status'] ?? 'pending';
-            if ($statusInput === 'paid') {
-                $paid = $grandTotal;
-                $paymentStatus = 'paid';
-            } elseif ($statusInput === 'unpaid') {
-                $paid = 0.00;
-                $paymentStatus = 'unpaid';
-            } else {
-                $paid = (float)($validated['paid_amount'] ?? 0);
-                $paymentStatus = $statusInput;
-            }
+                if ($paid > ($grandTotal + 0.001)) {
+                    throw new \InvalidArgumentException('Paid Amount (₹' . number_format($paid, 2) . ') cannot be greater than Grand Total (₹' . number_format($grandTotal, 2) . ').');
+                }
 
-            $purchase = Purchase::create([
-                'firm_id'         => $firmId,
-                'project_name'    => $validated['project_name'],
-                'invoice_number'  => $validated['invoice_number'],
-                'supplier_id'     => $validated['supplier_id'],
-                'user_id'         => $user->id,
-                'purchase_date'   => $validated['purchase_date'],
-                'subtotal'        => $subtotal,
-                'tax_amount'      => $totalTax,
-                'discount_amount' => $discount,
-                'shipping_cost'   => $shipping,
-                'grand_total'     => $grandTotal,
-                'paid_amount'     => $paid,
-                'payment_status'  => $paymentStatus,
-                'notes'           => $validated['notes'] ?? null,
-            ]);
-
-            if ($paid > 0) {
-                $purchase->payments()->create([
-                    'payment_date' => $validated['purchase_date'],
-                    'amount'       => $paid,
-                    'notes'        => 'Initial payment upon purchase order creation',
+                $purchase = Purchase::create([
+                    'firm_id'         => $firmId,
+                    'project_name'    => $validated['project_name'],
+                    'invoice_number'  => $validated['invoice_number'],
+                    'supplier_id'     => $validated['supplier_id'],
+                    'user_id'         => $user->id,
+                    'purchase_date'   => $validated['purchase_date'],
+                    'subtotal'        => $subtotal,
+                    'tax_amount'      => $totalTax,
+                    'discount_amount' => $discount,
+                    'shipping_cost'   => $shipping,
+                    'grand_total'     => $grandTotal,
+                    'paid_amount'     => $paid,
+                    'payment_status'  => $paymentStatus,
+                    'notes'           => $validated['notes'] ?? null,
                 ]);
-            }
 
-            foreach ($itemsData as $iData) {
-                $purchase->items()->create($iData);
+                if ($paid > 0) {
+                    $purchase->payments()->create([
+                        'payment_date' => $validated['purchase_date'],
+                        'amount'       => $paid,
+                        'notes'        => 'Initial payment upon purchase order creation',
+                    ]);
+                }
 
-                // Auto-increment stock quantity
-                $product = Product::find($iData['product_id']);
-                $product->increment('stock_quantity', $iData['quantity']);
-                $product->update(['cost_price' => $iData['unit_cost']]);
-            }
-        });
+                foreach ($itemsData as $iData) {
+                    $purchase->items()->create($iData);
+
+                    // Auto-increment stock quantity
+                    $product = Product::find($iData['product_id']);
+                    $product->increment('stock_quantity', $iData['quantity']);
+                    $product->update(['cost_price' => $iData['unit_cost']]);
+                }
+            });
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['paid_amount' => $e->getMessage()])->withInput();
+        }
 
         return redirect()->route('purchases.index')->with('success', 'Purchase order created & product stock updated!');
     }
@@ -357,73 +388,81 @@ class PurchaseController extends Controller
             return back()->withErrors(['invoice_number' => 'Invoice number already exists for this firm.'])->withInput();
         }
 
-        DB::transaction(function () use ($validated, $purchase) {
-            // Revert old inventory stock additions
-            foreach ($purchase->items as $oldItem) {
-                Product::where('id', $oldItem->product_id)->decrement('stock_quantity', $oldItem->quantity);
-            }
-            $purchase->items()->delete();
+        try {
+            DB::transaction(function () use ($validated, $purchase) {
+                // Revert old inventory stock additions
+                foreach ($purchase->items as $oldItem) {
+                    Product::where('id', $oldItem->product_id)->decrement('stock_quantity', $oldItem->quantity);
+                }
+                $purchase->items()->delete();
 
-            $subtotal = 0;
-            $totalTax = 0;
-            $itemsData = [];
+                $subtotal = 0;
+                $totalTax = 0;
+                $itemsData = [];
 
-            foreach ($validated['products'] as $item) {
-                $itemSubtotal = $item['qty'] * $item['cost'];
-                $taxPercent = $item['tax_percent'] ?? 0;
-                $itemTax = ($itemSubtotal * $taxPercent) / 100;
+                foreach ($validated['products'] as $item) {
+                    $itemSubtotal = $item['qty'] * $item['cost'];
+                    $taxPercent = $item['tax_percent'] ?? 0;
+                    $itemTax = ($itemSubtotal * $taxPercent) / 100;
 
-                $subtotal += $itemSubtotal;
-                $totalTax += $itemTax;
+                    $subtotal += $itemSubtotal;
+                    $totalTax += $itemTax;
 
-                $itemsData[] = [
-                    'product_id' => $item['id'],
-                    'unit_cost'  => $item['cost'],
-                    'quantity'   => $item['qty'],
-                    'subtotal'   => $itemSubtotal,
-                ];
-            }
+                    $itemsData[] = [
+                        'product_id' => $item['id'],
+                        'unit_cost'  => $item['cost'],
+                        'quantity'   => $item['qty'],
+                        'subtotal'   => $itemSubtotal,
+                    ];
+                }
 
-            $discount = $validated['discount_amount'] ?? 0;
-            $shipping = $validated['shipping_cost'] ?? 0;
-            $grandTotal = $subtotal + $totalTax - $discount + $shipping;
+                $discount = $validated['discount_amount'] ?? 0;
+                $shipping = $validated['shipping_cost'] ?? 0;
+                $grandTotal = $subtotal + $totalTax - $discount + $shipping;
 
-            $statusInput = $validated['payment_status'] ?? 'pending';
-            if ($statusInput === 'paid') {
-                $paid = $grandTotal;
-                $paymentStatus = 'paid';
-            } elseif ($statusInput === 'unpaid') {
-                $paid = 0.00;
-                $paymentStatus = 'unpaid';
-            } else {
-                $paid = (float)$validated['paid_amount'];
-                $paymentStatus = $statusInput;
-            }
+                $statusInput = $validated['payment_status'] ?? 'pending';
+                if ($statusInput === 'paid') {
+                    $paid = $grandTotal;
+                    $paymentStatus = 'paid';
+                } elseif ($statusInput === 'unpaid' || $statusInput === 'pending') {
+                    $paid = 0.00;
+                    $paymentStatus = $statusInput;
+                } else {
+                    $paid = (float)$validated['paid_amount'];
+                    $paymentStatus = $statusInput;
+                }
 
-            $purchase->update([
-                'project_name'    => $validated['project_name'],
-                'invoice_number'  => $validated['invoice_number'],
-                'supplier_id'     => $validated['supplier_id'],
-                'purchase_date'   => $validated['purchase_date'],
-                'subtotal'        => $subtotal,
-                'tax_amount'      => $totalTax,
-                'discount_amount' => $discount,
-                'shipping_cost'   => $shipping,
-                'grand_total'     => $grandTotal,
-                'paid_amount'     => $paid,
-                'payment_status'  => $paymentStatus,
-                'notes'           => $validated['notes'] ?? null,
-            ]);
+                if ($paid > ($grandTotal + 0.001)) {
+                    throw new \InvalidArgumentException('Paid Amount (₹' . number_format($paid, 2) . ') cannot be greater than Grand Total (₹' . number_format($grandTotal, 2) . ').');
+                }
 
-            foreach ($itemsData as $iData) {
-                $purchase->items()->create($iData);
+                $purchase->update([
+                    'project_name'    => $validated['project_name'],
+                    'invoice_number'  => $validated['invoice_number'],
+                    'supplier_id'     => $validated['supplier_id'],
+                    'purchase_date'   => $validated['purchase_date'],
+                    'subtotal'        => $subtotal,
+                    'tax_amount'      => $totalTax,
+                    'discount_amount' => $discount,
+                    'shipping_cost'   => $shipping,
+                    'grand_total'     => $grandTotal,
+                    'paid_amount'     => $paid,
+                    'payment_status'  => $paymentStatus,
+                    'notes'           => $validated['notes'] ?? null,
+                ]);
 
-                // Increment new stock
-                $product = Product::find($iData['product_id']);
-                $product->increment('stock_quantity', $iData['quantity']);
-                $product->update(['cost_price' => $iData['unit_cost']]);
-            }
-        });
+                foreach ($itemsData as $iData) {
+                    $purchase->items()->create($iData);
+
+                    // Increment new stock
+                    $product = Product::find($iData['product_id']);
+                    $product->increment('stock_quantity', $iData['quantity']);
+                    $product->update(['cost_price' => $iData['unit_cost']]);
+                }
+            });
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['paid_amount' => $e->getMessage()])->withInput();
+        }
 
         return redirect()->route('purchases.index')->with('success', 'Purchase order updated successfully & product stock recalculated!');
     }

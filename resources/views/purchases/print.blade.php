@@ -187,9 +187,13 @@
                         <strong>Grand Total:</strong>
                         <strong class="text-primary">₹{{ number_format($purchase->grand_total, 2) }}</strong>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between mb-1">
                         <span>Amount Paid:</span>
                         <strong class="text-success">₹{{ number_format($purchase->paid_amount, 2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Remaining Balance:</span>
+                        <strong class="text-danger">₹{{ number_format(max(0, $purchase->grand_total - $purchase->paid_amount), 2) }}</strong>
                     </div>
                 </div>
             </div>

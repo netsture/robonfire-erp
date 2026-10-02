@@ -98,10 +98,35 @@ class SaleController extends Controller
         $products = $productsQuery->get();
         $categories = $categoriesQuery->get();
 
-        $firmSeq = Sale::where('firm_id', $firmId)->count() + 1;
-        $autoInvoice = 'CHN-FRM' . $firmId . '-' . str_pad($firmSeq, 4, '0', STR_PAD_LEFT);
+        $autoInvoice = $this->generateNextInvoiceNumber($firmId);
 
         return view('sales.create', compact('customers', 'products', 'categories', 'autoInvoice'));
+    }
+
+    private function generateNextInvoiceNumber($firmId)
+    {
+        $lastSale = Sale::where('firm_id', $firmId)
+            ->where('invoice_number', 'LIKE', 'CHN-FRM' . $firmId . '-%')
+            ->orderByRaw('CAST(SUBSTRING_INDEX(invoice_number, "-", -1) AS UNSIGNED) DESC')
+            ->first();
+
+        $maxSeq = 0;
+        if ($lastSale && preg_match('/(\d+)$/', $lastSale->invoice_number, $matches)) {
+            $maxSeq = (int) $matches[1];
+        }
+
+        $countSeq = Sale::where('firm_id', $firmId)->count();
+        $nextSeq = max($maxSeq, $countSeq) + 1;
+
+        do {
+            $candidate = 'CHN-FRM' . $firmId . '-' . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+            $exists = Sale::where('firm_id', $firmId)->where('invoice_number', $candidate)->exists();
+            if ($exists) {
+                $nextSeq++;
+            }
+        } while ($exists);
+
+        return $candidate;
     }
 
     public function store(Request $request)
@@ -111,7 +136,7 @@ class SaleController extends Controller
 
         $validated = $request->validate([
             'customer_id'     => ['required', 'exists:customers,id'],
-            'invoice_number'  => ['required', 'string'],
+            'invoice_number'  => ['nullable', 'string'],
             'project_name'    => ['required', 'string'],
             'vehicle_number'  => ['nullable', 'string'],
             'sale_date'       => ['required', 'date'],
@@ -130,6 +155,15 @@ class SaleController extends Controller
             'products.*.price.gt'       => 'Selling Price (₹) must be greater than 0 for all product items.',
             'products.*.price.required' => 'Selling Price (₹) is required for all product items.',
         ]);
+
+        if (empty($validated['invoice_number'])) {
+            $validated['invoice_number'] = $this->generateNextInvoiceNumber($firmId);
+        } else {
+            $existsInv = Sale::where('firm_id', $firmId)->where('invoice_number', $validated['invoice_number'])->exists();
+            if ($existsInv) {
+                $validated['invoice_number'] = $this->generateNextInvoiceNumber($firmId);
+            }
+        }
 
         // Check stock availability first
         foreach ($validated['products'] as $item) {
@@ -152,79 +186,87 @@ class SaleController extends Controller
             }
         }
 
-        DB::transaction(function () use ($validated, $firmId, $user, &$sale) {
-            $subtotal = 0;
-            $totalTax = 0;
-            $itemsData = [];
+        try {
+            DB::transaction(function () use ($validated, $firmId, $user, &$sale) {
+                $subtotal = 0;
+                $totalTax = 0;
+                $itemsData = [];
 
-            foreach ($validated['products'] as $item) {
-                $itemSubtotal = $item['qty'] * $item['price'];
-                $taxPercent = $item['tax_percent'] ?? 0;
-                $itemTax = ($itemSubtotal * $taxPercent) / 100;
+                foreach ($validated['products'] as $item) {
+                    $itemSubtotal = $item['qty'] * $item['price'];
+                    $taxPercent = $item['tax_percent'] ?? 0;
+                    $itemTax = ($itemSubtotal * $taxPercent) / 100;
 
-                $subtotal += $itemSubtotal;
-                $totalTax += $itemTax;
+                    $subtotal += $itemSubtotal;
+                    $totalTax += $itemTax;
 
-                $itemsData[] = [
-                    'product_id' => $item['id'],
-                    'unit_price' => $item['price'],
-                    'quantity'   => $item['qty'],
-                    'subtotal'   => $itemSubtotal,
-                ];
-            }
+                    $itemsData[] = [
+                        'product_id' => $item['id'],
+                        'unit_price' => $item['price'],
+                        'quantity'   => $item['qty'],
+                        'subtotal'   => $itemSubtotal,
+                    ];
+                }
 
-            $discount = $validated['discount_amount'] ?? 0;
-            $tax = $totalTax;
-            $shipping = $validated['shipping_cost'] ?? 0;
-            $grandTotal = $subtotal + $tax - $discount + $shipping;
+                $discount = $validated['discount_amount'] ?? 0;
+                $tax = $totalTax;
+                $shipping = $validated['shipping_cost'] ?? 0;
+                $grandTotal = $subtotal + $tax - $discount + $shipping;
 
-            $statusInput = $validated['payment_status'] ?? 'pending';
-            if ($statusInput === 'paid') {
-                $paid = $grandTotal;
-                $paymentStatus = 'paid';
-            } elseif ($statusInput === 'unpaid') {
-                $paid = 0.00;
-                $paymentStatus = 'unpaid';
-            } else {
-                $paid = (float)($validated['paid_amount'] ?? 0);
-                $paymentStatus = $statusInput;
-            }
+                $statusInput = $validated['payment_status'] ?? 'pending';
+                if ($statusInput === 'paid') {
+                    $paid = $grandTotal;
+                    $paymentStatus = 'paid';
+                } elseif ($statusInput === 'unpaid' || $statusInput === 'pending') {
+                    $paid = 0.00;
+                    $paymentStatus = $statusInput;
+                } else {
+                    $paid = (float)($validated['paid_amount'] ?? 0);
+                    $paymentStatus = $statusInput;
+                }
 
-            $sale = Sale::create([
-                'firm_id'         => $firmId,
-                'invoice_number'  => $validated['invoice_number'],
-                'project_name'    => $validated['project_name'] ?? null,
-                'vehicle_number'  => $validated['vehicle_number'] ?? null,
-                'customer_id'     => $validated['customer_id'],
-                'user_id'         => $user->id,
-                'sale_date'       => $validated['sale_date'],
-                'subtotal'        => $subtotal,
-                'tax_amount'      => $tax,
-                'discount_amount' => $discount,
-                'shipping_cost'   => $shipping,
-                'grand_total'     => $grandTotal,
-                'paid_amount'     => $paid,
-                'payment_status'  => $paymentStatus,
-                'notes'           => $validated['notes'] ?? null,
-            ]);
+                if ($paid > ($grandTotal + 0.001)) {
+                    throw new \InvalidArgumentException('Amount Received (₹' . number_format($paid, 2) . ') cannot be greater than Grand Total (₹' . number_format($grandTotal, 2) . ').');
+                }
 
-            if ($paid > 0) {
-                $sale->payments()->create([
-                    'payment_date' => $validated['sale_date'],
-                    'amount'       => $paid,
-                    'notes'        => 'Initial payment upon sales order creation',
+                $sale = Sale::create([
+                    'firm_id'         => $firmId,
+                    'invoice_number'  => $validated['invoice_number'],
+                    'project_name'    => $validated['project_name'] ?? null,
+                    'vehicle_number'  => $validated['vehicle_number'] ?? null,
+                    'customer_id'     => $validated['customer_id'],
+                    'user_id'         => $user->id,
+                    'sale_date'       => $validated['sale_date'],
+                    'subtotal'        => $subtotal,
+                    'tax_amount'      => $tax,
+                    'discount_amount' => $discount,
+                    'shipping_cost'   => $shipping,
+                    'grand_total'     => $grandTotal,
+                    'paid_amount'     => $paid,
+                    'payment_status'  => $paymentStatus,
+                    'notes'           => $validated['notes'] ?? null,
                 ]);
-            }
 
-            foreach ($itemsData as $iData) {
-                $sale->items()->create($iData);
+                if ($paid > 0) {
+                    $sale->payments()->create([
+                        'payment_date' => $validated['sale_date'],
+                        'amount'       => $paid,
+                        'notes'        => 'Initial payment upon sales order creation',
+                    ]);
+                }
 
-                // Auto-deduct stock quantity & update product selling price
-                $product = Product::find($iData['product_id']);
-                $product->decrement('stock_quantity', $iData['quantity']);
-                $product->update(['selling_price' => $iData['unit_price']]);
-            }
-        });
+                foreach ($itemsData as $iData) {
+                    $sale->items()->create($iData);
+
+                    // Auto-deduct stock quantity & update product selling price
+                    $product = Product::find($iData['product_id']);
+                    $product->decrement('stock_quantity', $iData['quantity']);
+                    $product->update(['selling_price' => $iData['unit_price']]);
+                }
+            });
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['paid_amount' => $e->getMessage()])->withInput();
+        }
 
         return redirect()->route('sales.index')->with('success', 'Sales Order #' . $sale->invoice_number . ' completed & stock updated!');
     }
@@ -358,74 +400,82 @@ class SaleController extends Controller
             return back()->withErrors(['invoice_number' => 'Invoice number already exists for this firm.'])->withInput();
         }
 
-        DB::transaction(function () use ($validated, $sale) {
-            // Revert old inventory stock deductions
-            foreach ($sale->items as $oldItem) {
-                Product::where('id', $oldItem->product_id)->increment('stock_quantity', $oldItem->quantity);
-            }
-            $sale->items()->delete();
+        try {
+            DB::transaction(function () use ($validated, $sale) {
+                // Revert old inventory stock deductions
+                foreach ($sale->items as $oldItem) {
+                    Product::where('id', $oldItem->product_id)->increment('stock_quantity', $oldItem->quantity);
+                }
+                $sale->items()->delete();
 
-            $subtotal = 0;
-            $totalTax = 0;
-            $itemsData = [];
+                $subtotal = 0;
+                $totalTax = 0;
+                $itemsData = [];
 
-            foreach ($validated['products'] as $item) {
-                $itemSubtotal = $item['qty'] * $item['price'];
-                $taxPercent = $item['tax_percent'] ?? 0;
-                $itemTax = ($itemSubtotal * $taxPercent) / 100;
+                foreach ($validated['products'] as $item) {
+                    $itemSubtotal = $item['qty'] * $item['price'];
+                    $taxPercent = $item['tax_percent'] ?? 0;
+                    $itemTax = ($itemSubtotal * $taxPercent) / 100;
 
-                $subtotal += $itemSubtotal;
-                $totalTax += $itemTax;
+                    $subtotal += $itemSubtotal;
+                    $totalTax += $itemTax;
 
-                $itemsData[] = [
-                    'product_id' => $item['id'],
-                    'unit_price' => $item['price'],
-                    'quantity'   => $item['qty'],
-                    'subtotal'   => $itemSubtotal,
-                ];
-            }
+                    $itemsData[] = [
+                        'product_id' => $item['id'],
+                        'unit_price' => $item['price'],
+                        'quantity'   => $item['qty'],
+                        'subtotal'   => $itemSubtotal,
+                    ];
+                }
 
-            $discount = $validated['discount_amount'] ?? 0;
-            $shipping = $validated['shipping_cost'] ?? 0;
-            $grandTotal = $subtotal + $totalTax - $discount + $shipping;
+                $discount = $validated['discount_amount'] ?? 0;
+                $shipping = $validated['shipping_cost'] ?? 0;
+                $grandTotal = $subtotal + $totalTax - $discount + $shipping;
 
-            $statusInput = $validated['payment_status'] ?? 'pending';
-            if ($statusInput === 'paid') {
-                $paid = $grandTotal;
-                $paymentStatus = 'paid';
-            } elseif ($statusInput === 'unpaid') {
-                $paid = 0.00;
-                $paymentStatus = 'unpaid';
-            } else {
-                $paid = (float)$validated['paid_amount'];
-                $paymentStatus = $statusInput;
-            }
+                $statusInput = $validated['payment_status'] ?? 'pending';
+                if ($statusInput === 'paid') {
+                    $paid = $grandTotal;
+                    $paymentStatus = 'paid';
+                } elseif ($statusInput === 'unpaid' || $statusInput === 'pending') {
+                    $paid = 0.00;
+                    $paymentStatus = $statusInput;
+                } else {
+                    $paid = (float)$validated['paid_amount'];
+                    $paymentStatus = $statusInput;
+                }
 
-            $sale->update([
-                'invoice_number'  => $validated['invoice_number'],
-                'project_name'    => $validated['project_name'] ?? null,
-                'vehicle_number'  => $validated['vehicle_number'] ?? null,
-                'customer_id'     => $validated['customer_id'],
-                'sale_date'       => $validated['sale_date'],
-                'subtotal'        => $subtotal,
-                'tax_amount'      => $totalTax,
-                'discount_amount' => $discount,
-                'shipping_cost'   => $shipping,
-                'grand_total'     => $grandTotal,
-                'paid_amount'     => $paid,
-                'payment_status'  => $paymentStatus,
-                'notes'           => $validated['notes'] ?? null,
-            ]);
+                if ($paid > ($grandTotal + 0.001)) {
+                    throw new \InvalidArgumentException('Amount Received (₹' . number_format($paid, 2) . ') cannot be greater than Grand Total (₹' . number_format($grandTotal, 2) . ').');
+                }
 
-            foreach ($itemsData as $iData) {
-                $sale->items()->create($iData);
+                $sale->update([
+                    'invoice_number'  => $validated['invoice_number'],
+                    'project_name'    => $validated['project_name'] ?? null,
+                    'vehicle_number'  => $validated['vehicle_number'] ?? null,
+                    'customer_id'     => $validated['customer_id'],
+                    'sale_date'       => $validated['sale_date'],
+                    'subtotal'        => $subtotal,
+                    'tax_amount'      => $totalTax,
+                    'discount_amount' => $discount,
+                    'shipping_cost'   => $shipping,
+                    'grand_total'     => $grandTotal,
+                    'paid_amount'     => $paid,
+                    'payment_status'  => $paymentStatus,
+                    'notes'           => $validated['notes'] ?? null,
+                ]);
 
-                // Deduct stock for new items & update product selling price
-                $product = Product::find($iData['product_id']);
-                $product->decrement('stock_quantity', $iData['quantity']);
-                $product->update(['selling_price' => $iData['unit_price']]);
-            }
-        });
+                foreach ($itemsData as $iData) {
+                    $sale->items()->create($iData);
+
+                    // Deduct stock for new items & update product selling price
+                    $product = Product::find($iData['product_id']);
+                    $product->decrement('stock_quantity', $iData['quantity']);
+                    $product->update(['selling_price' => $iData['unit_price']]);
+                }
+            });
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['paid_amount' => $e->getMessage()])->withInput();
+        }
 
         return redirect()->route('sales.index')->with('success', 'Sales order updated successfully & inventory recalculated!');
     }
