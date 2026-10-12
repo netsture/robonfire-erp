@@ -58,6 +58,46 @@ class Product extends Model
         return $this->hasMany(StockAdjustment::class);
     }
 
+    public function purchaseItems(): HasMany
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
+    public function returnableMaterialItems(): HasMany
+    {
+        return $this->hasMany(ReturnableMaterialItem::class);
+    }
+
+    /**
+     * Get counts of existing child records associated with this product.
+     *
+     * @return array<string, int>
+     */
+    public function getChildRelationsCount(): array
+    {
+        $counts = [
+            'sale entry' => $this->saleItems()->count(),
+            'purchase entry' => $this->purchaseItems()->count(),
+            'stock adjustment' => $this->stockAdjustments()->count(),
+            'returnable material' => $this->returnableMaterialItems()->count(),
+        ];
+
+        return array_filter($counts, fn ($count) => $count > 0);
+    }
+
+    /**
+     * Check if product has any child records.
+     */
+    public function hasChildRecords(): bool
+    {
+        return !empty($this->getChildRelationsCount());
+    }
+
     public function isLowStock(): bool
     {
         return $this->stock_quantity <= $this->alert_quantity;

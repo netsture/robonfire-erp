@@ -65,7 +65,7 @@
                             <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editBrandModal_{{ $brand->id }}" title="Edit Brand">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <form action="{{ route('brands.destroy', $brand) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete brand master?')">
+                            <form action="{{ route('brands.destroy', $brand) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this brand? Note: Brands with existing products cannot be deleted.')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete Brand">

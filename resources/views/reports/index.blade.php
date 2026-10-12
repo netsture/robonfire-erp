@@ -13,7 +13,7 @@
             <div class="rounded-circle dark-symbol-avatar shadow-sm mb-3" style="width: 52px; height: 52px; background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
                 <i class="bi bi-cart-check-fill fs-4"></i>
             </div>
-            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Purchases Reports</h5>
+            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Purchases Report</h5>
             <p class="text-white small mb-3" style="color: #ffffff !important; opacity: 0.95;">Track procurement expenses, supplier payables, and stock restocking history.</p>
             <a href="{{ route('reports.purchases') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #0369a1 !important;">View Purchase Report</a>
         </div>
@@ -25,7 +25,7 @@
             <div class="rounded-circle dark-symbol-avatar shadow-sm mb-3" style="width: 52px; height: 52px; background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
                 <i class="bi bi-bar-chart-fill fs-4"></i>
             </div>
-            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Sales Reports</h5>
+            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Sales Report</h5>
             <p class="text-white small mb-3" style="color: #ffffff !important; opacity: 0.95;">Itemized revenue by date range, customer ledgers, and payment statuses.</p>
             <a href="{{ route('reports.sales') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #047857 !important;">View Sales Report</a>
         </div>

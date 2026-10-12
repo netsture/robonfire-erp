@@ -122,10 +122,28 @@
                     <tr>
                         <td class="text-center fw-bold">{{ $index + 1 }}</td>
                         <td class="text-center font-monospace">{{ \Carbon\Carbon::parse($item['raw_date'])->format('d-m-Y') }}</td>
-                        <td class="fw-semibold">{{ $item['entry_type'] }}</td>
+                        <td>
+                            <span class="badge {{ $item['badge_class'] ?? '' }} px-2 py-1 fw-semibold">
+                                {{ $item['entry_type'] }}
+                            </span>
+                        </td>
                         <td class="font-monospace fw-semibold">{{ $item['ref_no'] }}</td>
-                        <td>{{ $item['party'] }}</td>
-                        <td>{{ $item['products_summary'] }}</td>
+                        <td>
+                            <div class="fw-semibold">{{ $item['party'] }}</div>
+                            @if(!empty($item['party_type']))
+                                <span class="badge {{ $item['party_type'] === 'Supplier' ? 'bg-primary text-white' : ($item['party_type'] === 'Customer' ? 'bg-success text-white' : 'bg-warning text-dark') }} px-1.5 py-0.5" style="font-size: 9px;">
+                                    {{ $item['party_type'] }}
+                                </span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="small">{{ $item['products_summary'] }}</div>
+                            @if(!empty($item['items_count']))
+                                <span class="badge bg-secondary text-white px-1.5 py-0.5" style="font-size: 9px;">
+                                    {{ $item['items_count'] }} Item(s)
+                                </span>
+                            @endif
+                        </td>
                         <td>{{ $item['entered_by'] }}</td>
                         <td class="text-end fw-bold font-monospace">₹{{ number_format($item['amount'], 2) }}</td>
                     </tr>

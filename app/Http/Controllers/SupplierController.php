@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class SupplierController extends Controller
 {
@@ -201,7 +202,24 @@ class SupplierController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        $supplier->delete();
-        return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
+        $childCounts = $supplier->getChildRelationsCount();
+        if (!empty($childCounts)) {
+            $formattedDetails = [];
+            foreach ($childCounts as $type => $count) {
+                $formattedDetails[] = "{$count} " . Str::plural($type, $count);
+            }
+            $details = implode(', ', $formattedDetails);
+
+            return back()->with('error', "Cannot delete supplier '{$supplier->company_name}' because it contains child records ({$details}). Please delete or reassign related records first.");
+        }
+
+        try {
+            $supplier->delete();
+            return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', "Cannot delete supplier '{$supplier->company_name}' due to database integrity constraints (associated child records exist).");
+        } catch (\Exception $e) {
+            return back()->with('error', 'An unexpected error occurred while deleting the supplier: ' . $e->getMessage());
+        }
     }
 }

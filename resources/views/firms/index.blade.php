@@ -155,7 +155,7 @@
                                 <a href="{{ route('firms.edit', $firm) }}" class="btn btn-sm btn-light border" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form action="{{ route('firms.destroy', $firm) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete firm and all associated records?')">
+                                <form action="{{ route('firms.destroy', $firm) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this firm? Note: Firms containing child records cannot be deleted.')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">

@@ -580,7 +580,7 @@ class ReportController extends Controller
                     'timestamp' => $pi->purchase->purchase_date ? \Carbon\Carbon::parse($pi->purchase->purchase_date)->format('Y-m-d') : $pi->created_at->format('Y-m-d'),
                     'raw_date'  => $pi->purchase->purchase_date ?? $pi->created_at,
                     'type'      => 'Purchase',
-                    'badge_class' => 'bg-success text-white',
+                    'badge_class' => 'bg-primary text-white',
                     'direction' => 'IN',
                     'ref_no'    => $pi->purchase->invoice_number,
                     'ref_route' => route('purchases.show', $pi->purchase->id),
@@ -612,7 +612,7 @@ class ReportController extends Controller
                     'timestamp' => $si->sale->sale_date ? \Carbon\Carbon::parse($si->sale->sale_date)->format('Y-m-d') : $si->created_at->format('Y-m-d'),
                     'raw_date'  => $si->sale->sale_date ?? $si->created_at,
                     'type'      => 'Sale',
-                    'badge_class' => 'bg-primary text-white',
+                    'badge_class' => 'bg-success text-white',
                     'direction' => 'OUT',
                     'ref_no'    => $si->sale->invoice_number,
                     'ref_route' => route('sales.show', $si->sale->id),
@@ -712,6 +712,15 @@ class ReportController extends Controller
             $summary['current_stock'] = $selectedProduct->stock_quantity;
             $summary['cost_price']    = $selectedProduct->cost_price;
             $summary['selling_price'] = $selectedProduct->selling_price;
+        }
+
+        if ($products->isEmpty()) {
+            session()->now('error', 'No product records found. Please add products to your catalog to view stock reports.');
+        } elseif ($selectedProductId && !$selectedProduct) {
+            session()->now('error', 'The requested product could not be found.');
+        } elseif ($selectedProduct && $movementHistory->isEmpty()) {
+            $dateMsg = ($request->filled('start_date') || $request->filled('end_date')) ? ' within the selected date range' : '';
+            session()->now('warning', "No stock movement records found for '{$selectedProduct->name}'{$dateMsg}.");
         }
 
         $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
@@ -837,7 +846,7 @@ class ReportController extends Controller
             $entriesLedger->push([
                 'raw_date' => $p->purchase_date ?? $p->created_at,
                 'entry_type' => 'Purchase',
-                'badge_class' => 'bg-success text-white',
+                'badge_class' => 'bg-primary text-white',
                 'ref_no' => $p->invoice_number,
                 'ref_route' => route('purchases.show', $p->id),
                 'party' => $p->supplier->company_name ?? 'N/A',
@@ -860,7 +869,7 @@ class ReportController extends Controller
             $entriesLedger->push([
                 'raw_date' => $s->sale_date ?? $s->created_at,
                 'entry_type' => 'Sale',
-                'badge_class' => 'bg-primary text-white',
+                'badge_class' => 'bg-success text-white',
                 'ref_no' => $s->invoice_number,
                 'ref_route' => route('sales.show', $s->id),
                 'party' => $s->customer->company_name ?? 'N/A',
@@ -1243,9 +1252,11 @@ class ReportController extends Controller
                     'timestamp' => $pi->purchase->purchase_date ? \Carbon\Carbon::parse($pi->purchase->purchase_date)->format('d-m-Y') : $pi->created_at->format('d-m-Y'),
                     'raw_date'  => $pi->purchase->purchase_date ?? $pi->created_at,
                     'type'      => 'Purchase',
+                    'badge_class' => 'bg-primary text-white',
                     'direction' => 'IN',
                     'ref_no'    => $pi->purchase->invoice_number,
                     'party'     => $pi->purchase->supplier->company_name ?? 'N/A',
+                    'party_type'=> 'Supplier',
                     'quantity'  => $pi->quantity,
                     'rate'      => $pi->unit_cost,
                     'amount'    => $pi->subtotal,
@@ -1268,9 +1279,11 @@ class ReportController extends Controller
                     'timestamp' => $si->sale->sale_date ? \Carbon\Carbon::parse($si->sale->sale_date)->format('d-m-Y') : $si->created_at->format('d-m-Y'),
                     'raw_date'  => $si->sale->sale_date ?? $si->created_at,
                     'type'      => 'Sale',
+                    'badge_class' => 'bg-success text-white',
                     'direction' => 'OUT',
                     'ref_no'    => $si->sale->invoice_number,
                     'party'     => $si->sale->customer->company_name ?? 'N/A',
+                    'party_type'=> 'Customer',
                     'quantity'  => $si->quantity,
                     'rate'      => $si->unit_price,
                     'amount'    => $si->subtotal,
@@ -1293,9 +1306,11 @@ class ReportController extends Controller
                     'timestamp' => $ri->returnableMaterial->return_date ? \Carbon\Carbon::parse($ri->returnableMaterial->return_date)->format('d-m-Y') : $ri->created_at->format('d-m-Y'),
                     'raw_date'  => $ri->returnableMaterial->return_date ?? $ri->created_at,
                     'type'      => 'Returnable',
+                    'badge_class' => 'bg-warning text-dark',
                     'direction' => 'IN',
                     'ref_no'    => $ri->returnableMaterial->return_number,
                     'party'     => $ri->returnableMaterial->customer->company_name ?? 'N/A',
+                    'party_type'=> 'Customer',
                     'quantity'  => $ri->quantity,
                     'rate'      => $ri->unit_price,
                     'amount'    => $ri->subtotal,
@@ -1317,9 +1332,11 @@ class ReportController extends Controller
                     'timestamp' => $adj->created_at->format('d-m-Y'),
                     'raw_date'  => $adj->created_at,
                     'type'      => 'Adjustment (' . strtoupper($adj->type) . ')',
+                    'badge_class' => $adj->type === 'add' ? 'bg-info text-white' : 'bg-danger text-white',
                     'direction' => $adj->type === 'add' ? 'IN' : 'OUT',
                     'ref_no'    => 'ADJ-' . $adj->id,
                     'party'     => $adj->user->name ?? 'System',
+                    'party_type'=> 'User',
                     'quantity'  => $adj->quantity,
                     'rate'      => $selectedProduct->cost_price,
                     'amount'    => $adj->quantity * $selectedProduct->cost_price,
@@ -1431,8 +1448,11 @@ class ReportController extends Controller
             $entriesLedger->push([
                 'raw_date' => $p->purchase_date ?? $p->created_at,
                 'entry_type' => 'Purchase',
+                'badge_class' => 'bg-primary text-white',
                 'ref_no' => $p->invoice_number,
                 'party' => $p->supplier->company_name ?? 'N/A',
+                'party_type' => 'Supplier',
+                'items_count' => $p->items->count(),
                 'products_summary' => $prodNames ?: 'No items',
                 'amount' => $p->grand_total,
                 'entered_by' => $p->user->name ?? 'Unknown',
@@ -1447,8 +1467,11 @@ class ReportController extends Controller
             $entriesLedger->push([
                 'raw_date' => $s->sale_date ?? $s->created_at,
                 'entry_type' => 'Sale',
+                'badge_class' => 'bg-success text-white',
                 'ref_no' => $s->invoice_number,
                 'party' => $s->customer->company_name ?? 'N/A',
+                'party_type' => 'Customer',
+                'items_count' => $s->items->count(),
                 'products_summary' => $prodNames ?: 'No items',
                 'amount' => $s->grand_total,
                 'entered_by' => $s->user->name ?? 'Unknown',
@@ -1463,8 +1486,11 @@ class ReportController extends Controller
             $entriesLedger->push([
                 'raw_date' => $r->return_date ?? $r->created_at,
                 'entry_type' => 'Returnable',
+                'badge_class' => 'bg-warning text-dark',
                 'ref_no' => $r->return_number,
                 'party' => $r->customer->company_name ?? 'N/A',
+                'party_type' => 'Customer',
+                'items_count' => $r->items->count(),
                 'products_summary' => $prodNames ?: 'No items',
                 'amount' => $r->grand_total,
                 'entered_by' => $r->user->name ?? 'Unknown',
@@ -1475,8 +1501,11 @@ class ReportController extends Controller
             $entriesLedger->push([
                 'raw_date' => $adj->created_at,
                 'entry_type' => 'Adjustment (' . strtoupper($adj->type) . ')',
+                'badge_class' => $adj->type === 'add' ? 'bg-info text-white' : 'bg-danger text-white',
                 'ref_no' => 'ADJ-' . $adj->id,
                 'party' => $adj->product->name ?? 'Product',
+                'party_type' => 'Product',
+                'items_count' => 1,
                 'products_summary' => ($adj->product->name ?? 'Product') . ' (' . ($adj->type === 'add' ? '+' : '-') . $adj->quantity . ')',
                 'amount' => $adj->quantity * ($adj->product->cost_price ?? 0),
                 'entered_by' => $adj->user->name ?? 'Unknown',

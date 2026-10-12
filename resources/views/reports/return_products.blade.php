@@ -25,26 +25,32 @@
 
 <!-- KPI Metric Cards -->
 <div class="row g-3 mb-4">
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+    <div class="col-12 col-sm-6 col-xl">
+        <div class="card card-custom border-0 p-3 text-white h-100" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
             <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Return Entries</span>
             <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">{{ number_format($totalReturnCount) }}</h3>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+    <div class="col-12 col-sm-6 col-xl">
+        <div class="card card-custom border-0 p-3 text-white h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
             <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Units Returned</span>
             <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">+{{ number_format($totalUnitsReturned) }}</h3>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 text-white" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+    <div class="col-12 col-sm-6 col-xl">
+        <div class="card card-custom border-0 p-3 text-white h-100" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
             <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Subtotal Value</span>
             <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalSubtotal, 2) }}</h3>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card card-custom border-0 p-3 bg-primary text-white">
+    <div class="col-12 col-sm-6 col-xl">
+        <div class="card card-custom border-0 p-3 text-white h-100" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);">
+            <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Tax Collected</span>
+            <h3 class="fw-bold font-outfit mt-2 mb-0" style="color: #ffffff !important;">+₹{{ number_format($totalTaxAmount, 2) }}</h3>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl">
+        <div class="card card-custom border-0 p-3 bg-primary text-white h-100">
             <span class="text-white small fw-semibold text-uppercase" style="color: #ffffff !important;">Grand Total Returned Value</span>
             <h3 class="fw-bold font-outfit text-white mt-2 mb-0" style="color: #ffffff !important;">₹{{ number_format($totalGrandTotal, 2) }}</h3>
         </div>

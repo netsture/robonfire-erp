@@ -58,4 +58,51 @@ class Firm extends Model
     {
         return $this->hasMany(Purchase::class);
     }
+
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function returnableMaterials(): HasMany
+    {
+        return $this->hasMany(ReturnableMaterial::class);
+    }
+
+    public function stockAdjustments(): HasMany
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
+
+    /**
+     * Get counts of existing child records associated with this firm.
+     *
+     * @return array<string, int>
+     */
+    public function getChildRelationsCount(): array
+    {
+        $counts = [
+            'user' => $this->users()->count(),
+            'product' => $this->products()->count(),
+            'sale' => $this->sales()->count(),
+            'purchase' => $this->purchases()->count(),
+            'customer' => $this->customers()->count(),
+            'supplier' => $this->suppliers()->count(),
+            'category' => $this->categories()->count(),
+            'brand' => $this->brands()->count(),
+            'project' => $this->projects()->count(),
+            'returnable material' => $this->returnableMaterials()->count(),
+            'stock adjustment' => $this->stockAdjustments()->count(),
+        ];
+
+        return array_filter($counts, fn ($count) => $count > 0);
+    }
+
+    /**
+     * Check if the firm has any child records.
+     */
+    public function hasChildRecords(): bool
+    {
+        return !empty($this->getChildRelationsCount());
+    }
 }

@@ -184,7 +184,7 @@
                                     <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm btn-light border" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete customer record?')">
+                                    <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this customer? Note: Customers with existing child records cannot be deleted.')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">

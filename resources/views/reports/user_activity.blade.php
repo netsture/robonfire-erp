@@ -298,17 +298,69 @@
                             @endif
                         </td>
                         <td>
-                            <div class="fw-semibold text-dark">{{ $row['party'] }}</div>
-                            <span class="badge bg-light text-muted border py-0.5 px-2 small">{{ $row['party_type'] }}</span>
+                            <div class="fw-bold text-dark mb-1">
+                                @if($row['party_type'] === 'Supplier')
+                                    <i class="bi bi-building me-1 text-primary"></i>
+                                @elseif($row['party_type'] === 'Customer')
+                                    <i class="bi bi-person-circle me-1 text-success"></i>
+                                @else
+                                    <i class="bi bi-box-seam me-1 text-warning"></i>
+                                @endif
+                                {{ $row['party'] }}
+                            </div>
+                            @if($row['party_type'] === 'Supplier')
+                                <span class="badge rounded-pill px-2 py-0.5 small fw-semibold" style="background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                                    <i class="bi bi-truck me-1"></i>Supplier
+                                </span>
+                            @elseif($row['party_type'] === 'Customer')
+                                <span class="badge rounded-pill px-2 py-0.5 small fw-semibold" style="background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;">
+                                    <i class="bi bi-person-check me-1"></i>Customer
+                                </span>
+                            @else
+                                <span class="badge rounded-pill px-2 py-0.5 small fw-semibold" style="background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;">
+                                    <i class="bi bi-box me-1"></i>{{ $row['party_type'] }}
+                                </span>
+                            @endif
                         </td>
                         <td>
-                            <div class="small fw-semibold text-dark">{{ $row['products_summary'] }}</div>
-                            <span class="badge bg-secondary-subtle text-secondary py-0.5 px-1.5 small">{{ $row['items_count'] }} Item(s)</span>
-                        </td>
-                        <td>
-                            <span class="badge bg-light text-dark border fw-semibold px-2.5 py-1">
-                                {{ $row['status'] }}
+                            <div class="small fw-semibold text-dark mb-1">{{ $row['products_summary'] }}</div>
+                            <span class="badge rounded-pill px-2.5 py-0.5 small fw-bold" style="background-color: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe;">
+                                <i class="bi bi-boxes me-1"></i>{{ $row['items_count'] }} {{ $row['items_count'] == 1 ? 'Item' : 'Items' }}
                             </span>
+                        </td>
+                        <td>
+                            @php
+                                $st = strtolower($row['status'] ?? '');
+                            @endphp
+                            @if($st === 'paid')
+                                <span class="badge bg-success text-white rounded-pill px-2.5 py-1 fw-semibold">
+                                    <i class="bi bi-check-circle me-1"></i>Paid
+                                </span>
+                            @elseif($st === 'unpaid')
+                                <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 fw-semibold">
+                                    <i class="bi bi-x-circle me-1"></i>Unpaid
+                                </span>
+                            @elseif($st === 'partial')
+                                <span class="badge bg-info text-white rounded-pill px-2.5 py-1 fw-semibold">
+                                    <i class="bi bi-pie-chart me-1"></i>Partial
+                                </span>
+                            @elseif($st === 'pending')
+                                <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 fw-semibold">
+                                    <i class="bi bi-clock-history me-1"></i>Pending
+                                </span>
+                            @elseif($st === 'returned')
+                                <span class="badge rounded-pill px-2.5 py-1 fw-semibold text-white" style="background-color: #ea580c;">
+                                    <i class="bi bi-arrow-return-left me-1"></i>Returned
+                                </span>
+                            @elseif($st === 'adjusted')
+                                <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-semibold">
+                                    <i class="bi bi-sliders me-1"></i>Adjusted
+                                </span>
+                            @else
+                                <span class="badge bg-light text-dark border fw-semibold px-2.5 py-1 rounded-pill">
+                                    {{ $row['status'] }}
+                                </span>
+                            @endif
                         </td>
                         <td class="text-end fw-bold font-monospace text-dark">
                             ₹{{ number_format($row['amount'], 2) }}

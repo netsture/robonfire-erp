@@ -287,7 +287,7 @@
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
                                     @if($user->id !== auth()->id())
-                                        <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?')">
+                                        <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user? Note: Users with existing transactions cannot be deleted.')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete User">

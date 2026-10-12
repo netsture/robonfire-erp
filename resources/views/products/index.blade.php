@@ -299,7 +299,7 @@
                                     <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-light border" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete product from List?')">
+                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this product? Note: Products with existing transactions or stock history cannot be deleted.')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">

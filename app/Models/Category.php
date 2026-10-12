@@ -27,4 +27,26 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    /**
+     * Get counts of existing child records associated with this category.
+     *
+     * @return array<string, int>
+     */
+    public function getChildRelationsCount(): array
+    {
+        $counts = [
+            'product' => $this->products()->count(),
+        ];
+
+        return array_filter($counts, fn ($count) => $count > 0);
+    }
+
+    /**
+     * Check if category has any child records.
+     */
+    public function hasChildRecords(): bool
+    {
+        return !empty($this->getChildRelationsCount());
+    }
 }

@@ -87,10 +87,11 @@
             <div class="col-12">
                 <div class="border rounded p-3 bg-light text-center">
                     <div class="row font-outfit fw-bold">
-                        <div class="col-3">Total Return Entries: {{ number_format($totalReturnCount) }}</div>
-                        <div class="col-3 border-start border-end">Total Units Returned: {{ number_format($totalUnitsReturned) }}</div>
-                        <div class="col-3 border-end">Subtotal Value: ₹{{ number_format($totalSubtotal, 2) }}</div>
-                        <div class="col-3">Grand Total Value: ₹{{ number_format($totalGrandTotal, 2) }}</div>
+                        <div class="col">Total Return Entries: {{ number_format($totalReturnCount) }}</div>
+                        <div class="col border-start">Total Units Returned: {{ number_format($totalUnitsReturned) }}</div>
+                        <div class="col border-start">Subtotal Value: ₹{{ number_format($totalSubtotal, 2) }}</div>
+                        <div class="col border-start">Tax Collected: ₹{{ number_format($totalTaxAmount, 2) }}</div>
+                        <div class="col border-start">Grand Total Value: ₹{{ number_format($totalGrandTotal, 2) }}</div>
                     </div>
                 </div>
             </div>

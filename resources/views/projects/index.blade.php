@@ -365,7 +365,7 @@
                                                 </div>
                                                 <div class="modal-body text-start py-3">
                                                     Are you sure you want to delete project <strong class="text-dark">{{ $project->project_name }}</strong>?
-                                                    <br><small class="text-muted">This action cannot be undone.</small>
+                                                    <br><small class="text-muted">Note: Projects with existing child records (expenses, purchases) cannot be deleted.</small>
                                                 </div>
                                                 <div class="modal-footer border-0 pt-0">
                                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>

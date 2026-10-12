@@ -231,7 +231,28 @@ class FirmController extends Controller
             abort(403, 'Only Superadmin can manage Firms.');
         }
 
-        $firm->delete();
-        return redirect()->route('firms.index')->with('success', 'Firm record and associated data removed.');
+        if (auth()->user()->firm_id === $firm->id) {
+            return back()->with('error', "Cannot delete firm '{$firm->name}' because your current account is associated with this firm.");
+        }
+
+        $childCounts = $firm->getChildRelationsCount();
+        if (!empty($childCounts)) {
+            $formattedDetails = [];
+            foreach ($childCounts as $type => $count) {
+                $formattedDetails[] = "{$count} " . Str::plural($type, $count);
+            }
+            $details = implode(', ', $formattedDetails);
+
+            return back()->with('error', "Cannot delete firm '{$firm->name}' because it contains child records ({$details}). Please delete or reassign all related child data before deleting this firm.");
+        }
+
+        try {
+            $firm->delete();
+            return redirect()->route('firms.index')->with('success', 'Firm record removed successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', "Cannot delete firm '{$firm->name}' due to database integrity constraints (associated child records exist).");
+        } catch (\Exception $e) {
+            return back()->with('error', 'An unexpected error occurred while deleting the firm: ' . $e->getMessage());
+        }
     }
 }

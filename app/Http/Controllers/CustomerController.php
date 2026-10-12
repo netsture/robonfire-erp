@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -201,7 +202,24 @@ class CustomerController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        $customer->delete();
-        return redirect()->route('customers.index')->with('success', 'Customer record deleted.');
+        $childCounts = $customer->getChildRelationsCount();
+        if (!empty($childCounts)) {
+            $formattedDetails = [];
+            foreach ($childCounts as $type => $count) {
+                $formattedDetails[] = "{$count} " . Str::plural($type, $count);
+            }
+            $details = implode(', ', $formattedDetails);
+
+            return back()->with('error', "Cannot delete customer '{$customer->company_name}' because it contains child records ({$details}). Please delete or reassign related records first.");
+        }
+
+        try {
+            $customer->delete();
+            return redirect()->route('customers.index')->with('success', 'Customer record deleted.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', "Cannot delete customer '{$customer->company_name}' due to database integrity constraints (associated child records exist).");
+        } catch (\Exception $e) {
+            return back()->with('error', 'An unexpected error occurred while deleting the customer: ' . $e->getMessage());
+        }
     }
 }

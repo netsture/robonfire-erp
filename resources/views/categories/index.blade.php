@@ -65,7 +65,7 @@
                             <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editCategoryModal_{{ $category->id }}">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <form action="{{ route('categories.destroy', $category) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete category?')">
+                            <form action="{{ route('categories.destroy', $category) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this category? Note: Categories with existing products cannot be deleted.')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-light border text-danger">

@@ -114,11 +114,24 @@ class BrandController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        if ($brand->products()->count() > 0) {
-            return back()->with('error', 'Cannot delete brand associated with existing products.');
+        $childCounts = $brand->getChildRelationsCount();
+        if (!empty($childCounts)) {
+            $formattedDetails = [];
+            foreach ($childCounts as $type => $count) {
+                $formattedDetails[] = "{$count} " . Str::plural($type, $count);
+            }
+            $details = implode(', ', $formattedDetails);
+
+            return back()->with('error', "Cannot delete brand '{$brand->name}' because it contains child records ({$details}). Please delete or reassign related records first.");
         }
 
-        $brand->delete();
-        return redirect()->route('brands.index')->with('success', 'Brand deleted successfully.');
+        try {
+            $brand->delete();
+            return redirect()->route('brands.index')->with('success', 'Brand deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', "Cannot delete brand '{$brand->name}' due to database integrity constraints (associated child records exist).");
+        } catch (\Exception $e) {
+            return back()->with('error', 'An unexpected error occurred while deleting the brand: ' . $e->getMessage());
+        }
     }
 }

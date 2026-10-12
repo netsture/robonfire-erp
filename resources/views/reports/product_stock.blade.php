@@ -23,9 +23,11 @@
 @endpush
 
 @section('header_actions')
-    <a href="{{ route('reports.product-stock.print', request()->query()) }}" target="_blank" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
-        <i class="bi bi-printer me-1"></i> Print Report
-    </a>
+    @if($selectedProduct)
+        <a href="{{ route('reports.product-stock.print', request()->query()) }}" target="_blank" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
+            <i class="bi bi-printer me-1"></i> Print Report
+        </a>
+    @endif
     <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium">
         <i class="bi bi-arrow-left me-1"></i> Back to Reports
     </a>
@@ -44,59 +46,59 @@
     <hr class="my-3">
 </div>
 
- <!-- Summary Statistics Cards -->
-    <div class="row g-3 mb-4">
-        <!-- Purchase Card -->
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Purchased</span>
-                    <i class="bi bi-cart-plus-fill fs-4" style="color: #ffffff !important;"></i>
-                </div>
-                <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">+{{ number_format($summary['total_purchased_qty']) }} {{ $selectedProduct->unit }}</h3>
-                <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Valuation: ₹{{ number_format($summary['total_purchased_amount'], 2) }}</span>
+<!-- Summary Statistics Cards -->
+<div class="row g-3 mb-4">
+    <!-- Purchase Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Purchased</span>
+                <i class="bi bi-cart-plus-fill fs-4" style="color: #ffffff !important;"></i>
             </div>
-        </div>
-
-        <!-- Sales Card -->
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Sold</span>
-                    <i class="bi bi-bag-check-fill fs-4" style="color: #ffffff !important;"></i>
-                </div>
-                <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">-{{ number_format($summary['total_sold_qty']) }} {{ $selectedProduct->unit }}</h3>
-                <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Revenue: ₹{{ number_format($summary['total_sold_amount'], 2) }}</span>
-            </div>
-        </div>
-
-        <!-- Returns Card -->
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Returned</span>
-                    <i class="bi bi-box-arrow-in-left fs-4" style="color: #ffffff !important;"></i>
-                </div>
-                <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">+{{ number_format($summary['total_returned_qty']) }} {{ $selectedProduct->unit }}</h3>
-                <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Valuation: ₹{{ number_format($summary['total_returned_amount'], 2) }}</span>
-            </div>
-        </div>
-
-        <!-- In-Stock Card -->
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card card-custom border-0 p-3 bg-dark text-white h-100 justify-content-center">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-white small fw-semibold text-uppercase">CURRENT IN-STOCK</span>
-                    <i class="bi bi-boxes fs-4 text-warning"></i>
-                </div>
-                <h3 class="fw-bold font-outfit mt-1 mb-0 {{ $selectedProduct->isLowStock() ? 'text-danger' : 'text-success' }}">
-                    {{ number_format($summary['current_stock']) }} {{ $selectedProduct->unit }}
-                </h3>
-                <span class="small text-white-50 mt-1">Cost: ₹{{ number_format($summary['cost_price'], 2) }} | Selling: ₹{{ number_format($summary['selling_price'], 2) }}</span>
-            </div>
+            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">+{{ number_format($summary['total_purchased_qty']) }} {{ $selectedProduct->unit ?? 'Units' }}</h3>
+            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Valuation: ₹{{ number_format($summary['total_purchased_amount'], 2) }}</span>
         </div>
     </div>
-    
+
+    <!-- Sales Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Sold</span>
+                <i class="bi bi-bag-check-fill fs-4" style="color: #ffffff !important;"></i>
+            </div>
+            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">-{{ number_format($summary['total_sold_qty']) }} {{ $selectedProduct->unit ?? 'Units' }}</h3>
+            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Revenue: ₹{{ number_format($summary['total_sold_amount'], 2) }}</span>
+        </div>
+    </div>
+
+    <!-- Returns Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-custom border-0 p-3 text-white h-100 justify-content-center" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-uppercase" style="color: #ffffff !important;">Total Returned</span>
+                <i class="bi bi-box-arrow-in-left fs-4" style="color: #ffffff !important;"></i>
+            </div>
+            <h3 class="fw-bold font-outfit mt-1 mb-0" style="color: #ffffff !important;">+{{ number_format($summary['total_returned_qty']) }} {{ $selectedProduct->unit ?? 'Units' }}</h3>
+            <span class="small mt-1" style="color: #ffffff !important; opacity: 0.9;">Valuation: ₹{{ number_format($summary['total_returned_amount'], 2) }}</span>
+        </div>
+    </div>
+
+    <!-- In-Stock Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-custom border-0 p-3 bg-dark text-white h-100 justify-content-center">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-white small fw-semibold text-uppercase">CURRENT IN-STOCK</span>
+                <i class="bi bi-boxes fs-4 text-warning"></i>
+            </div>
+            <h3 class="fw-bold font-outfit mt-1 mb-0 {{ ($selectedProduct && $selectedProduct->isLowStock()) ? 'text-danger' : 'text-success' }}">
+                {{ number_format($summary['current_stock']) }} {{ $selectedProduct->unit ?? 'Units' }}
+            </h3>
+            <span class="small text-white-50 mt-1">Cost: ₹{{ number_format($summary['cost_price'], 2) }} | Selling: ₹{{ number_format($summary['selling_price'], 2) }}</span>
+        </div>
+    </div>
+</div>
+
 <!-- Product Selection & Filter Bar -->
 <div class="card card-custom border-0 p-3 mb-4 no-print">
     <form method="GET" action="{{ route('reports.product-stock') }}" class="row g-2 align-items-end" id="stockReportForm">
@@ -114,7 +116,7 @@
 
         <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-4' : 'col-md-5' }}">
             <label class="form-label small fw-semibold text-dark mb-1">Select Product <span class="text-danger">*</span></label>
-            <select name="product_id" id="product_id_select" class="form-select form-select-sm" required>
+            <select name="product_id" id="product_id_select" class="form-select form-select-sm">
                 <option value="">Search or Select Product...</option>
                 @foreach($products as $prod)
                     @php
@@ -147,7 +149,24 @@
     </form>
 </div>
 
-@if($selectedProduct)
+@if(!$selectedProduct)
+    <!-- No Product Found Error Message Display -->
+    <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3" role="alert">
+        <i class="bi bi-exclamation-octagon-fill fs-2 text-danger"></i>
+        <div>
+            <h5 class="fw-bold mb-1 text-danger">No Product Records Found</h5>
+            <p class="mb-0 text-muted small">
+                @if(count($products) === 0)
+                    No products exist in the catalog for this firm. Please add products in the inventory section first to view stock movement reports.
+                @elseif(request('product_id'))
+                    The requested product was not found or does not belong to the selected firm.
+                @else
+                    No product is selected. Please select a product from the dropdown above to view its stock movement report.
+                @endif
+            </p>
+        </div>
+    </div>
+@else
     <!-- Product Header Card -->
     <div class="card card-custom border-0 p-4 mb-4">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -186,6 +205,24 @@
             </div>
         </div>
     </div>
+
+    @if($movementHistory->isEmpty())
+        <!-- Empty Movement Alert Message Display -->
+        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-3 p-3 mb-4 rounded-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-3 text-warning"></i>
+            <div>
+                <h6 class="fw-bold mb-1 text-dark">No Stock Movement Records Found</h6>
+                <p class="mb-0 text-muted small">
+                    No purchases, sales, returns, or adjustments were recorded for <strong>{{ $selectedProduct->name }}</strong>
+                    @if(request('start_date') || request('end_date'))
+                        between <strong>{{ request('start_date') ?: 'Beginning' }}</strong> and <strong>{{ request('end_date') ?: 'Today' }}</strong>.
+                    @else
+                        in the system yet.
+                    @endif
+                </p>
+            </div>
+        </div>
+    @endif
 
     <!-- Movement History Ledger Table -->
     <div class="card card-custom border-0 overflow-hidden">
@@ -308,8 +345,29 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="fw-semibold text-dark">{{ $row['party'] }}</div>
-                                <span class="badge bg-light text-muted border py-0.5 px-2 small">{{ $row['party_type'] }}</span>
+                                <div class="fw-bold text-dark mb-1">
+                                    @if($row['party_type'] === 'Supplier')
+                                        <i class="bi bi-building me-1 text-primary"></i>
+                                    @elseif($row['party_type'] === 'Customer')
+                                        <i class="bi bi-person-circle me-1 text-success"></i>
+                                    @else
+                                        <i class="bi bi-person-gear me-1 text-warning"></i>
+                                    @endif
+                                    {{ $row['party'] }}
+                                </div>
+                                @if($row['party_type'] === 'Supplier')
+                                    <span class="badge rounded-pill px-2 py-0.5 small fw-semibold" style="background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                                        <i class="bi bi-truck me-1"></i>Supplier
+                                    </span>
+                                @elseif($row['party_type'] === 'Customer')
+                                    <span class="badge rounded-pill px-2 py-0.5 small fw-semibold" style="background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;">
+                                        <i class="bi bi-person-check me-1"></i>Customer
+                                    </span>
+                                @else
+                                    <span class="badge rounded-pill px-2 py-0.5 small fw-semibold" style="background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;">
+                                        <i class="bi bi-person-gear me-1"></i>{{ $row['party_type'] }}
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 @if($row['direction'] === 'IN')
@@ -322,8 +380,16 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-center fw-bold font-monospace">
-                                {{ $row['quantity'] }} {{ $selectedProduct->unit }}
+                            <td class="text-center font-monospace">
+                                @if($row['direction'] === 'IN')
+                                    <span class="badge rounded-pill px-2.5 py-1 fw-bold fs-7" style="background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;">
+                                        +{{ number_format($row['quantity']) }} {{ $selectedProduct->unit ?? 'Units' }}
+                                    </span>
+                                @else
+                                    <span class="badge rounded-pill px-2.5 py-1 fw-bold fs-7" style="background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;">
+                                        -{{ number_format($row['quantity']) }} {{ $selectedProduct->unit ?? 'Units' }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="text-end small font-monospace text-dark">
                                 ₹{{ number_format($row['rate'], 2) }}
@@ -334,22 +400,18 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>
-                                <h6>No stock movements recorded for this product yet.</h6>
-                                <p class="small mb-0">When purchases, sales, returns, or adjustments occur, they will appear here in chronological order.</p>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="text-danger mb-2">
+                                    <i class="bi bi-exclamation-circle fs-1"></i>
+                                </div>
+                                <h6 class="fw-bold text-danger mb-1">No Stock Movement Records Found</h6>
+                                <p class="text-muted small mb-0">No purchases, sales, returns, or adjustments recorded for <strong>{{ $selectedProduct->name }}</strong> matching the selected criteria.</p>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
-@else
-    <div class="card card-custom border-0 p-5 text-center">
-        <i class="bi bi-box-seam fs-1 text-muted mb-3"></i>
-        <h5 class="fw-bold text-dark">No Products Found</h5>
-        <p class="text-muted">Please add products to your catalog to view stock movement reports.</p>
     </div>
 @endif
 

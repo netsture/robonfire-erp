@@ -139,20 +139,39 @@
                                 @endif
                             </td>
                             <td class="font-monospace fw-semibold">{{ $item['ref_no'] }}</td>
-                            <td>{{ $item['party'] }}</td>
-                            <td class="text-center fw-bold">{{ number_format($item['quantity']) }}</td>
+                            <td>
+                                <div class="fw-semibold">{{ $item['party'] }}</div>
+                                @if(!empty($item['party_type']))
+                                    <span class="badge {{ $item['party_type'] === 'Supplier' ? 'bg-primary text-white' : ($item['party_type'] === 'Customer' ? 'bg-success text-white' : 'bg-warning text-dark') }} px-1.5 py-0.5" style="font-size: 9px;">
+                                        {{ $item['party_type'] }}
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="text-center fw-bold font-monospace">
+                                @if($item['direction'] === 'IN')
+                                    <span class="text-success fw-bold">+{{ number_format($item['quantity']) }}</span>
+                                @else
+                                    <span class="text-danger fw-bold">-{{ number_format($item['quantity']) }}</span>
+                                @endif
+                            </td>
                             <td class="text-end font-monospace">₹{{ number_format($item['rate'], 2) }}</td>
                             <td class="text-end fw-bold font-monospace">₹{{ number_format($item['amount'], 2) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-3 text-muted">No stock movement recorded for this product.</td>
+                            <td colspan="9" class="text-center py-4 text-danger fw-semibold">
+                                <i class="bi bi-exclamation-circle me-1"></i> No stock movement records found for this product.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         @else
-            <div class="alert alert-info text-center my-4">No product selected for stock report.</div>
+            <div class="alert alert-danger text-center my-4 py-4">
+                <i class="bi bi-exclamation-octagon-fill fs-2 text-danger d-block mb-2"></i>
+                <h5 class="fw-bold text-danger mb-1">No Product Records Found</h5>
+                <p class="text-muted small mb-0">No product or stock movement records are available for the selected criteria.</p>
+            </div>
         @endif
 
         <div class="mt-5 text-center text-muted small border-top pt-3">

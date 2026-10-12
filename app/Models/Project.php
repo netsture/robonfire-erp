@@ -46,4 +46,28 @@ class Project extends Model
     {
         return (float) $this->expenses()->sum('amount');
     }
+
+    /**
+     * Get counts of existing child records associated with this project.
+     *
+     * @return array<string, int>
+     */
+    public function getChildRelationsCount(): array
+    {
+        $counts = [
+            'expense' => $this->expenses()->count(),
+            'purchase' => Purchase::where('firm_id', $this->firm_id)->where('project_name', $this->project_name)->count(),
+            'returnable material' => ReturnableMaterial::where('firm_id', $this->firm_id)->where('project_name', $this->project_name)->count(),
+        ];
+
+        return array_filter($counts, fn ($count) => $count > 0);
+    }
+
+    /**
+     * Check if project has any child records.
+     */
+    public function hasChildRecords(): bool
+    {
+        return !empty($this->getChildRelationsCount());
+    }
 }

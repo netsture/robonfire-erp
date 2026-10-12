@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['firm_id', 'name', 'email', 'password', 'phone', 'role', 'status'])]
 #[Hidden(['password', 'remember_token'])]
@@ -35,7 +37,7 @@ class User extends Authenticatable
         return $value ? ucfirst($value) : $value;
     }
 
-    public function firm()
+    public function firm(): BelongsTo
     {
         return $this->belongsTo(Firm::class);
     }
@@ -43,6 +45,51 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class);
+    }
+
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class);
+    }
+
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
+    }
+
+    public function returnableMaterials(): HasMany
+    {
+        return $this->hasMany(ReturnableMaterial::class);
+    }
+
+    public function stockAdjustments(): HasMany
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
+
+    /**
+     * Get counts of existing child records associated with this user.
+     *
+     * @return array<string, int>
+     */
+    public function getChildRelationsCount(): array
+    {
+        $counts = [
+            'sale' => $this->sales()->count(),
+            'purchase' => $this->purchases()->count(),
+            'returnable material' => $this->returnableMaterials()->count(),
+            'stock adjustment' => $this->stockAdjustments()->count(),
+        ];
+
+        return array_filter($counts, fn ($count) => $count > 0);
+    }
+
+    /**
+     * Check if user has any child records.
+     */
+    public function hasChildRecords(): bool
+    {
+        return !empty($this->getChildRelationsCount());
     }
 
     public function isSuperAdmin()

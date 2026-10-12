@@ -40,4 +40,32 @@ class Customer extends Model
     {
         return $this->hasMany(Sale::class);
     }
+
+    public function returnableMaterials(): HasMany
+    {
+        return $this->hasMany(ReturnableMaterial::class);
+    }
+
+    /**
+     * Get counts of existing child records associated with this customer.
+     *
+     * @return array<string, int>
+     */
+    public function getChildRelationsCount(): array
+    {
+        $counts = [
+            'sale' => $this->sales()->count(),
+            'returnable material' => $this->returnableMaterials()->count(),
+        ];
+
+        return array_filter($counts, fn ($count) => $count > 0);
+    }
+
+    /**
+     * Check if customer has any child records.
+     */
+    public function hasChildRecords(): bool
+    {
+        return !empty($this->getChildRelationsCount());
+    }
 }

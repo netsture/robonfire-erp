@@ -114,11 +114,24 @@ class CategoryController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        if ($category->products()->count() > 0) {
-            return back()->with('error', 'Cannot delete category containing products.');
+        $childCounts = $category->getChildRelationsCount();
+        if (!empty($childCounts)) {
+            $formattedDetails = [];
+            foreach ($childCounts as $type => $count) {
+                $formattedDetails[] = "{$count} " . Str::plural($type, $count);
+            }
+            $details = implode(', ', $formattedDetails);
+
+            return back()->with('error', "Cannot delete category '{$category->name}' because it contains child records ({$details}). Please delete or reassign related records first.");
         }
 
-        $category->delete();
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
+        try {
+            $category->delete();
+            return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', "Cannot delete category '{$category->name}' due to database integrity constraints (associated child records exist).");
+        } catch (\Exception $e) {
+            return back()->with('error', 'An unexpected error occurred while deleting the category: ' . $e->getMessage());
+        }
     }
 }

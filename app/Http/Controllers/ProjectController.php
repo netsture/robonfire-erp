@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Firm;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
@@ -270,8 +271,24 @@ class ProjectController extends Controller
             abort(403, 'Unauthorized access to project record.');
         }
 
-        $project->delete();
+        $childCounts = $project->getChildRelationsCount();
+        if (!empty($childCounts)) {
+            $formattedDetails = [];
+            foreach ($childCounts as $type => $count) {
+                $formattedDetails[] = "{$count} " . Str::plural($type, $count);
+            }
+            $details = implode(', ', $formattedDetails);
 
-        return redirect()->route('projects.index')->with('success', 'Project entry deleted successfully.');
+            return back()->with('error', "Cannot delete project '{$project->project_name}' because it contains child records ({$details}). Please delete or reassign related records first.");
+        }
+
+        try {
+            $project->delete();
+            return redirect()->route('projects.index')->with('success', 'Project entry deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', "Cannot delete project '{$project->project_name}' due to database integrity constraints (associated child records exist).");
+        } catch (\Exception $e) {
+            return back()->with('error', 'An unexpected error occurred while deleting the project: ' . $e->getMessage());
+        }
     }
 }
