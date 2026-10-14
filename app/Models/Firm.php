@@ -82,7 +82,6 @@ class Firm extends Model
     public function getChildRelationsCount(): array
     {
         $counts = [
-            'user' => $this->users()->count(),
             'product' => $this->products()->count(),
             'sale' => $this->sales()->count(),
             'purchase' => $this->purchases()->count(),

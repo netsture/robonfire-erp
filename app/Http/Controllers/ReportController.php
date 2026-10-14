@@ -714,14 +714,6 @@ class ReportController extends Controller
             $summary['selling_price'] = $selectedProduct->selling_price;
         }
 
-        if ($products->isEmpty()) {
-            session()->now('error', 'No product records found. Please add products to your catalog to view stock reports.');
-        } elseif ($selectedProductId && !$selectedProduct) {
-            session()->now('error', 'The requested product could not be found.');
-        } elseif ($selectedProduct && $movementHistory->isEmpty()) {
-            $dateMsg = ($request->filled('start_date') || $request->filled('end_date')) ? ' within the selected date range' : '';
-            session()->now('warning', "No stock movement records found for '{$selectedProduct->name}'{$dateMsg}.");
-        }
 
         $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
 

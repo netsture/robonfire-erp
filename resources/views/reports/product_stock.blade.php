@@ -213,11 +213,12 @@
             <div>
                 <h6 class="fw-bold mb-1 text-dark">No Stock Movement Records Found</h6>
                 <p class="mb-0 text-muted small">
-                    No purchases, sales, returns, or adjustments were recorded for <strong>{{ $selectedProduct->name }}</strong>
+                    No stock movement records found for <strong>'{{ $selectedProduct->name }}'</strong>.
+                    No purchases, sales, returns, or adjustments were recorded
                     @if(request('start_date') || request('end_date'))
                         between <strong>{{ request('start_date') ?: 'Beginning' }}</strong> and <strong>{{ request('end_date') ?: 'Today' }}</strong>.
                     @else
-                        in the system yet.
+                        for <strong>{{ $selectedProduct->name }}</strong> in the system yet.
                     @endif
                 </p>
             </div>
@@ -400,12 +401,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5">
-                                <div class="text-danger mb-2">
-                                    <i class="bi bi-exclamation-circle fs-1"></i>
-                                </div>
-                                <h6 class="fw-bold text-danger mb-1">No Stock Movement Records Found</h6>
-                                <p class="text-muted small mb-0">No purchases, sales, returns, or adjustments recorded for <strong>{{ $selectedProduct->name }}</strong> matching the selected criteria.</p>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-3 d-block mb-1 text-secondary opacity-50"></i>
+                                No stock movement entries found for this product.
                             </td>
                         </tr>
                     @endforelse
