@@ -8,7 +8,7 @@
     <a href="{{ route('users.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-3 font-outfit fw-medium me-2 no-print">
         <i class="bi bi-printer me-1"></i> Print Report
     </a>
-    @if(auth()->user()->isAdmin())
+    @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
         <a href="{{ route('users.create') }}" class="btn btn-primary rounded-pill px-3 font-outfit fw-medium">
             <i class="bi bi-person-plus-fill me-1"></i> Add New User
         </a>
@@ -258,7 +258,7 @@
                             @endif
                         </td>
                         <td>
-                            @if(auth()->user()->isAdmin())
+                            @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
                                 <form action="{{ route('users.toggle-status', $user) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-sm border-0 p-0" title="Click to toggle status">
@@ -281,8 +281,11 @@
                             {{ $user->created_at->format('d-m-Y') }}
                         </td>
                         <td class="text-end pe-4 no-print">
-                            @if(auth()->user()->isAdmin())
-                                <div class="btn-group">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#viewUserModal_{{ $user->id }}" title="View User Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
                                     <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-light border" title="Edit User">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
@@ -295,10 +298,8 @@
                                             </button>
                                         </form>
                                     @endif
-                                </div>
-                            @else
-                                <span class="text-muted small">View Only</span>
-                            @endif
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -318,5 +319,108 @@
         </div>
     @endif
 </div>
+
+{{-- Modals for View User Details --}}
+@foreach($users as $user)
+    @php
+        $modalRoleStr = strtolower(trim($user->role ?? ($user->roles->first()->name ?? 'User')));
+    @endphp
+    <!-- View User Modal -->
+    <div class="modal fade" id="viewUserModal_{{ $user->id }}" tabindex="-1" aria-labelledby="viewUserModalLabel_{{ $user->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-bottom bg-light px-4 py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-primary fs-5"></i>
+                        <h5 class="modal-title fw-bold font-outfit text-dark mb-0" id="viewUserModalLabel_{{ $user->id }}">User Details</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-start">
+                    <!-- User Header Info -->
+                    <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                        <div class="rounded-circle dark-symbol-avatar dark-symbol-user d-flex align-items-center justify-content-center fw-bold" style="width: 52px; height: 52px; font-size: 1.3rem;">
+                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold text-dark mb-1 font-outfit">{{ $user->name }}</h5>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                @if(in_array($modalRoleStr, ['superadmin', 'super admin', 'super-admin']))
+                                    <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-semibold">
+                                        <i class="bi bi-shield-lock-fill me-1"></i>{{ ucfirst($user->role ?? 'Superadmin') }}
+                                    </span>
+                                @elseif(in_array($modalRoleStr, ['admin', 'administrator']))
+                                    <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #4f46e5;">
+                                        <i class="bi bi-shield-check me-1"></i>{{ ucfirst($user->role ?? 'Admin') }}
+                                    </span>
+                                @elseif(in_array($modalRoleStr, ['manager', 'supervisor']))
+                                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-semibold">
+                                        <i class="bi bi-person-badge-fill me-1"></i>{{ ucfirst($user->role ?? 'Manager') }}
+                                    </span>
+                                @elseif(in_array($modalRoleStr, ['sales', 'staff', 'biller']))
+                                    <span class="badge bg-info text-white rounded-pill px-3 py-1 fw-semibold">
+                                        <i class="bi bi-person-workspace me-1"></i>{{ ucfirst($user->role ?? 'Sales') }}
+                                    </span>
+                                @else
+                                    <span class="badge text-white rounded-pill px-3 py-1 fw-semibold" style="background-color: #bb3b9f;">
+                                        <i class="bi bi-person-check-fill me-1"></i>{{ ucfirst($user->role ?? 'User') }}
+                                    </span>
+                                @endif
+
+                                @if($user->status === 'active')
+                                    <span class="badge bg-success text-white rounded-pill px-3 py-1">Active</span>
+                                @else
+                                    <span class="badge bg-danger text-white rounded-pill px-3 py-1">Inactive</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Attributes List -->
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <span class="text-muted small d-block mb-1"><i class="bi bi-building text-primary me-1"></i> Firm / Organization</span>
+                                <span class="fw-semibold text-dark">{{ $user->firm->name ?? 'Global / Superadmin' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <span class="text-muted small d-block mb-1"><i class="bi bi-envelope text-primary me-1"></i> Email Address</span>
+                                <a href="mailto:{{ $user->email }}" class="fw-semibold text-dark text-break text-decoration-none">{{ $user->email }}</a>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <span class="text-muted small d-block mb-1"><i class="bi bi-telephone text-primary me-1"></i> Phone Number</span>
+                                <span class="fw-semibold text-dark">{{ $user->phone ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <span class="text-muted small d-block mb-1"><i class="bi bi-calendar-event text-primary me-1"></i> Joined Date</span>
+                                <span class="fw-semibold text-dark">{{ $user->created_at ? $user->created_at->format('d M Y, h:i A') : 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($user->roles && $user->roles->count() > 0)
+                    <div class="mt-3 p-3 bg-light rounded-3">
+                        <span class="text-muted small d-block mb-2"><i class="bi bi-shield-check text-primary me-1"></i> Assigned System Roles</span>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach($user->roles as $assignedRole)
+                                <span class="badge bg-white text-dark border rounded-pill px-3 py-1 font-monospace">{{ $assignedRole->name }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer border-top bg-light px-4 py-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 @endsection

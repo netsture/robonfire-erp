@@ -146,18 +146,33 @@ class UserController extends Controller
         return view('users.print', compact('users', 'totalUsers', 'activeUsers', 'inactiveUsers'));
     }
 
+    public function show(User $user)
+    {
+        $authUser = auth()->user();
+        if (!$authUser->isSuperAdmin() && $user->firm_id !== $authUser->firm_id) {
+            abort(403, 'Unauthorized access to user profile.');
+        }
+
+        $user->load(['roles', 'firm']);
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'user' => $user,
+                'child_counts' => $user->getChildRelationsCount(),
+            ]);
+        }
+
+        return redirect()->route('users.index');
+    }
+
     public function create()
     {
         $authUser = auth()->user();
-        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
-            abort(403, 'Only Admin role can perform this action.');
+        if ($authUser->isSuperAdmin() || !$authUser->isAdmin()) {
+            abort(403, 'Superadmin has view-only rights for this section. Only Firm Admin can perform this action.');
         }
 
-        $rolesQuery = Role::query();
-        if (!$authUser->isSuperAdmin()) {
-            $rolesQuery->where('slug', 'user');
-        }
-        $roles = $rolesQuery->get();
+        $roles = Role::where('slug', 'user')->get();
 
         return view('users.create', compact('roles'));
     }
@@ -165,8 +180,8 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $authUser = auth()->user();
-        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
-            abort(403, 'Only Admin role can perform this action.');
+        if ($authUser->isSuperAdmin() || !$authUser->isAdmin()) {
+            abort(403, 'Superadmin has view-only rights for this section. Only Firm Admin can perform this action.');
         }
 
         $validated = $request->validate([
@@ -183,12 +198,12 @@ class UserController extends Controller
 
         $role = Role::findOrFail($validated['role_id']);
 
-        if (!$authUser->isSuperAdmin() && $role->slug !== 'user') {
+        if ($role->slug !== 'user') {
             return back()->withErrors(['role_id' => 'Admins can only assign the User role.'])->withInput();
         }
 
         $user = User::create([
-            'firm_id'  => $authUser->isSuperAdmin() ? null : $authUser->firm_id,
+            'firm_id'  => $authUser->firm_id,
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'phone'    => $validated['phone'],
@@ -205,21 +220,15 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $authUser = auth()->user();
-        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
-            abort(403, 'Only Admin role can perform this action.');
+        if ($authUser->isSuperAdmin() || !$authUser->isAdmin()) {
+            abort(403, 'Superadmin has view-only rights for this section. Only Firm Admin can perform this action.');
         }
 
-        if (!$authUser->isSuperAdmin()) {
-            if ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id) {
-                abort(403, 'Unauthorized access to user profile.');
-            }
+        if ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id) {
+            abort(403, 'Unauthorized access to user profile.');
         }
 
-        $rolesQuery = Role::query();
-        if (!$authUser->isSuperAdmin()) {
-            $rolesQuery->where('slug', 'user');
-        }
-        $roles = $rolesQuery->get();
+        $roles = Role::where('slug', 'user')->get();
 
         return view('users.edit', compact('user', 'roles'));
     }
@@ -227,14 +236,12 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $authUser = auth()->user();
-        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
-            abort(403, 'Only Admin role can perform this action.');
+        if ($authUser->isSuperAdmin() || !$authUser->isAdmin()) {
+            abort(403, 'Superadmin has view-only rights for this section. Only Firm Admin can perform this action.');
         }
 
-        if (!$authUser->isSuperAdmin()) {
-            if ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id) {
-                abort(403, 'Unauthorized access to user profile.');
-            }
+        if ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id) {
+            abort(403, 'Unauthorized access to user profile.');
         }
 
         $validated = $request->validate([
@@ -250,7 +257,7 @@ class UserController extends Controller
 
         $role = Role::findOrFail($validated['role_id']);
 
-        if (!$authUser->isSuperAdmin() && $role->slug !== 'user') {
+        if ($role->slug !== 'user') {
             return back()->withErrors(['role_id' => 'Admins can only assign the User role.'])->withInput();
         }
 
@@ -276,10 +283,10 @@ class UserController extends Controller
     public function toggleStatus(User $user)
     {
         $authUser = auth()->user();
-        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
-            abort(403, 'Only Admin role can perform this action.');
+        if ($authUser->isSuperAdmin() || !$authUser->isAdmin()) {
+            abort(403, 'Superadmin has view-only rights for this section. Only Firm Admin can perform this action.');
         }
-        if (!$authUser->isSuperAdmin() && ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id)) {
+        if ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -296,10 +303,10 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $authUser = auth()->user();
-        if (!$authUser->isAdmin() && !$authUser->isSuperAdmin()) {
-            abort(403, 'Only Admin role can perform this action.');
+        if ($authUser->isSuperAdmin() || !$authUser->isAdmin()) {
+            abort(403, 'Superadmin has view-only rights for this section. Only Firm Admin can perform this action.');
         }
-        if (!$authUser->isSuperAdmin() && ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id)) {
+        if ($user->isSuperAdmin() || $user->firm_id !== $authUser->firm_id) {
             abort(403, 'Unauthorized action.');
         }
 

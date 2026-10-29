@@ -288,6 +288,19 @@ document.addEventListener('DOMContentLoaded', function() {
             input.addEventListener('input', calculateTotals);
         });
 
+        const priceEl = row.querySelector('.price-input');
+        if (priceEl) {
+            priceEl.addEventListener('change', function() {
+                const val = parseFloat(this.value);
+                if (this.value !== '' && (isNaN(val) || val <= 0)) {
+                    alert('Selling Price (₹) value cannot be 0. Please enter a valid selling price.');
+                    this.value = '';
+                    this.focus();
+                    calculateTotals();
+                }
+            });
+        }
+
         row.querySelector('.remove-row-btn').addEventListener('click', function() {
             if (document.querySelectorAll('.item-row').length > 1) {
                 row.remove();
@@ -340,6 +353,23 @@ document.addEventListener('DOMContentLoaded', function() {
             paidInput.value = '0';
         }
     });
+
+    const saleFormEl = document.getElementById('saleForm');
+    if (saleFormEl) {
+        saleFormEl.addEventListener('submit', function(e) {
+            const priceInputs = document.querySelectorAll('.price-input');
+            for (let i = 0; i < priceInputs.length; i++) {
+                const priceVal = parseFloat(priceInputs[i].value);
+                if (isNaN(priceVal) || priceVal <= 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Selling Price (₹) value cannot be 0. Please enter a valid selling price.');
+                    priceInputs[i].focus();
+                    return false;
+                }
+            }
+        });
+    }
 
     calculateTotals();
 });

@@ -9,6 +9,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // 0. Add index on firm_id so the foreign key constraint (products_firm_id_foreign)
+        // remains satisfied when dropping the composite unique index in MySQL InnoDB.
+        Schema::table('products', function (Blueprint $table) {
+            $table->index('firm_id', 'products_firm_id_index');
+        });
+
         // 1. Drop existing (firm_id, name) unique index on products
         Schema::table('products', function (Blueprint $table) {
             $table->dropUnique(['firm_id', 'name']);
@@ -48,6 +54,7 @@ return new class extends Migration
         Schema::table('products', function (Blueprint $table) {
             $table->dropUnique('products_firm_name_cat_brand_unique');
             $table->unique(['firm_id', 'name']);
+            $table->dropIndex('products_firm_id_index');
         });
     }
 };

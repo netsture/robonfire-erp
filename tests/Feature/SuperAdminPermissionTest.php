@@ -129,6 +129,92 @@ class SuperAdminPermissionTest extends TestCase
         // User create
         $response = $this->actingAs($this->superAdmin)->get(route('users.create'));
         $response->assertStatus(403);
+
+        // User edit
+        $response = $this->actingAs($this->superAdmin)->get(route('users.edit', $this->firmAdmin));
+        $response->assertStatus(403);
+
+        // User update
+        $response = $this->actingAs($this->superAdmin)->put(route('users.update', $this->firmAdmin), [
+            'name' => 'Attempted Edit',
+            'email' => 'admin@testfirm.com',
+            'phone' => '8888888888',
+            'role_id' => 1,
+            'status' => 'active',
+        ]);
+        $response->assertStatus(403);
+
+        // User toggle status
+        $response = $this->actingAs($this->superAdmin)->post(route('users.toggle-status', $this->firmAdmin));
+        $response->assertStatus(403);
+
+        // User destroy
+        $response = $this->actingAs($this->superAdmin)->delete(route('users.destroy', $this->firmAdmin));
+        $response->assertStatus(403);
+
+        $testRole = \App\Models\Role::create(['name' => 'Custom Role', 'slug' => 'custom-role']);
+
+        // Role create
+        $response = $this->actingAs($this->superAdmin)->get(route('roles.create'));
+        $response->assertStatus(403);
+
+        // Role store
+        $response = $this->actingAs($this->superAdmin)->post(route('roles.store'), [
+            'name' => 'New Unauthorized Role',
+        ]);
+        $response->assertStatus(403);
+
+        // Role edit
+        $response = $this->actingAs($this->superAdmin)->get(route('roles.edit', $testRole));
+        $response->assertStatus(403);
+
+        // Role update
+        $response = $this->actingAs($this->superAdmin)->put(route('roles.update', $testRole), [
+            'name' => 'Updated Role Name',
+        ]);
+        $response->assertStatus(403);
+
+        // Role destroy
+        $response = $this->actingAs($this->superAdmin)->delete(route('roles.destroy', $testRole));
+        $response->assertStatus(403);
+    }
+
+    public function test_superadmin_users_index_shows_view_only_interface()
+    {
+        $response = $this->actingAs($this->superAdmin)->get(route('users.index'));
+        $response->assertOk();
+        $response->assertDontSee('Add New User');
+        $response->assertDontSee(route('users.create'));
+        $response->assertDontSee(route('users.edit', $this->firmAdmin));
+        $response->assertDontSee(route('users.toggle-status', $this->firmAdmin));
+        $response->assertSee('View User Details');
+        $response->assertSee('viewUserModal_' . $this->firmAdmin->id);
+
+        $firmAdminResponse = $this->actingAs($this->firmAdmin)->get(route('users.index'));
+        $firmAdminResponse->assertOk();
+        $firmAdminResponse->assertSee('Add New User');
+        $firmAdminResponse->assertSee(route('users.create'));
+        $firmAdminResponse->assertSee(route('users.edit', $this->firmAdmin));
+        $firmAdminResponse->assertSee(route('users.toggle-status', $this->firmAdmin));
+    }
+
+    public function test_superadmin_roles_index_shows_view_only_interface()
+    {
+        $testRole = \App\Models\Role::create(['name' => 'Staff Role', 'slug' => 'staff-role']);
+
+        $response = $this->actingAs($this->superAdmin)->get(route('roles.index'));
+        $response->assertOk();
+        $response->assertDontSee('Create New Role');
+        $response->assertDontSee(route('roles.create'));
+        $response->assertDontSee(route('roles.edit', $testRole));
+        $response->assertSee('View Permissions');
+        $response->assertSee('viewRoleModal_' . $testRole->id);
+
+        $firmAdminResponse = $this->actingAs($this->firmAdmin)->get(route('roles.index'));
+        $firmAdminResponse->assertOk();
+        $firmAdminResponse->assertSee('Create New Role');
+        $firmAdminResponse->assertSee(route('roles.create'));
+        $firmAdminResponse->assertSee(route('roles.edit', $testRole));
     }
 
     public function test_firm_admin_can_create_customer()

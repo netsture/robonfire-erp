@@ -384,13 +384,16 @@ class SaleController extends Controller
             'products'               => ['required', 'array', 'min:1'],
             'products.*.id'          => ['required', 'exists:products,id'],
             'products.*.qty'         => ['required', 'integer', 'min:1'],
-            'products.*.price'       => ['required', 'numeric', 'min:0'],
+            'products.*.price'       => ['required', 'numeric', 'gt:0'],
             'products.*.tax_percent' => ['nullable', 'numeric', 'min:0'],
             'discount_amount'        => ['nullable', 'numeric', 'min:0'],
             'shipping_cost'          => ['nullable', 'numeric', 'min:0'],
             'payment_status'         => ['nullable', 'in:pending,paid,unpaid,due,partial'],
             'paid_amount'            => ['required', 'numeric', 'min:0'],
             'notes'                  => ['nullable', 'string'],
+        ], [
+            'products.*.price.gt'       => 'Selling Price (₹) must be greater than 0 for all product items.',
+            'products.*.price.required' => 'Selling Price (₹) is required for all product items.',
         ]);
 
         $firmId = $sale->firm_id;

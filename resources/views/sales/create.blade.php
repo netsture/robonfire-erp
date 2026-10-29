@@ -145,7 +145,7 @@
                                             <input type="number" name="products[{{ $index }}][qty]" class="form-control form-control-sm qty-input" min="1" value="{{ $oldProduct['qty'] ?? 1 }}" required>
                                         </td>
                                         <td>
-                                            <input type="number" min="0" name="products[{{ $index }}][price]" class="form-control form-control-sm price-input" value="{{ $oldProduct['price'] ?? '' }}" placeholder="e.g. 150" required>
+                                            <input type="number" min="0" step="any" name="products[{{ $index }}][price]" class="form-control form-control-sm price-input" value="{{ $oldProduct['price'] ?? '' }}" placeholder="e.g. 150" required>
                                         </td>
                                         <td>
                                             <input type="number" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $oldProduct['tax_percent'] ?? '0' }}" min="0">
@@ -196,7 +196,7 @@
                                         <input type="number" name="products[0][qty]" class="form-control form-control-sm qty-input" min="1" value="1" required>
                                     </td>
                                     <td>
-                                        <input type="number" min="0" name="products[0][price]" class="form-control form-control-sm price-input" value="" placeholder="e.g. 150" required>
+                                        <input type="number" min="0" step="any" name="products[0][price]" class="form-control form-control-sm price-input" value="" placeholder="e.g. 150" required>
                                     </td>
                                     <td>
                                         <input type="number" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0" min="0">
@@ -381,7 +381,7 @@
                 prodSelect.value = '';
                 row.querySelector('.hsn-input').value = '';
                 row.querySelector('.unit-input').value = '';
-                row.querySelector('.price-input').value = '0.00';
+                row.querySelector('.price-input').value = '';
                 row.querySelector('.tax-percent-input').value = '0.00';
                 calculateTotals();
             }
@@ -405,12 +405,12 @@
 
                 row.querySelector('.hsn-input').value = hsn;
                 row.querySelector('.unit-input').value = unit;
-                row.querySelector('.price-input').value = parseFloat(price).toFixed(2);
+                row.querySelector('.price-input').value = (parseFloat(price) > 0) ? parseFloat(price).toFixed(2) : '';
                 row.querySelector('.tax-percent-input').value = parseFloat(tax).toFixed(2);
             } else {
                 row.querySelector('.hsn-input').value = '';
                 row.querySelector('.unit-input').value = '';
-                row.querySelector('.price-input').value = '0.00';
+                row.querySelector('.price-input').value = '';
                 row.querySelector('.tax-percent-input').value = '0.00';
             }
             calculateTotals();
@@ -443,7 +443,7 @@
                     <input type="number" name="products[${rowCount}][qty]" class="form-control form-control-sm qty-input" min="1" value="1" required>
                 </td>
                 <td>
-                    <input type="number" min="0" name="products[${rowCount}][price]" class="form-control form-control-sm price-input" value="" placeholder="e.g. 150" required>
+                    <input type="number" min="0" step="any" name="products[${rowCount}][price]" class="form-control form-control-sm price-input" value="" placeholder="e.g. 150" required>
                 </td>
                 <td>
                     <input type="number" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0" min="0">
@@ -471,6 +471,23 @@
                 filterProductsInRow(row);
             } else if (e.target.classList.contains('product-select')) {
                 handleProductChange(row);
+                if (e.target.value) {
+                    const priceInput = row.querySelector('.price-input');
+                    const priceVal = parseFloat(priceInput.value) || 0;
+                    if (priceVal <= 0) {
+                        alert('Selling Price (₹) value cannot be 0. Please enter a valid selling price.');
+                        priceInput.value = '';
+                        setTimeout(() => priceInput.focus(), 10);
+                    }
+                }
+            } else if (e.target.classList.contains('price-input')) {
+                const val = parseFloat(e.target.value);
+                if (e.target.value !== '' && (isNaN(val) || val <= 0)) {
+                    alert('Selling Price (₹) value cannot be 0. Please enter a valid selling price.');
+                    e.target.value = '';
+                    setTimeout(() => e.target.focus(), 10);
+                    calculateTotals();
+                }
             }
         });
 
@@ -565,6 +582,18 @@
         const saleFormEl = document.getElementById('saleForm');
         if (saleFormEl) {
             saleFormEl.addEventListener('submit', function(e) {
+                const priceInputs = document.querySelectorAll('.price-input');
+                for (let i = 0; i < priceInputs.length; i++) {
+                    const priceVal = parseFloat(priceInputs[i].value);
+                    if (isNaN(priceVal) || priceVal <= 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('Selling Price (₹) value cannot be 0. Please enter a valid selling price.');
+                        priceInputs[i].focus();
+                        return false;
+                    }
+                }
+
                 const statusSelect = document.getElementById('payment_status');
                 const paidInput = document.getElementById('paid_amount');
                 if (statusSelect && paidInput && statusSelect.value === 'partial') {

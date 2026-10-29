@@ -45,7 +45,9 @@ Route::middleware('auth')->group(function () {
     // Read-only View routes for Superadmin, full access for Admins/Users
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/print', [UserController::class, 'printReport'])->name('users.print');
+    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show')->whereNumber('user');
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+    Route::get('/roles/{role}', [RoleController::class, 'show'])->name('roles.show')->whereNumber('role');
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/print', [CustomerController::class, 'printReport'])->name('customers.print');
     Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
