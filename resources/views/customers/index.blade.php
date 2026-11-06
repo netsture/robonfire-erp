@@ -49,7 +49,8 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">
+                    <th class="ps-4" style="width: 50px;">#</th>
+                    <th>
                         <a href="{{ route('customers.index', array_merge(request()->query(), ['sort_by' => 'company_name', 'sort_order' => request('sort_by') === 'company_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
                             Company Name
                             @if(request('sort_by') === 'company_name')
@@ -125,9 +126,10 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($customers as $customer)
+                @forelse($customers as $index => $customer)
                     <tr>
-                        <td class="ps-4">
+                        <td class="ps-4 fw-bold text-muted">{{ $customers->firstItem() + $index }}</td>
+                        <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle dark-symbol-avatar dark-symbol-customer" style="width: 40px; height: 40px;">
                                     <i class="bi bi-building fs-5"></i>
@@ -197,7 +199,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 8 : 7 }}" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 9 : 8 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-people fs-1 d-block mb-2 text-secondary"></i>
                             No customer records found. Click "Add Customer" to create one.
                         </td>

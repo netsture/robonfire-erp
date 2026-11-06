@@ -36,8 +36,11 @@
 
                     <div class="col-12">
                         <label for="project_name" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('project_name') is-invalid @enderror" id="project_name" name="project_name" value="{{ old('project_name', $project->project_name) }}" required placeholder="e.g. Metro Line 3 Fire Safety Installation">
-                        @error('project_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-briefcase text-muted"></i></span>
+                            <input type="text" class="form-control @error('project_name') is-invalid @enderror" id="project_name" name="project_name" value="{{ old('project_name', $project->project_name) }}" required placeholder="e.g. Metro Line 3 Fire Safety Installation">
+                        </div>
+                        @error('project_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-6">

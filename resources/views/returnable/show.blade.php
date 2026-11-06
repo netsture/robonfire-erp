@@ -95,8 +95,8 @@
                         @foreach($returnableMaterial->items as $item)
                             @php
                                 $prod = $item->product;
-                                $taxPct = $prod->tax_percent ?? 0;
-                                $lineTax = ($item->subtotal * $taxPct) / 100;
+                                $taxPct = $item->tax_percent ?? ($prod->tax_percent ?? 0);
+                                $lineTax = $item->tax_amount ?? (($item->subtotal * $taxPct) / 100);
                                 $totalWithTax = $item->subtotal + $lineTax;
                             @endphp
                             <tr>

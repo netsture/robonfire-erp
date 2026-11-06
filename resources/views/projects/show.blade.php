@@ -57,8 +57,8 @@
         <div class="card card-custom border-0 p-4 mb-4">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle p-3 bg-primary bg-opacity-10 text-primary fw-bold" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;">
-                        <i class="bi bi-briefcase-fill fs-3"></i>
+                    <div class="rounded-circle dark-symbol-avatar dark-symbol-project" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                        <i class="bi bi-briefcase-fill"></i>
                     </div>
                     <div>
                         <h4 class="fw-bold font-outfit text-dark mb-1">{{ $project->project_name }}</h4>

@@ -81,44 +81,56 @@
     </div>
 </div>
 
-<!-- Stock Adjustments Audit Trail -->
-<!--<div class="card card-custom border-0 p-4">
-    <h5 class="fw-bold font-outfit mb-3 text-dark">Stock Adjustment Audit Log</h5>
+<!-- Product Activity & Edit History -->
+<div class="card card-custom border-0 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold font-outfit text-dark mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Product Activity & Change History</h5>
+        <a href="{{ route('reports.product-logs', ['search' => $product->product_identifier ?? $product->name]) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3" target="_blank">
+            <i class="bi bi-journal-text me-1"></i> Full Product Log Report
+        </a>
+    </div>
 
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
+                    <th style="width: 50px;">#</th>
                     <th>Date & Time</th>
-                    <th>Adjusted By</th>
-                    <th>Type</th>
-                    <th>Quantity</th>
-                    <th>Audit Reason</th>
+                    <th>Action</th>
+                    <th>Changed By (User)</th>
+                    <th>Change Summary</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($product->stockAdjustments as $adj)
+                @forelse($product->logs as $idx => $log)
                     <tr>
-                        <td class="small text-muted">{{ $adj->created_at->format('d-m-Y h:i A') }}</td>
-                        <td class="fw-semibold text-dark">{{ $adj->user->name ?? 'System' }}</td>
+                        <td class="fw-bold text-muted">{{ $idx + 1 }}</td>
+                        <td class="small font-monospace text-dark">{{ $log->created_at ? $log->created_at->format('d-m-Y, h:i A') : 'N/A' }}</td>
                         <td>
-                            @if($adj->type === 'add')
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">+ STOCK ADD</span>
-                            @else
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">- STOCK SUBTRACT</span>
+                            @if($log->action === 'create')
+                                <span class="badge bg-success text-white rounded-pill px-3 py-1"><i class="bi bi-plus-circle me-1"></i>Added</span>
+                            @elseif($log->action === 'update')
+                                <span class="badge bg-primary text-white rounded-pill px-3 py-1"><i class="bi bi-pencil-square me-1"></i>Updated</span>
+                            @elseif($log->action === 'delete')
+                                <span class="badge bg-danger text-white rounded-pill px-3 py-1"><i class="bi bi-trash me-1"></i>Deleted</span>
                             @endif
                         </td>
-                        <td class="fw-bold text-dark">{{ $adj->quantity }} {{ $product->unit }}</td>
-                        <td class="small text-muted">{{ $adj->reason }}</td>
+                        <td>
+                            <span class="fw-semibold text-dark">{{ $log->user->name ?? 'System' }}</span>
+                            @if($log->user?->role)
+                                <span class="badge bg-light text-muted border ms-1">{{ ucfirst($log->user->role) }}</span>
+                            @endif
+                        </td>
+                        <td class="small text-dark">{{ $log->description }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">No manual stock adjustments recorded yet.</td>
+                        <td colspan="5" class="text-center py-4 text-muted">No activity logs recorded for this product yet.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-</div>-->
-    
+</div>
+
 @endsection

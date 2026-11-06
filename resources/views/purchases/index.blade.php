@@ -58,7 +58,8 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">
+                    <th class="ps-4" style="width: 50px;">#</th>
+                    <th>
                         <a href="{{ route('purchases.index', array_merge(request()->query(), ['sort_by' => 'invoice_number', 'sort_order' => request('sort_by') === 'invoice_number' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
                             Invoice No / Project Name
                             @if(request('sort_by') === 'invoice_number')
@@ -144,9 +145,10 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($purchases as $purchase)
+                @forelse($purchases as $index => $purchase)
                     <tr>
-                        <td class="ps-4">
+                        <td class="ps-4 fw-bold text-muted">{{ $purchases->firstItem() + $index }}</td>
+                        <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle dark-symbol-avatar dark-symbol-supplier" style="width: 40px; height: 40px;">
                                     <i class="bi bi-cart-plus-fill fs-5"></i>
@@ -348,7 +350,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 9 : 8 }}" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 10 : 9 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-cart fs-1 d-block mb-2 text-secondary"></i>
                             No purchase orders recorded yet. Click "New Purchase Order" to restock inventory.
                         </td>

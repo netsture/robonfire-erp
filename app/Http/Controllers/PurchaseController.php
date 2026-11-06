@@ -7,6 +7,7 @@ use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\TransactionAuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -184,10 +185,12 @@ class PurchaseController extends Controller
                     $totalTax += $itemTax;
 
                     $itemsData[] = [
-                        'product_id' => $item['id'],
-                        'unit_cost'  => $item['cost'],
-                        'quantity'   => $item['qty'],
-                        'subtotal'   => $itemSubtotal,
+                        'product_id'  => $item['id'],
+                        'unit_cost'   => $item['cost'],
+                        'quantity'    => $item['qty'],
+                        'subtotal'    => $itemSubtotal,
+                        'tax_percent' => $taxPercent,
+                        'tax_amount'  => $itemTax,
                     ];
                 }
 
@@ -247,6 +250,10 @@ class PurchaseController extends Controller
             });
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['paid_amount' => $e->getMessage()])->withInput();
+        }
+
+        if (isset($purchase)) {
+            TransactionAuditLog::record('purchase', 'create', $purchase->fresh(['supplier', 'items.product']));
         }
 
         return redirect()->route('purchases.index')->with('success', 'Purchase order created & product stock updated!');
@@ -388,6 +395,18 @@ class PurchaseController extends Controller
             return back()->withErrors(['invoice_number' => 'Invoice number already exists for this firm.'])->withInput();
         }
 
+        $purchase->loadMissing(['supplier', 'items.product']);
+        $before = [
+            'invoice_number' => $purchase->invoice_number,
+            'project_name'   => $purchase->project_name,
+            'supplier_name'  => $purchase->supplier->company_name ?? 'N/A',
+            'grand_total'    => $purchase->grand_total,
+            'paid_amount'    => $purchase->paid_amount,
+            'payment_status' => $purchase->payment_status,
+            'items_count'    => $purchase->items->count(),
+            'items_summary'  => $purchase->items->map(fn($it) => ($it->product->name ?? 'Item') . ' (x' . $it->quantity . ')')->join(', '),
+        ];
+
         try {
             DB::transaction(function () use ($validated, $purchase) {
                 // Revert old inventory stock additions
@@ -409,10 +428,12 @@ class PurchaseController extends Controller
                     $totalTax += $itemTax;
 
                     $itemsData[] = [
-                        'product_id' => $item['id'],
-                        'unit_cost'  => $item['cost'],
-                        'quantity'   => $item['qty'],
-                        'subtotal'   => $itemSubtotal,
+                        'product_id'  => $item['id'],
+                        'unit_cost'   => $item['cost'],
+                        'quantity'    => $item['qty'],
+                        'subtotal'    => $itemSubtotal,
+                        'tax_percent' => $taxPercent,
+                        'tax_amount'  => $itemTax,
                     ];
                 }
 
@@ -464,6 +485,19 @@ class PurchaseController extends Controller
             return back()->withErrors(['paid_amount' => $e->getMessage()])->withInput();
         }
 
+        $purchase->load(['supplier', 'items.product']);
+        $after = [
+            'invoice_number' => $purchase->invoice_number,
+            'project_name'   => $purchase->project_name,
+            'supplier_name'  => $purchase->supplier->company_name ?? 'N/A',
+            'grand_total'    => $purchase->grand_total,
+            'paid_amount'    => $purchase->paid_amount,
+            'payment_status' => $purchase->payment_status,
+            'items_count'    => $purchase->items->count(),
+            'items_summary'  => $purchase->items->map(fn($it) => ($it->product->name ?? 'Item') . ' (x' . $it->quantity . ')')->join(', '),
+        ];
+        TransactionAuditLog::record('purchase', 'update', $purchase, $before, $after);
+
         return redirect()->route('purchases.index')->with('success', 'Purchase order updated successfully & product stock recalculated!');
     }
 
@@ -495,6 +529,9 @@ class PurchaseController extends Controller
         if (!$user->isSuperAdmin() && $purchase->firm_id !== $user->firm_id) {
             abort(403, 'Unauthorized access to firm record.');
         }
+
+        $purchase->loadMissing(['supplier', 'items.product']);
+        TransactionAuditLog::record('purchase', 'delete', $purchase);
 
         DB::transaction(function () use ($purchase) {
             foreach ($purchase->items as $item) {

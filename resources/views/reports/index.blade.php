@@ -79,6 +79,30 @@
         </div>
     </div>
 
+    <!-- Product Activity Log Report Card -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card card-custom border-0 p-4 h-100 text-white" style="background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);">
+            <div class="rounded-circle dark-symbol-avatar shadow-sm mb-3" style="width: 52px; height: 52px; background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
+                <i class="bi bi-journal-text fs-4"></i>
+            </div>
+            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Product Activity Log</h5>
+            <p class="text-white small mb-3" style="color: #ffffff !important; opacity: 0.95;">Audit trail of product additions, updates, and deletions showing which user made changes.</p>
+            <a href="{{ route('reports.product-logs') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #4338ca !important;">View Product Logs</a>
+        </div>
+    </div>
+
+    <!-- Purchase, Sale & Return Activity Log Report Card -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card card-custom border-0 p-4 h-100 text-white" style="background: linear-gradient(135deg, #0e7490 0%, #155e75 100%);">
+            <div class="rounded-circle dark-symbol-avatar shadow-sm mb-3" style="width: 52px; height: 52px; background: rgba(15, 23, 42, 0.4) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #ffffff !important;">
+                <i class="bi bi-receipt fs-4"></i>
+            </div>
+            <h5 class="fw-bold font-outfit text-white mb-1" style="color: #ffffff !important;">Transaction Audit Log</h5>
+            <p class="text-white small mb-3" style="color: #ffffff !important; opacity: 0.95;">Audit trail of purchases, sales, and returns showing which user created, edited, or deleted records.</p>
+            <a href="{{ route('reports.transaction-logs') }}" class="btn btn-white rounded-pill w-100 mt-auto fw-bold shadow-sm" target="_blank" style="background-color: #ffffff; color: #0e7490 !important;">View Transaction Logs</a>
+        </div>
+    </div>
+
     <!-- Profit & Loss Card -->
     <!--<div class="col-12 col-md-6 col-xl-3">
         <div class="card card-custom border-0 p-4 h-100">

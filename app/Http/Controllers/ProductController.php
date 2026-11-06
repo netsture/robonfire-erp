@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Brand;
+use App\Models\ProductLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -13,7 +14,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Product::with('category', 'brand', 'firm');
+        $query = Product::select('products.*')->with('category', 'brand', 'firm');
 
         if (!$user->isSuperAdmin()) {
             $query->where('products.firm_id', $user->firm_id);
@@ -56,25 +57,34 @@ class ProductController extends Controller
             if ($sortBy === 'category_name') {
                 $query->leftJoin('categories', 'products.category_id', '=', 'categories.id')
                       ->select('products.*')
-                      ->orderBy('categories.name', $sortOrder);
+                      ->orderBy('categories.name', $sortOrder)
+                      ->orderBy('products.id', $sortOrder);
             } elseif ($sortBy === 'brand_name') {
                 $query->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
                       ->select('products.*')
-                      ->orderBy('brands.name', $sortOrder);
+                      ->orderBy('brands.name', $sortOrder)
+                      ->orderBy('products.id', $sortOrder);
             } elseif ($sortBy === 'firm_name') {
                 $query->leftJoin('firms', 'products.firm_id', '=', 'firms.id')
                       ->select('products.*')
-                      ->orderBy('firms.name', $sortOrder);
+                      ->orderBy('firms.name', $sortOrder)
+                      ->orderBy('products.id', $sortOrder);
             } elseif (in_array($sortBy, ['name', 'product_identifier', 'hsn_code', 'unit', 'cost_price', 'selling_price', 'tax_percent', 'stock_quantity', 'alert_quantity', 'status', 'created_at'])) {
-                $query->orderBy("products.{$sortBy}", $sortOrder);
+                $query->orderBy("products.{$sortBy}", $sortOrder)
+                      ->orderBy('products.id', $sortOrder);
             } else {
-                $query->latest('products.created_at');
+                $query->latest('products.created_at')->orderBy('products.id', 'desc');
             }
         } else {
-            $query->latest('products.created_at');
+            $query->latest('products.created_at')->orderBy('products.id', 'desc');
         }
 
-        $products = $query->paginate(10)->withQueryString();
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 10;
+        }
+
+        $products = $query->paginate($perPage)->withQueryString();
 
         $catQuery = Category::query();
         $brandQuery = Brand::query();
@@ -213,7 +223,7 @@ class ProductController extends Controller
 
         $productIdentifier = (!empty($validated['product_identifier']) && is_numeric($validated['product_identifier']) && strlen(trim($validated['product_identifier'])) === 5) ? trim($validated['product_identifier']) : Product::generateUniqueIdentifier();
 
-        Product::create([
+        $product = Product::create([
             'firm_id'            => $firmId,
             'name'               => $validated['name'],
             'product_identifier' => $productIdentifier,
@@ -230,6 +240,8 @@ class ProductController extends Controller
             'status'             => $validated['status'],
         ]);
 
+        ProductLog::record('create', $product);
+
         return redirect()->route('products.index')->with('success', 'Product created and added to list.');
     }
 
@@ -240,7 +252,7 @@ class ProductController extends Controller
             abort(403, 'Unauthorized access to firm record.');
         }
 
-        $product->load('category', 'brand', 'stockAdjustments.user');
+        $product->load('category', 'brand', 'stockAdjustments.user', 'logs.user');
         return view('products.show', compact('product'));
     }
 
@@ -311,7 +323,16 @@ class ProductController extends Controller
             $validated['stock_quantity'] = $product->stock_quantity;
         }
 
+        $before = $product->only([
+            'name', 'product_identifier', 'hsn_code', 'category_id', 'brand_id',
+            'unit', 'cost_price', 'selling_price', 'tax_percent', 'alert_quantity',
+            'stock_quantity', 'description', 'status'
+        ]);
+
         $product->update($validated);
+
+        $after = $product->fresh()->only(array_keys($before));
+        ProductLog::record('update', $product, $before, $after);
 
         return redirect()->route('products.index')->with('success', 'Product details updated successfully.');
     }
@@ -335,6 +356,7 @@ class ProductController extends Controller
         }
 
         try {
+            ProductLog::record('delete', $product);
             $product->delete();
             return redirect()->route('products.index')->with('success', 'Product deleted from inventory.');
         } catch (\Illuminate\Database\QueryException $e) {

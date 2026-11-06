@@ -83,6 +83,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/profit-loss', [ReportController::class, 'profitLossReport'])->name('reports.profit-loss');
     Route::get('/reports/return-products', [ReportController::class, 'returnProductsReport'])->name('reports.return-products');
     Route::get('/reports/return-products/print', [ReportController::class, 'printReturnProductsReport'])->name('reports.return-products.print');
+    Route::get('/reports/product-logs', [ReportController::class, 'productLogsReport'])->name('reports.product-logs');
+    Route::get('/reports/product-logs/print', [ReportController::class, 'printProductLogsReport'])->name('reports.product-logs.print');
+    Route::get('/reports/transaction-logs', [ReportController::class, 'transactionLogsReport'])->name('reports.transaction-logs');
+    Route::get('/reports/transaction-logs/print', [ReportController::class, 'printTransactionLogsReport'])->name('reports.transaction-logs.print');
 
     // Write Routes (Restricted for Superadmin - view-only enforcement)
     Route::middleware([\App\Http\Middleware\RestrictSuperadminWrite::class])->group(function () {

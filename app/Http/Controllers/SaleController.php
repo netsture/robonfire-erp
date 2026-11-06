@@ -7,6 +7,7 @@ use App\Models\SaleItem;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\TransactionAuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -85,7 +86,7 @@ class SaleController extends Controller
         $firmId = $user->firm_id ?? 1;
 
         $customersQuery = Customer::where('status', 'active');
-        $productsQuery = Product::with(['category', 'brand'])->where('status', 'active')->where('stock_quantity', '>', 0);
+        $productsQuery = Product::with(['category', 'brand'])->where('status', 'active');
         $categoriesQuery = Category::query();
 
         if (!$user->isSuperAdmin()) {
@@ -201,10 +202,12 @@ class SaleController extends Controller
                     $totalTax += $itemTax;
 
                     $itemsData[] = [
-                        'product_id' => $item['id'],
-                        'unit_price' => $item['price'],
-                        'quantity'   => $item['qty'],
-                        'subtotal'   => $itemSubtotal,
+                        'product_id'  => $item['id'],
+                        'unit_price'  => $item['price'],
+                        'quantity'    => $item['qty'],
+                        'subtotal'    => $itemSubtotal,
+                        'tax_percent' => $taxPercent,
+                        'tax_amount'  => $itemTax,
                     ];
                 }
 
@@ -266,6 +269,10 @@ class SaleController extends Controller
             });
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['paid_amount' => $e->getMessage()])->withInput();
+        }
+
+        if (isset($sale)) {
+            TransactionAuditLog::record('sale', 'create', $sale->fresh(['customer', 'items.product']));
         }
 
         return redirect()->route('sales.index')->with('success', 'Sales Order #' . $sale->invoice_number . ' completed & stock updated!');
@@ -403,6 +410,18 @@ class SaleController extends Controller
             return back()->withErrors(['invoice_number' => 'Invoice number already exists for this firm.'])->withInput();
         }
 
+        $sale->loadMissing(['customer', 'items.product']);
+        $before = [
+            'invoice_number' => $sale->invoice_number,
+            'project_name'   => $sale->project_name,
+            'customer_name'  => $sale->customer->company_name ?? 'N/A',
+            'grand_total'    => $sale->grand_total,
+            'paid_amount'    => $sale->paid_amount,
+            'payment_status' => $sale->payment_status,
+            'items_count'    => $sale->items->count(),
+            'items_summary'  => $sale->items->map(fn($it) => ($it->product->name ?? 'Item') . ' (x' . $it->quantity . ')')->join(', '),
+        ];
+
         try {
             DB::transaction(function () use ($validated, $sale) {
                 // Revert old inventory stock deductions
@@ -424,10 +443,12 @@ class SaleController extends Controller
                     $totalTax += $itemTax;
 
                     $itemsData[] = [
-                        'product_id' => $item['id'],
-                        'unit_price' => $item['price'],
-                        'quantity'   => $item['qty'],
-                        'subtotal'   => $itemSubtotal,
+                        'product_id'  => $item['id'],
+                        'unit_price'  => $item['price'],
+                        'quantity'    => $item['qty'],
+                        'subtotal'    => $itemSubtotal,
+                        'tax_percent' => $taxPercent,
+                        'tax_amount'  => $itemTax,
                     ];
                 }
 
@@ -479,6 +500,19 @@ class SaleController extends Controller
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['paid_amount' => $e->getMessage()])->withInput();
         }
+
+        $sale->load(['customer', 'items.product']);
+        $after = [
+            'invoice_number' => $sale->invoice_number,
+            'project_name'   => $sale->project_name,
+            'customer_name'  => $sale->customer->company_name ?? 'N/A',
+            'grand_total'    => $sale->grand_total,
+            'paid_amount'    => $sale->paid_amount,
+            'payment_status' => $sale->payment_status,
+            'items_count'    => $sale->items->count(),
+            'items_summary'  => $sale->items->map(fn($it) => ($it->product->name ?? 'Item') . ' (x' . $it->quantity . ')')->join(', '),
+        ];
+        TransactionAuditLog::record('sale', 'update', $sale, $before, $after);
 
         return redirect()->route('sales.index')->with('success', 'Sales order updated successfully & inventory recalculated!');
     }
@@ -533,6 +567,9 @@ class SaleController extends Controller
         if (!$user->isSuperAdmin() && $sale->firm_id !== $user->firm_id) {
             abort(403, 'Unauthorized access to firm record.');
         }
+
+        $sale->loadMissing(['customer', 'items.product']);
+        TransactionAuditLog::record('sale', 'delete', $sale);
 
         DB::transaction(function () use ($sale) {
             foreach ($sale->items as $item) {

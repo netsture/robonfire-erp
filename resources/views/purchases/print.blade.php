@@ -143,8 +143,12 @@
                 @foreach($purchase->items as $item)
                     @php
                         $prod = $item->product;
-                        $taxPct = $prod->tax_percent ?? 0;
-                        $lineTax = ($item->subtotal * $taxPct) / 100;
+                        $taxPct = (isset($item->tax_percent) && $item->tax_percent !== null)
+                            ? (float)$item->tax_percent
+                            : ($purchase->subtotal > 0 && count($purchase->items) === 1 ? round(((float)$purchase->tax_amount / (float)$purchase->subtotal) * 100, 2) : ($prod->tax_percent ?? 0));
+                        $lineTax = (isset($item->tax_amount) && (float)$item->tax_amount > 0)
+                            ? (float)$item->tax_amount
+                            : (($item->subtotal * $taxPct) / 100);
                         $totalWithTax = $item->subtotal + $lineTax;
                     @endphp
                     <tr>

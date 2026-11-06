@@ -143,7 +143,7 @@
                     <th class="ps-4">#</th>
                     <th>
                         <a href="{{ route('projects.expenses.index', array_merge(request()->query(), ['sort_by' => 'project_name', 'sort_order' => request('sort_by') === 'project_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
-                            Project Entry
+                            <i class="bi bi-briefcase me-1 text-primary"></i> Project Entry
                             @if(request('sort_by') === 'project_name')
                                 <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
                             @else
@@ -214,13 +214,18 @@
                         <td class="ps-4 fw-bold text-muted">{{ $expenses->firstItem() + $index }}</td>
                         <td>
                             @if($expense->project)
-                                <div>
-                                    <a href="{{ route('projects.show', ['project' => $expense->project, 'tab' => 'expenses']) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
-                                        {{ $expense->project->project_name }}
-                                    </a>
-                                    @if($expense->project->po_number)
-                                        <div class="small text-muted font-monospace"><i class="bi bi-hash text-muted me-1"></i>{{ $expense->project->po_number }}</div>
-                                    @endif
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle dark-symbol-avatar dark-symbol-project" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                                        <i class="bi bi-briefcase"></i>
+                                    </div>
+                                    <div>
+                                        <a href="{{ route('projects.show', ['project' => $expense->project, 'tab' => 'expenses']) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
+                                            {{ $expense->project->project_name }}
+                                        </a>
+                                        @if($expense->project->po_number)
+                                            <div class="small text-muted font-monospace"><i class="bi bi-hash text-muted me-1"></i>{{ $expense->project->po_number }}</div>
+                                        @endif
+                                    </div>
                                 </div>
                             @else
                                 <span class="text-muted small">N/A</span>
@@ -311,12 +316,15 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="project_id" class="form-label fw-semibold text-dark">Select Project Entry <span class="text-danger">*</span></label>
-                            <select class="form-select" id="project_id" name="project_id" required>
-                                <option value="">Choose Project...</option>
-                                @foreach($projects as $proj)
-                                    <option value="{{ $proj->id }}">{{ $proj->project_name }} {{ $proj->po_number ? '('.$proj->po_number.')' : '' }}</option>
-                                @endforeach
-                            </select>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-briefcase text-muted"></i></span>
+                                <select class="form-select" id="project_id" name="project_id" required>
+                                    <option value="">Choose Project...</option>
+                                    @foreach($projects as $proj)
+                                        <option value="{{ $proj->id }}">{{ $proj->project_name }} {{ $proj->po_number ? '('.$proj->po_number.')' : '' }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -379,7 +387,10 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label fw-semibold text-dark">Project Entry</label>
-                                <input type="text" class="form-control bg-light" value="{{ $expense->project->project_name ?? 'N/A' }}" disabled>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-briefcase text-muted"></i></span>
+                                    <input type="text" class="form-control bg-light" value="{{ $expense->project->project_name ?? 'N/A' }}" disabled>
+                                </div>
                             </div>
 
                             <div class="mb-3">

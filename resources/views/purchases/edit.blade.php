@@ -19,6 +19,20 @@
         border: 1px solid #e2e8f0 !important;
         z-index: 1055 !important;
     }
+    .table .ts-control {
+        border-radius: 0.25rem !important;
+        padding: 0.28rem 0.65rem !important;
+        font-size: 0.875rem !important;
+        min-height: 31px !important;
+        line-height: 1.4 !important;
+    }
+    .table .ts-wrapper {
+        width: 100% !important;
+    }
+    .ts-dropdown .option {
+        padding: 0.35rem 0.75rem !important;
+        font-size: 0.875rem !important;
+    }
 </style>
 @endpush
 
@@ -82,12 +96,12 @@
                         <thead class="table-light">
                             <tr>
                                 <th style="min-width: 180px;">Category <span class="text-danger">*</span></th>
-                                <th style="min-width: 180px;">Product Item <br>(Brand)</th>
+                                <th style="min-width: 270px;">Product Item <br>(Brand) / Unique ID</th>
                                 <th style="min-width: 100px;">HSN Code</th>
                                 <th style="min-width: 60px;">Type</th>
                                 <th style="min-width: 80px;">Qty</th>
-                                <th style="min-width: 100px;">Unit Cost(₹)</th>
-                                <th style="min-width: 80px;">Tax (%)</th>
+                                <th style="min-width: 110px;">Unit Cost(₹)</th>
+                                <th style="min-width: 90px;">Tax (%)</th>
                                 <th style="min-width: 110px;">Total (₹)</th>
                                 <th style="min-width: 110px;">Total w/ Tax</th>
                                 <th style="width: 50px;" class="text-center">Action</th>
@@ -104,7 +118,15 @@
                                     $selCatId = $selProd ? $selProd->category_id : null;
                                     $qty = $item['quantity'] ?? ($item['qty'] ?? 1);
                                     $cost = $item['unit_cost'] ?? ($item['cost'] ?? ($selProd ? $selProd->cost_price : 0));
-                                    $tax = $item['tax_percent'] ?? ($selProd ? $selProd->tax_percent : 0);
+                                    if (isset($item['tax_percent']) && old('products')) {
+                                        $tax = $item['tax_percent'];
+                                    } elseif (isset($item['tax_percent']) && $item['tax_percent'] !== null) {
+                                        $tax = $item['tax_percent'];
+                                    } elseif ($purchase->subtotal > 0 && count($itemsToDisplay) === 1 && (float)$purchase->tax_amount > 0) {
+                                        $tax = round(((float)$purchase->tax_amount / (float)$purchase->subtotal) * 100, 2);
+                                    } else {
+                                        $tax = $selProd ? $selProd->tax_percent : 0;
+                                    }
                                 @endphp
                                 <tr class="item-row">
                                     <td>
@@ -121,12 +143,13 @@
                                             @foreach($products as $prod)
                                                 <option value="{{ $prod->id }}" 
                                                         data-category="{{ $prod->category_id }}" 
+                                                        data-identifier="{{ $prod->product_identifier ?? '' }}"
                                                         data-hsn="{{ $prod->hsn_code ?? '' }}" 
                                                         data-unit="{{ $prod->unit }}" 
                                                         data-cost="{{ $prod->cost_price }}" 
                                                         data-tax="{{ $prod->tax_percent }}"
                                                         {{ $prodId == $prod->id ? 'selected' : '' }}>
-                                                    {{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}
+                                                    {{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}{{ $prod->product_identifier ? ' ['.$prod->product_identifier.']' : '' }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -134,8 +157,10 @@
                                     <td><input type="text" class="form-control form-control-sm hsn-input bg-light" readonly placeholder="HSN"></td>
                                     <td><input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Type"></td>
                                     <td><input type="number" name="products[{{ $index }}][qty]" class="form-control form-control-sm qty-input" min="1" value="{{ $qty }}" required></td>
-                                    <td><input type="number" min="0" name="products[{{ $index }}][cost]" class="form-control form-control-sm cost-input" value="{{ $cost }}" required></td>
-                                    <td><input type="number" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $tax }}" min="0"></td>
+                                    <td><input type="number" min="0" step="any" name="products[{{ $index }}][cost]" class="form-control form-control-sm cost-input" value="{{ $cost }}" required></td>
+                                    <td>
+                                        <input type="number" step="any" min="0" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input bg-light" value="{{ $tax }}" readonly>
+                                    </td>
                                     <td><input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0"></td>
                                     <td><input type="text" class="form-control form-control-sm row-total-tax-input bg-light fw-bold text-dark" readonly value="₹0"></td>
                                     <td class="text-center">
@@ -165,12 +190,12 @@
                 
                 <div class="mb-2">
                     <label for="discount_amount" class="form-label small fw-semibold">Discount Amount (₹)</label>
-                    <input type="number" class="form-control form-control-sm" id="discount_amount" name="discount_amount" value="{{ (float)old('discount_amount', $purchase->discount_amount) == 0 ? 0 : old('discount_amount', $purchase->discount_amount) }}">
+                    <input type="number" step="any" min="0" class="form-control form-control-sm" id="discount_amount" name="discount_amount" value="{{ (float)old('discount_amount', $purchase->discount_amount) == 0 ? 0 : old('discount_amount', $purchase->discount_amount) }}">
                 </div>
 
                 <div class="mb-3">
                     <label for="shipping_cost" class="form-label small fw-semibold">Shipping Cost (₹)</label>
-                    <input type="number" class="form-control form-control-sm" id="shipping_cost" name="shipping_cost" value="{{ (float)old('shipping_cost', $purchase->shipping_cost) == 0 ? 0 : old('shipping_cost', $purchase->shipping_cost) }}">
+                    <input type="number" step="any" min="0" class="form-control form-control-sm" id="shipping_cost" name="shipping_cost" value="{{ (float)old('shipping_cost', $purchase->shipping_cost) == 0 ? 0 : old('shipping_cost', $purchase->shipping_cost) }}">
                 </div>
 
                 <hr class="my-3 text-muted">
@@ -209,11 +234,113 @@
 </form>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let rowIndex = {{ count($itemsToDisplay) }};
     const itemsContainer = document.getElementById('itemsContainer');
     const addRowBtn = document.getElementById('addRowBtn');
+
+    const allProducts = [
+        @foreach($products as $prod)
+        {
+            id: "{{ $prod->id }}",
+            name: @json($prod->name),
+            brand: @json($prod->brand ? $prod->brand->name : ''),
+            identifier: @json($prod->product_identifier ?? ''),
+            text: @json($prod->name . ($prod->brand ? ' (' . $prod->brand->name . ')' : '') . ($prod->product_identifier ? ' [' . $prod->product_identifier . ']' : '')),
+            category_id: "{{ $prod->category_id ?? '' }}",
+            hsn: @json($prod->hsn_code ?? ''),
+            unit: @json($prod->unit ?? ''),
+            cost: {{ (float)($prod->cost_price ?? 0) }},
+            tax: {{ (float)($prod->tax_percent ?? 0) }}
+        },
+        @endforeach
+    ];
+
+    const productsMap = {};
+    allProducts.forEach(p => {
+        productsMap[p.id] = p;
+    });
+
+    const categoryOptions = `@foreach($categories as $cat)<option value="{{ $cat->id }}">{{ $cat->name }}</option>@endforeach`;
+    const productsOptions = `@foreach($products as $prod)<option value="{{ $prod->id }}" data-category="{{ $prod->category_id }}" data-identifier="{{ $prod->product_identifier ?? '' }}" data-hsn="{{ $prod->hsn_code ?? '' }}" data-unit="{{ $prod->unit }}" data-cost="{{ $prod->cost_price }}" data-tax="{{ $prod->tax_percent }}">{{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}{{ $prod->product_identifier ? ' ['.$prod->product_identifier.']' : '' }}</option>@endforeach`;
+
+    function syncSelectOption(selectEl, value, text) {
+        if (!selectEl) return;
+        let opt = selectEl.querySelector('option[value="' + value + '"]');
+        if (!opt && value) {
+            opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = text || value;
+            selectEl.appendChild(opt);
+        }
+        selectEl.value = value;
+        if (opt) {
+            opt.selected = true;
+        }
+    }
+
+    function initProductTomSelect(prodSelect) {
+        if (!prodSelect || prodSelect.tomselect) return prodSelect ? prodSelect.tomselect : null;
+
+        const row = prodSelect.closest('.item-row');
+        const catSelect = row ? row.querySelector('.category-select') : null;
+        const selectedCatId = catSelect ? catSelect.value : '';
+        const initialVal = prodSelect.value || '';
+
+        prodSelect.required = false;
+
+        const filteredOptions = allProducts.filter(p => !selectedCatId || p.category_id === selectedCatId);
+
+        const ts = new TomSelect(prodSelect, {
+            valueField: 'id',
+            labelField: 'text',
+            searchField: ['text', 'name', 'brand', 'identifier'],
+            options: filteredOptions,
+            items: initialVal ? [initialVal] : [],
+            create: false,
+            placeholder: 'Search or Select Product...',
+            plugins: ['dropdown_input'],
+            dropdownParent: 'body',
+            maxOptions: null,
+            closeAfterSelect: true,
+            sortField: {
+                field: 'text',
+                direction: 'asc'
+            },
+            render: {
+                option: function(data, escape) {
+                    return '<div class="py-1 px-2 d-flex justify-content-between align-items-center gap-2">' +
+                        '<div>' +
+                            '<span class="fw-medium text-dark">' + escape(data.name) + '</span>' +
+                            (data.brand ? ' <span class="text-muted small">(' + escape(data.brand) + ')</span>' : '') +
+                        '</div>' +
+                        (data.identifier ? '<span class="badge text-dark fw-bold border border-warning font-monospace" style="background-color: #fef08a; color: #713f12 !important; font-size: 0.75rem;"><i class="bi bi-qr-code me-1"></i>' + escape(data.identifier) + '</span>' : '') +
+                        '</div>';
+                },
+                item: function(data, escape) {
+                    return '<div class="d-flex align-items-center gap-1 flex-wrap">' +
+                        '<span>' + escape(data.name) + '</span>' +
+                        (data.brand ? '<span class="text-muted small">(' + escape(data.brand) + ')</span>' : '') +
+                        (data.identifier ? '<span class="badge text-dark fw-bold border border-warning font-monospace py-0 px-1 ms-1" style="background-color: #fef08a; color: #713f12 !important; font-size: 0.72rem;"><i class="bi bi-qr-code me-1"></i>' + escape(data.identifier) + '</span>' : '') +
+                        '</div>';
+                }
+            },
+            onChange: function(value) {
+                const prodObj = productsMap[value];
+                syncSelectOption(prodSelect, value, prodObj ? prodObj.text : value);
+                handleProductChange(row, value, true);
+            }
+        });
+
+        if (initialVal) {
+            const prodObj = productsMap[initialVal];
+            syncSelectOption(prodSelect, initialVal, prodObj ? prodObj.text : initialVal);
+        }
+
+        return ts;
+    }
 
     function calculateTotals() {
         let subtotal = 0;
@@ -242,52 +369,118 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('displaySubtotal').textContent = '₹' + subtotal.toFixed(2);
         document.getElementById('displayTax').textContent = '₹' + totalTax.toFixed(2);
         document.getElementById('displayGrandTotal').textContent = '₹' + Math.max(0, grandTotal).toFixed(2);
+
+        syncPaymentStatus(false);
+    }
+
+    function filterProductsInRow(row) {
+        const catSelect = row.querySelector('.category-select');
+        const prodSelect = row.querySelector('.product-select');
+        if (!catSelect || !prodSelect) return;
+
+        const selectedCatId = catSelect.value;
+        const ts = prodSelect.tomselect;
+
+        if (ts) {
+            const currentVal = ts.getValue();
+            ts.clearOptions();
+
+            let hasSelectedValid = false;
+            allProducts.forEach(prod => {
+                if (!selectedCatId || prod.category_id === selectedCatId) {
+                    ts.addOption(prod);
+                    if (prod.id === currentVal) {
+                        hasSelectedValid = true;
+                    }
+                }
+            });
+
+            if (currentVal && hasSelectedValid) {
+                ts.setValue(currentVal, true);
+                const prodObj = productsMap[currentVal];
+                syncSelectOption(prodSelect, currentVal, prodObj ? prodObj.text : currentVal);
+            } else {
+                ts.setValue('', true);
+                syncSelectOption(prodSelect, '', '');
+                row.querySelector('.hsn-input').value = '';
+                row.querySelector('.unit-input').value = '';
+                row.querySelector('.cost-input').value = '';
+                row.querySelector('.tax-percent-input').value = '0.00';
+                const hiddenTax = row.querySelector('.tax-percent-hidden');
+                if (hiddenTax) hiddenTax.value = '0.00';
+                calculateTotals();
+            }
+            ts.refreshOptions(false);
+        }
+    }
+
+    function handleProductChange(row, explicitVal, isUserChange = true) {
+        const prodSelect = row.querySelector('.product-select');
+        const ts = prodSelect ? prodSelect.tomselect : null;
+        const prodId = (explicitVal !== undefined && explicitVal !== null && explicitVal !== '') 
+            ? explicitVal 
+            : (ts ? ts.getValue() : (prodSelect ? prodSelect.value : ''));
+
+        if (prodId && productsMap[prodId]) {
+            const prod = productsMap[prodId];
+            const catSelect = row.querySelector('.category-select');
+
+            if (catSelect && prod.category_id && (catSelect.value !== prod.category_id || isUserChange)) {
+                catSelect.value = prod.category_id;
+            }
+
+            syncSelectOption(prodSelect, prodId, prod.text);
+
+            row.querySelector('.hsn-input').value = prod.hsn || '';
+            row.querySelector('.unit-input').value = prod.unit || '';
+
+            if (isUserChange) {
+                row.querySelector('.cost-input').value = (prod.cost > 0) ? prod.cost.toFixed(2) : '';
+                row.querySelector('.tax-percent-input').value = parseFloat(prod.tax || 0).toFixed(2);
+                const hiddenTax = row.querySelector('.tax-percent-hidden');
+                if (hiddenTax) hiddenTax.value = parseFloat(prod.tax || 0).toFixed(2);
+
+                if (prod.cost <= 0) {
+                    alert('Unit Cost (₹) value cannot be 0. Please enter a valid cost.');
+                    row.querySelector('.cost-input').value = '';
+                    setTimeout(() => row.querySelector('.cost-input').focus(), 10);
+                }
+            } else {
+                // Initial load: keep existing values if already present
+                if (!row.querySelector('.cost-input').value) {
+                    row.querySelector('.cost-input').value = (prod.cost > 0) ? prod.cost.toFixed(2) : '';
+                }
+                if (row.querySelector('.tax-percent-input').value === '' || isNaN(parseFloat(row.querySelector('.tax-percent-input').value))) {
+                    row.querySelector('.tax-percent-input').value = parseFloat(prod.tax || 0).toFixed(2);
+                }
+            }
+        } else {
+            syncSelectOption(prodSelect, '', '');
+            row.querySelector('.hsn-input').value = '';
+            row.querySelector('.unit-input').value = '';
+            if (isUserChange) {
+                row.querySelector('.cost-input').value = '';
+                row.querySelector('.tax-percent-input').value = '0.00';
+                const hiddenTax = row.querySelector('.tax-percent-hidden');
+                if (hiddenTax) hiddenTax.value = '0.00';
+            }
+        }
+        calculateTotals();
     }
 
     function initRowEvents(row) {
         const catSelect = row.querySelector('.category-select');
         const prodSelect = row.querySelector('.product-select');
 
-        function filterProducts() {
-            const catId = catSelect.value;
-            let firstMatched = false;
-            Array.from(prodSelect.options).forEach(opt => {
-                if (!opt.value) return;
-                if (!catId || opt.dataset.category === catId) {
-                    opt.style.display = '';
-                } else {
-                    opt.style.display = 'none';
-                    if (opt.selected) opt.selected = false;
-                }
-            });
-        }
+        initProductTomSelect(prodSelect);
 
-        function updateProductMeta() {
-            const selected = prodSelect.options[prodSelect.selectedIndex];
-            if (selected && selected.value) {
-                row.querySelector('.hsn-input').value = selected.dataset.hsn || 'N/A';
-                row.querySelector('.unit-input').value = selected.dataset.unit || 'Unit';
-                if (!row.querySelector('.cost-input').value) {
-                    row.querySelector('.cost-input').value = selected.dataset.cost || '0.00';
-                }
-                if (!row.querySelector('.tax-percent-input').value) {
-                    row.querySelector('.tax-percent-input').value = selected.dataset.tax || '0.00';
-                }
-                if (selected.dataset.category && !catSelect.value) {
-                    catSelect.value = selected.dataset.category;
-                }
-            } else {
-                row.querySelector('.hsn-input').value = '';
-                row.querySelector('.unit-input').value = '';
-            }
-            calculateTotals();
-        }
-
-        catSelect.addEventListener('change', filterProducts);
-        prodSelect.addEventListener('change', updateProductMeta);
+        catSelect.addEventListener('change', function() {
+            filterProductsInRow(row);
+        });
 
         row.querySelectorAll('.qty-input, .cost-input, .tax-percent-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
+            input.addEventListener('change', calculateTotals);
         });
 
         const costEl = row.querySelector('.cost-input');
@@ -305,6 +498,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         row.querySelector('.remove-row-btn').addEventListener('click', function() {
             if (document.querySelectorAll('.item-row').length > 1) {
+                if (prodSelect && prodSelect.tomselect) {
+                    prodSelect.tomselect.destroy();
+                }
                 row.remove();
                 calculateTotals();
             } else {
@@ -312,53 +508,113 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        updateProductMeta();
+        // Initialize metadata without overwriting saved cost/tax
+        handleProductChange(row, prodSelect ? prodSelect.value : '', false);
     }
 
     document.querySelectorAll('.item-row').forEach(initRowEvents);
 
     addRowBtn.addEventListener('click', function() {
-        const firstRow = document.querySelector('.item-row');
-        const newRow = firstRow.cloneNode(true);
-
-        newRow.querySelectorAll('input').forEach(input => {
-            if (input.classList.contains('qty-input')) input.value = 1;
-            else if (input.classList.contains('tax-percent-input')) input.value = '0.00';
-            else if (!input.readOnly) input.value = '';
-        });
-
-        newRow.querySelectorAll('select').forEach(select => {
-            select.selectedIndex = 0;
-            if (select.classList.contains('product-select')) {
-                select.name = `products[${rowIndex}][id]`;
-            }
-        });
-
-        newRow.querySelector('.qty-input').name = `products[${rowIndex}][qty]`;
-        newRow.querySelector('.cost-input').name = `products[${rowIndex}][cost]`;
-        newRow.querySelector('.tax-percent-input').name = `products[${rowIndex}][tax_percent]`;
+        const newRow = document.createElement('tr');
+        newRow.className = 'item-row';
+        newRow.innerHTML = `
+            <td>
+                <select class="form-select form-select-sm category-select" required>
+                    <option value="">Select Category...</option>
+                    ${categoryOptions}
+                </select>
+            </td>
+            <td>
+                <select name="products[${rowIndex}][id]" class="form-select form-select-sm product-select" required>
+                    <option value="">Select Product...</option>
+                    ${productsOptions}
+                </select>
+            </td>
+            <td><input type="text" class="form-control form-control-sm hsn-input bg-light" readonly placeholder="HSN"></td>
+            <td><input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Type"></td>
+            <td><input type="number" name="products[${rowIndex}][qty]" class="form-control form-control-sm qty-input" min="1" value="1" required></td>
+            <td><input type="number" min="0" step="any" name="products[${rowIndex}][cost]" class="form-control form-control-sm cost-input" value="" placeholder="e.g. 100" required></td>
+            <td>
+                <input type="number" step="any" min="0" name="products[${rowIndex}][tax_percent]" class="form-control form-control-sm tax-percent-input bg-light" value="0" readonly tabindex="-1" style="cursor: not-allowed;">
+            </td>
+            <td><input type="text" class="form-control form-control-sm row-subtotal-input bg-light" readonly value="₹0"></td>
+            <td><input type="text" class="form-control form-control-sm row-total-tax-input bg-light fw-bold text-dark" readonly value="₹0"></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-light border text-danger remove-row-btn"><i class="bi bi-trash"></i></button>
+            </td>
+        `;
 
         itemsContainer.appendChild(newRow);
         initRowEvents(newRow);
         rowIndex++;
+        calculateTotals();
     });
 
     document.getElementById('discount_amount').addEventListener('input', calculateTotals);
     document.getElementById('shipping_cost').addEventListener('input', calculateTotals);
 
-    document.getElementById('payment_status').addEventListener('change', function() {
+    function syncPaymentStatus(isStatusChange = false) {
+        const statusSelect = document.getElementById('payment_status');
+        if (!statusSelect) return;
+        const status = statusSelect.value;
         const paidInput = document.getElementById('paid_amount');
-        if (this.value === 'paid') {
-            const grandTotalText = document.getElementById('displayGrandTotal').textContent.replace('₹', '');
-            paidInput.value = parseFloat(grandTotalText) || 0;
-        } else if (this.value === 'unpaid') {
+        if (!paidInput) return;
+
+        const grandTotalText = document.getElementById('displayGrandTotal').textContent.replace(/[^\d.]/g, '');
+        const grandTotalValue = parseFloat(grandTotalText) || 0;
+
+        if (status === 'paid') {
+            paidInput.value = grandTotalValue.toFixed(2);
+            paidInput.readOnly = true;
+            paidInput.classList.add('bg-light');
+        } else if (status === 'unpaid' || status === 'pending') {
             paidInput.value = '0';
+            paidInput.readOnly = true;
+            paidInput.classList.add('bg-light');
+        } else if (status === 'partial') {
+            if (isStatusChange) {
+                paidInput.value = '0';
+            }
+            paidInput.readOnly = false;
+            paidInput.classList.remove('bg-light');
         }
-    });
+    }
+
+    const paymentStatusEl = document.getElementById('payment_status');
+    if (paymentStatusEl) {
+        paymentStatusEl.addEventListener('change', function() {
+            syncPaymentStatus(true);
+        });
+    }
 
     const purchaseFormEl = document.getElementById('purchaseForm');
     if (purchaseFormEl) {
         purchaseFormEl.addEventListener('submit', function(e) {
+            const rows = document.querySelectorAll('.item-row');
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const prodSelect = row.querySelector('.product-select');
+                if (!prodSelect) continue;
+
+                const ts = prodSelect.tomselect;
+                const chosenVal = ts ? ts.getValue() : prodSelect.value;
+
+                if (!chosenVal) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Please select a Product Item for all line items.');
+                    if (ts) {
+                        ts.focus();
+                    } else {
+                        prodSelect.focus();
+                    }
+                    return false;
+                }
+
+                const prodObj = productsMap[chosenVal];
+                syncSelectOption(prodSelect, chosenVal, prodObj ? prodObj.text : chosenVal);
+            }
+
             const costInputs = document.querySelectorAll('.cost-input');
             for (let i = 0; i < costInputs.length; i++) {
                 const costVal = parseFloat(costInputs[i].value);
@@ -367,6 +623,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.stopPropagation();
                     alert('Unit Cost (₹) value cannot be 0. Please enter a valid cost.');
                     costInputs[i].focus();
+                    return false;
+                }
+            }
+
+            const statusSelect = document.getElementById('payment_status');
+            const paidInput = document.getElementById('paid_amount');
+            if (statusSelect && paidInput && statusSelect.value === 'partial') {
+                const grandTotalText = document.getElementById('displayGrandTotal').textContent.replace(/[^\d.]/g, '');
+                const grandTotalValue = parseFloat(grandTotalText) || 0;
+                const val = parseFloat(paidInput.value) || 0;
+
+                if (val > grandTotalValue + 0.001) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Paid Amount (₹' + val.toFixed(2) + ') cannot be greater than Grand Total (₹' + grandTotalValue.toFixed(2) + ').');
+                    paidInput.focus();
                     return false;
                 }
             }

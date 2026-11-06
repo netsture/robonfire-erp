@@ -73,6 +73,11 @@ class Product extends Model
         return $this->hasMany(ReturnableMaterialItem::class);
     }
 
+    public function logs(): HasMany
+    {
+        return $this->hasMany(ProductLog::class);
+    }
+
     /**
      * Get counts of existing child records associated with this product.
      *

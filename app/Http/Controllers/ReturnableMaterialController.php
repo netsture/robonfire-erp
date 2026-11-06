@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Sale;
+use App\Models\TransactionAuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -194,10 +195,12 @@ class ReturnableMaterialController extends Controller
                 $totalTax += $itemTax;
 
                 $itemsData[] = [
-                    'product_id' => $item['id'],
-                    'unit_price' => $item['price'],
-                    'quantity'   => $item['qty'],
-                    'subtotal'   => $itemSubtotal,
+                    'product_id'  => $item['id'],
+                    'unit_price'  => $item['price'],
+                    'quantity'    => $item['qty'],
+                    'subtotal'    => $itemSubtotal,
+                    'tax_percent' => $taxPercent,
+                    'tax_amount'  => $itemTax,
                 ];
             }
 
@@ -230,6 +233,10 @@ class ReturnableMaterialController extends Controller
                 Product::where('id', $iData['product_id'])->increment('stock_quantity', $iData['quantity']);
             }
         });
+
+        if (isset($returnableMaterial)) {
+            TransactionAuditLog::record('returnable', 'create', $returnableMaterial->fresh(['customer', 'items.product']));
+        }
 
         return redirect()->route('returnable.index')->with('success', 'Returnable Entry #' . $returnableMaterial->return_number . ' created & inventory stock updated!');
     }
@@ -264,19 +271,21 @@ class ReturnableMaterialController extends Controller
         }
 
         $validated = $request->validate([
-            'customer_id'           => ['required', 'exists:customers,id'],
-            'return_number'         => ['required', 'string'],
-            'project_name'          => ['required', 'string'],
-            'return_reason'         => ['required', 'string'],
-            'return_date'           => ['required', 'date'],
-            'products'              => ['required', 'array', 'min:1'],
-            'products.*.id'         => ['required', 'exists:products,id'],
-            'products.*.qty'        => ['required', 'integer', 'min:1'],
-            'products.*.unit_price' => ['required', 'numeric', 'min:0'],
-            'discount_amount'       => ['nullable', 'numeric', 'min:0'],
-            'tax_amount'            => ['nullable', 'numeric', 'min:0'],
-            'shipping_cost'         => ['nullable', 'numeric', 'min:0'],
-            'notes'                 => ['nullable', 'string'],
+            'customer_id'            => ['required', 'exists:customers,id'],
+            'return_number'          => ['required', 'string'],
+            'project_name'           => ['required', 'string'],
+            'return_reason'          => ['required', 'string'],
+            'return_date'            => ['required', 'date'],
+            'products'               => ['required', 'array', 'min:1'],
+            'products.*.id'          => ['required', 'exists:products,id'],
+            'products.*.qty'         => ['required', 'integer', 'min:1'],
+            'products.*.price'       => ['nullable', 'numeric', 'min:0'],
+            'products.*.unit_price'  => ['nullable', 'numeric', 'min:0'],
+            'products.*.tax_percent' => ['nullable', 'numeric', 'min:0'],
+            'discount_amount'        => ['nullable', 'numeric', 'min:0'],
+            'tax_amount'             => ['nullable', 'numeric', 'min:0'],
+            'shipping_cost'          => ['nullable', 'numeric', 'min:0'],
+            'notes'                  => ['nullable', 'string'],
         ]);
 
         $firmId = $returnableMaterial->firm_id;
@@ -285,6 +294,16 @@ class ReturnableMaterialController extends Controller
         if ($existsNum) {
             return back()->withErrors(['return_number' => 'Return Slip # already exists for this firm.'])->withInput();
         }
+
+        $returnableMaterial->loadMissing(['customer', 'items.product']);
+        $before = [
+            'return_number'  => $returnableMaterial->return_number,
+            'project_name'   => $returnableMaterial->project_name,
+            'customer_name'  => $returnableMaterial->customer->company_name ?? 'N/A',
+            'grand_total'    => $returnableMaterial->grand_total,
+            'items_count'    => $returnableMaterial->items->count(),
+            'items_summary'  => $returnableMaterial->items->map(fn($it) => ($it->product->name ?? 'Item') . ' (x' . $it->quantity . ')')->join(', '),
+        ];
 
         DB::transaction(function () use ($validated, $returnableMaterial) {
             // Revert old inventory stock additions
@@ -298,18 +317,24 @@ class ReturnableMaterialController extends Controller
             $itemsData = [];
 
             foreach ($validated['products'] as $item) {
+                $unitPrice = $item['price'] ?? ($item['unit_price'] ?? 0);
                 $product = Product::find($item['id']);
-                $itemSubtotal = $item['qty'] * $item['unit_price'];
-                $itemTax = $itemSubtotal * (($product->tax_percent ?? 0) / 100);
+                $itemSubtotal = $item['qty'] * $unitPrice;
+                $taxPercent = isset($item['tax_percent']) && $item['tax_percent'] !== '' 
+                    ? (float)$item['tax_percent'] 
+                    : ($product ? (float)($product->tax_percent ?? 0) : 0);
+                $itemTax = ($itemSubtotal * $taxPercent) / 100;
 
                 $subtotal += $itemSubtotal;
                 $totalTax += $itemTax;
 
                 $itemsData[] = [
-                    'product_id' => $item['id'],
-                    'unit_price' => $item['unit_price'],
-                    'quantity'   => $item['qty'],
-                    'subtotal'   => $itemSubtotal,
+                    'product_id'  => $item['id'],
+                    'unit_price'  => $unitPrice,
+                    'quantity'    => $item['qty'],
+                    'subtotal'    => $itemSubtotal,
+                    'tax_percent' => $taxPercent,
+                    'tax_amount'  => $itemTax,
                 ];
             }
 
@@ -339,6 +364,17 @@ class ReturnableMaterialController extends Controller
                 Product::where('id', $iData['product_id'])->increment('stock_quantity', $iData['quantity']);
             }
         });
+
+        $returnableMaterial->load(['customer', 'items.product']);
+        $after = [
+            'return_number'  => $returnableMaterial->return_number,
+            'project_name'   => $returnableMaterial->project_name,
+            'customer_name'  => $returnableMaterial->customer->company_name ?? 'N/A',
+            'grand_total'    => $returnableMaterial->grand_total,
+            'items_count'    => $returnableMaterial->items->count(),
+            'items_summary'  => $returnableMaterial->items->map(fn($it) => ($it->product->name ?? 'Item') . ' (x' . $it->quantity . ')')->join(', '),
+        ];
+        TransactionAuditLog::record('returnable', 'update', $returnableMaterial, $before, $after);
 
         return redirect()->route('returnable.index')->with('success', 'Returnable entry updated successfully & stock updated!');
     }
@@ -397,6 +433,9 @@ class ReturnableMaterialController extends Controller
         if (!$user->isSuperAdmin() && $returnableMaterial->firm_id !== $user->firm_id) {
             abort(403, 'Unauthorized access to firm record.');
         }
+
+        $returnableMaterial->loadMissing(['customer', 'items.product']);
+        TransactionAuditLog::record('returnable', 'delete', $returnableMaterial);
 
         DB::transaction(function () use ($returnableMaterial) {
             foreach ($returnableMaterial->items as $item) {

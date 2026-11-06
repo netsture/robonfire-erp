@@ -19,6 +19,20 @@
         border: 1px solid #e2e8f0 !important;
         z-index: 1055 !important;
     }
+    .table .ts-control {
+        border-radius: 0.25rem !important;
+        padding: 0.28rem 0.65rem !important;
+        font-size: 0.875rem !important;
+        min-height: 31px !important;
+        line-height: 1.4 !important;
+    }
+    .table .ts-wrapper {
+        width: 100% !important;
+    }
+    .ts-dropdown .option {
+        padding: 0.35rem 0.75rem !important;
+        font-size: 0.875rem !important;
+    }
 </style>
 @endpush
 
@@ -45,10 +59,47 @@
                         <select class="form-select" id="sale_id" name="sale_id">
                             <option value="">Select or Search Sales Challan No</option>
                             @foreach($sales as $sale)
+                                @php
+                                    $saleItemsPayload = $sale->items->map(function($item) use ($sale) {
+                                        $taxPct = (float)($item->tax_percent ?? 0);
+                                        if ($taxPct == 0 && (float)($item->tax_amount ?? 0) > 0 && (float)$item->subtotal > 0) {
+                                            $taxPct = round(((float)$item->tax_amount / (float)$item->subtotal) * 100, 2);
+                                        } elseif ($taxPct == 0 && (float)$sale->tax_amount > 0 && (float)$sale->subtotal > 0) {
+                                            if ($sale->items->count() === 1) {
+                                                $taxPct = round(((float)$sale->tax_amount / (float)$sale->subtotal) * 100, 2);
+                                            } elseif ($item->product && (float)$item->product->tax_percent > 0) {
+                                                $taxPct = (float)$item->product->tax_percent;
+                                            } else {
+                                                $taxPct = round(((float)$sale->tax_amount / (float)$sale->subtotal) * 100, 2);
+                                            }
+                                        } elseif ($taxPct == 0 && $item->product) {
+                                            $taxPct = (float)($item->product->tax_percent ?? 0);
+                                        }
+
+                                        $unitPrice = (float)($item->unit_price ?? ($item->product ? $item->product->selling_price : 0));
+                                        $qty = (int)($item->quantity ?? 1);
+                                        $subtotal = (float)($item->subtotal > 0 ? $item->subtotal : ($unitPrice * $qty));
+                                        $taxAmount = (float)($item->tax_amount ?? round(($subtotal * $taxPct) / 100, 2));
+
+                                        return [
+                                            'id'          => $item->id,
+                                            'product_id'  => $item->product_id,
+                                            'quantity'    => $qty,
+                                            'unit_price'  => $unitPrice,
+                                            'subtotal'    => $subtotal,
+                                            'tax_percent' => $taxPct,
+                                            'tax_amount'  => $taxAmount,
+                                            'category_id' => $item->product ? $item->product->category_id : null,
+                                            'hsn'         => $item->product ? ($item->product->hsn_code ?? '') : '',
+                                            'unit'        => $item->product ? ($item->product->unit ?? '') : '',
+                                        ];
+                                    });
+                                @endphp
                                 <option value="{{ $sale->id }}" 
                                         data-customer-id="{{ $sale->customer_id }}" 
                                         data-project-name="{{ $sale->project_name ?? '' }}"
-                                        data-items="{{ json_encode($sale->items) }}">
+                                        data-tax-amount="{{ $sale->tax_amount ?? 0 }}"
+                                        data-items="{{ json_encode($saleItemsPayload) }}">
                                     {{ $sale->invoice_number }}
                                 </option>
                             @endforeach
@@ -110,12 +161,12 @@
                         <thead class="table-light">
                             <tr>
                                 <th style="min-width: 180px;">Category <span class="text-danger">*</span></th>
-                                <th style="min-width: 180px;">Product Item <br>(Brand)</th>
+                                <th style="min-width: 270px;">Product Item <br>(Brand) / Unique ID</th>
                                 <th style="min-width: 100px;">HSN Code</th>
                                 <th style="min-width: 60px;">Type</th>
                                 <th style="min-width: 80px;">Qty</th>
-                                <th style="min-width: 100px;">Selling Price(₹)</th>
-                                <th style="min-width: 80px;">Tax (%)</th>
+                                <th style="min-width: 110px;">Selling Price(₹)</th>
+                                <th style="min-width: 90px;">Tax (%)</th>
                                 <th style="min-width: 110px;">Total (₹)</th>
                                 <th style="min-width: 110px;">Total w/ Tax</th>
                                 <th style="width: 50px;" class="text-center">Action</th>
@@ -143,12 +194,13 @@
                                                 @foreach($products as $prod)
                                                     <option value="{{ $prod->id }}" 
                                                             data-category="{{ $prod->category_id }}" 
+                                                            data-identifier="{{ $prod->product_identifier ?? '' }}"
                                                             data-hsn="{{ $prod->hsn_code ?? '' }}" 
                                                             data-unit="{{ $prod->unit }}" 
                                                             data-price="{{ $prod->selling_price }}" 
                                                             data-tax="{{ $prod->tax_percent }}"
                                                             {{ (isset($oldProduct['id']) && $oldProduct['id'] == $prod->id) ? 'selected' : '' }}>
-                                                        {{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}
+                                                        {{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}{{ $prod->product_identifier ? ' ['.$prod->product_identifier.']' : '' }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -166,7 +218,7 @@
                                             <input type="number" min="0" name="products[{{ $index }}][price]" class="form-control form-control-sm price-input" value="{{ $oldProduct['price'] ?? '' }}" placeholder="e.g. 150" required>
                                         </td>
                                         <td>
-                                            <input type="number" min="0" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="{{ $oldProduct['tax_percent'] ?? 0 }}" placeholder="0">
+                                            <input type="number" min="0" step="any" name="products[{{ $index }}][tax_percent]" class="form-control form-control-sm tax-percent-input bg-light" value="{{ $oldProduct['tax_percent'] ?? 0 }}" readonly tabindex="-1" style="cursor: not-allowed;" placeholder="0">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0">
@@ -193,8 +245,8 @@
                                         <select name="products[0][id]" class="form-select form-select-sm product-select" required>
                                             <option value="">Select Product...</option>
                                             @foreach($products as $prod)
-                                                <option value="{{ $prod->id }}" data-category="{{ $prod->category_id }}" data-hsn="{{ $prod->hsn_code ?? '' }}" data-unit="{{ $prod->unit }}" data-price="{{ $prod->selling_price }}" data-tax="{{ $prod->tax_percent }}">
-                                                    {{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}
+                                                <option value="{{ $prod->id }}" data-category="{{ $prod->category_id }}" data-identifier="{{ $prod->product_identifier ?? '' }}" data-hsn="{{ $prod->hsn_code ?? '' }}" data-unit="{{ $prod->unit }}" data-price="{{ $prod->selling_price }}" data-tax="{{ $prod->tax_percent }}">
+                                                    {{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}{{ $prod->product_identifier ? ' ['.$prod->product_identifier.']' : '' }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -212,7 +264,7 @@
                                         <input type="number" min="0" name="products[0][price]" class="form-control form-control-sm price-input" placeholder="e.g. 150" required>
                                     </td>
                                     <td>
-                                        <input type="number" min="0" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0" placeholder="0">
+                                        <input type="number" min="0" step="any" name="products[0][tax_percent]" class="form-control form-control-sm tax-percent-input bg-light" value="0" readonly tabindex="-1" style="cursor: not-allowed;" placeholder="0">
                                     </td>
                                     <td>
                                         <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0">
@@ -301,6 +353,108 @@
             });
         }
 
+        const allProducts = [
+            @foreach($products as $prod)
+            {
+                id: "{{ $prod->id }}",
+                name: @json($prod->name),
+                brand: @json($prod->brand ? $prod->brand->name : ''),
+                identifier: @json($prod->product_identifier ?? ''),
+                text: @json($prod->name . ($prod->brand ? ' (' . $prod->brand->name . ')' : '') . ($prod->product_identifier ? ' [' . $prod->product_identifier . ']' : '')),
+                category_id: "{{ $prod->category_id ?? '' }}",
+                hsn: @json($prod->hsn_code ?? ''),
+                unit: @json($prod->unit ?? ''),
+                price: {{ (float)($prod->selling_price ?? 0) }},
+                tax: {{ (float)($prod->tax_percent ?? 0) }}
+            },
+            @endforeach
+        ];
+
+        const productsMap = {};
+        allProducts.forEach(p => {
+            productsMap[p.id] = p;
+        });
+
+        let rowCount = document.querySelectorAll('.item-row').length;
+        const categoryOptions = `@foreach($categories as $cat)<option value="{{ $cat->id }}">{{ $cat->name }}</option>@endforeach`;
+        const productsOptions = `@foreach($products as $prod)<option value="{{ $prod->id }}" data-category="{{ $prod->category_id }}" data-identifier="{{ $prod->product_identifier ?? '' }}" data-hsn="{{ $prod->hsn_code ?? '' }}" data-unit="{{ $prod->unit }}" data-price="{{ $prod->selling_price }}" data-tax="{{ $prod->tax_percent }}">{{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}{{ $prod->product_identifier ? ' ['.$prod->product_identifier.']' : '' }}</option>@endforeach`;
+
+        function syncSelectOption(selectEl, value, text) {
+            if (!selectEl) return;
+            let opt = selectEl.querySelector('option[value="' + value + '"]');
+            if (!opt && value) {
+                opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = text || value;
+                selectEl.appendChild(opt);
+            }
+            selectEl.value = value;
+            if (opt) {
+                opt.selected = true;
+            }
+        }
+
+        function initProductTomSelect(prodSelect) {
+            if (!prodSelect || prodSelect.tomselect) return prodSelect ? prodSelect.tomselect : null;
+
+            const row = prodSelect.closest('.item-row');
+            const catSelect = row ? row.querySelector('.category-select') : null;
+            const selectedCatId = catSelect ? catSelect.value : '';
+            const initialVal = prodSelect.value || '';
+
+            prodSelect.required = false;
+
+            const filteredOptions = allProducts.filter(p => !selectedCatId || p.category_id === selectedCatId);
+
+            const ts = new TomSelect(prodSelect, {
+                valueField: 'id',
+                labelField: 'text',
+                searchField: ['text', 'name', 'brand', 'identifier'],
+                options: filteredOptions,
+                items: initialVal ? [initialVal] : [],
+                create: false,
+                placeholder: 'Search or Select Product...',
+                plugins: ['dropdown_input'],
+                dropdownParent: 'body',
+                maxOptions: null,
+                closeAfterSelect: true,
+                sortField: {
+                    field: 'text',
+                    direction: 'asc'
+                },
+                render: {
+                    option: function(data, escape) {
+                        return '<div class="py-1 px-2 d-flex justify-content-between align-items-center gap-2">' +
+                            '<div>' +
+                                '<span class="fw-medium text-dark">' + escape(data.name) + '</span>' +
+                                (data.brand ? ' <span class="text-muted small">(' + escape(data.brand) + ')</span>' : '') +
+                            '</div>' +
+                            (data.identifier ? '<span class="badge text-dark fw-bold border border-warning font-monospace" style="background-color: #fef08a; color: #713f12 !important; font-size: 0.75rem;"><i class="bi bi-qr-code me-1"></i>' + escape(data.identifier) + '</span>' : '') +
+                            '</div>';
+                    },
+                    item: function(data, escape) {
+                        return '<div class="d-flex align-items-center gap-1 flex-wrap">' +
+                            '<span>' + escape(data.name) + '</span>' +
+                            (data.brand ? '<span class="text-muted small">(' + escape(data.brand) + ')</span>' : '') +
+                            (data.identifier ? '<span class="badge text-dark fw-bold border border-warning font-monospace py-0 px-1 ms-1" style="background-color: #fef08a; color: #713f12 !important; font-size: 0.72rem;"><i class="bi bi-qr-code me-1"></i>' + escape(data.identifier) + '</span>' : '') +
+                            '</div>';
+                    }
+                },
+                onChange: function(value) {
+                    const prodObj = productsMap[value];
+                    syncSelectOption(prodSelect, value, prodObj ? prodObj.text : value);
+                    handleProductChange(row, value, true);
+                }
+            });
+
+            if (initialVal) {
+                const prodObj = productsMap[initialVal];
+                syncSelectOption(prodSelect, initialVal, prodObj ? prodObj.text : initialVal);
+            }
+
+            return ts;
+        }
+
         let saleTs = null;
         if (document.getElementById('sale_id')) {
             saleTs = new TomSelect('#sale_id', {
@@ -342,10 +496,18 @@
         function populateSaleItems(items) {
             const container = document.getElementById('itemsContainer');
             if (!container) return;
+
+            container.querySelectorAll('.product-select').forEach(sel => {
+                if (sel.tomselect) sel.tomselect.destroy();
+            });
+
             container.innerHTML = '';
             rowCount = 0;
 
             items.forEach(item => {
+                const priceVal = parseFloat(item.unit_price !== undefined ? item.unit_price : 0).toFixed(2);
+                const taxVal = parseFloat(item.tax_percent !== undefined ? item.tax_percent : 0).toFixed(2);
+
                 const newRow = document.createElement('tr');
                 newRow.className = 'item-row';
                 newRow.innerHTML = `
@@ -362,19 +524,19 @@
                         </select>
                     </td>
                     <td>
-                        <input type="text" class="form-control form-control-sm hsn-input bg-light" readonly placeholder="HSN">
+                        <input type="text" class="form-control form-control-sm hsn-input bg-light" readonly placeholder="HSN" value="${item.hsn || ''}">
                     </td>
                     <td>
-                        <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Type">
+                        <input type="text" class="form-control form-control-sm unit-input bg-light" readonly placeholder="Type" value="${item.unit || ''}">
                     </td>
                     <td>
                         <input type="number" name="products[${rowCount}][qty]" class="form-control form-control-sm qty-input" min="1" value="${item.quantity || 1}" required>
                     </td>
                     <td>
-                        <input type="number" step="0.01" min="0" name="products[${rowCount}][price]" class="form-control form-control-sm price-input" value="${parseFloat(item.unit_price || 0).toFixed(2)}" placeholder="e.g. 150.00" required>
+                        <input type="number" step="any" min="0" name="products[${rowCount}][price]" class="form-control form-control-sm price-input" value="${priceVal}" placeholder="e.g. 150" required>
                     </td>
                     <td>
-                        <input type="number" step="0.01" min="0" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" placeholder="0.00">
+                        <input type="number" step="any" min="0" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input bg-light" value="${taxVal}" readonly tabindex="-1" style="cursor: not-allowed;" placeholder="0">
                     </td>
                     <td>
                         <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0.00">
@@ -388,10 +550,27 @@
                 `;
                 container.appendChild(newRow);
 
+                const catSelect = newRow.querySelector('.category-select');
                 const prodSelect = newRow.querySelector('.product-select');
                 if (prodSelect && item.product_id) {
                     prodSelect.value = item.product_id;
-                    handleProductChange(newRow);
+                    const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
+                    const catId = item.category_id || (selectedOpt ? selectedOpt.getAttribute('data-category') : '');
+                    if (catSelect && catId) {
+                        catSelect.value = catId;
+                    }
+                    if (selectedOpt) {
+                        if (!newRow.querySelector('.hsn-input').value) {
+                            newRow.querySelector('.hsn-input').value = selectedOpt.getAttribute('data-hsn') || '';
+                        }
+                        if (!newRow.querySelector('.unit-input').value) {
+                            newRow.querySelector('.unit-input').value = selectedOpt.getAttribute('data-unit') || '';
+                        }
+                    }
+                }
+
+                if (prodSelect) {
+                    initProductTomSelect(prodSelect);
                 }
 
                 rowCount++;
@@ -399,64 +578,90 @@
             calculateTotals();
         }
 
-        let rowCount = document.querySelectorAll('.item-row').length;
-        const categoryOptions = `@foreach($categories as $cat)<option value="{{ $cat->id }}">{{ $cat->name }}</option>@endforeach`;
-        const productsOptions = `@foreach($products as $prod)<option value="{{ $prod->id }}" data-category="{{ $prod->category_id }}" data-hsn="{{ $prod->hsn_code ?? '' }}" data-unit="{{ $prod->unit }}" data-price="{{ $prod->selling_price }}" data-tax="{{ $prod->tax_percent }}">{{ $prod->name }}{{ $prod->brand ? ' ('.$prod->brand->name.')' : '' }}</option>@endforeach`;
-
         function filterProductsInRow(row) {
             const catSelect = row.querySelector('.category-select');
             const prodSelect = row.querySelector('.product-select');
+            if (!catSelect || !prodSelect) return;
+
             const selectedCatId = catSelect.value;
+            const ts = prodSelect.tomselect;
 
-            let hasSelectedValid = false;
-            Array.from(prodSelect.options).forEach(option => {
-                if (!option.value) return;
-                const optCatId = option.getAttribute('data-category');
-                if (!selectedCatId || optCatId === selectedCatId) {
-                    option.hidden = false;
-                    option.disabled = false;
-                    if (option.selected) hasSelectedValid = true;
+            if (ts) {
+                const currentVal = ts.getValue();
+                ts.clearOptions();
+
+                let hasSelectedValid = false;
+                allProducts.forEach(prod => {
+                    if (!selectedCatId || prod.category_id === selectedCatId) {
+                        ts.addOption(prod);
+                        if (prod.id === currentVal) {
+                            hasSelectedValid = true;
+                        }
+                    }
+                });
+
+                if (currentVal && hasSelectedValid) {
+                    ts.setValue(currentVal, true);
+                    const prodObj = productsMap[currentVal];
+                    syncSelectOption(prodSelect, currentVal, prodObj ? prodObj.text : currentVal);
                 } else {
-                    option.hidden = true;
-                    option.disabled = true;
+                    ts.setValue('', true);
+                    syncSelectOption(prodSelect, '', '');
+                    const hsnEl = row.querySelector('.hsn-input');
+                    const unitEl = row.querySelector('.unit-input');
+                    const priceEl = row.querySelector('.price-input');
+                    const taxEl = row.querySelector('.tax-percent-input');
+                    if (hsnEl) hsnEl.value = '';
+                    if (unitEl) unitEl.value = '';
+                    if (priceEl) priceEl.value = '0.00';
+                    if (taxEl) taxEl.value = '0.00';
+                    calculateTotals();
                 }
-            });
-
-            if (!hasSelectedValid && prodSelect.value !== '') {
-                prodSelect.value = '';
-                row.querySelector('.hsn-input').value = '';
-                row.querySelector('.unit-input').value = '';
-                row.querySelector('.price-input').value = '0.00';
-                row.querySelector('.tax-percent-input').value = '0.00';
-                calculateTotals();
+                ts.refreshOptions(false);
             }
         }
 
-        function handleProductChange(row) {
+        function handleProductChange(row, explicitVal, isUserChange = true) {
             const prodSelect = row.querySelector('.product-select');
-            const selectedOption = prodSelect.options[prodSelect.selectedIndex];
+            const ts = prodSelect ? prodSelect.tomselect : null;
+            const prodId = (explicitVal !== undefined && explicitVal !== null && explicitVal !== '') 
+                ? explicitVal 
+                : (ts ? ts.getValue() : (prodSelect ? prodSelect.value : ''));
 
-            if (selectedOption && selectedOption.value) {
-                const catId = selectedOption.getAttribute('data-category') || '';
-                const hsn = selectedOption.getAttribute('data-hsn') || '';
-                const unit = selectedOption.getAttribute('data-unit') || '';
-                const price = selectedOption.getAttribute('data-price') || 0;
-                const tax = selectedOption.getAttribute('data-tax') || 0;
-
+            if (prodId && productsMap[prodId]) {
+                const prod = productsMap[prodId];
                 const catSelect = row.querySelector('.category-select');
-                if (catSelect && catId) {
-                    catSelect.value = catId;
+
+                if (catSelect && prod.category_id && (!catSelect.value || isUserChange)) {
+                    catSelect.value = prod.category_id;
                 }
 
-                row.querySelector('.hsn-input').value = hsn;
-                row.querySelector('.unit-input').value = unit;
-                row.querySelector('.price-input').value = parseFloat(price).toFixed(2);
-                row.querySelector('.tax-percent-input').value = parseFloat(tax).toFixed(2);
+                syncSelectOption(prodSelect, prodId, prod.text);
+
+                const hsnEl = row.querySelector('.hsn-input');
+                const unitEl = row.querySelector('.unit-input');
+                if (hsnEl) hsnEl.value = prod.hsn || '';
+                if (unitEl) unitEl.value = prod.unit || '';
+
+                if (isUserChange) {
+                    const priceEl = row.querySelector('.price-input');
+                    const taxEl = row.querySelector('.tax-percent-input');
+                    if (priceEl) priceEl.value = (parseFloat(prod.price) > 0) ? parseFloat(prod.price).toFixed(2) : '0.00';
+                    if (taxEl) taxEl.value = parseFloat(prod.tax || 0).toFixed(2);
+                }
             } else {
-                row.querySelector('.hsn-input').value = '';
-                row.querySelector('.unit-input').value = '';
-                row.querySelector('.price-input').value = '0.00';
-                row.querySelector('.tax-percent-input').value = '0.00';
+                syncSelectOption(prodSelect, '', '');
+                const hsnEl = row.querySelector('.hsn-input');
+                const unitEl = row.querySelector('.unit-input');
+                if (hsnEl) hsnEl.value = '';
+                if (unitEl) unitEl.value = '';
+
+                if (isUserChange) {
+                    const priceEl = row.querySelector('.price-input');
+                    const taxEl = row.querySelector('.tax-percent-input');
+                    if (priceEl) priceEl.value = '0.00';
+                    if (taxEl) taxEl.value = '0.00';
+                }
             }
             calculateTotals();
         }
@@ -491,7 +696,7 @@
                     <input type="number" step="0.01" min="0" name="products[${rowCount}][price]" class="form-control form-control-sm price-input" placeholder="e.g. 150.00" required>
                 </td>
                 <td>
-                    <input type="number" step="0.01" min="0" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input" value="0.00" placeholder="0.00">
+                    <input type="number" step="any" min="0" name="products[${rowCount}][tax_percent]" class="form-control form-control-sm tax-percent-input bg-light" value="0.00" readonly placeholder="0.00">
                 </td>
                 <td>
                     <input type="text" class="form-control form-control-sm line-total bg-light fw-bold" readonly value="0.00">
@@ -504,6 +709,12 @@
                 </td>
             `;
             container.appendChild(newRow);
+
+            const newProdSelect = newRow.querySelector('.product-select');
+            if (newProdSelect) {
+                initProductTomSelect(newProdSelect);
+            }
+
             rowCount++;
             calculateTotals();
         });
@@ -514,8 +725,6 @@
 
             if (e.target.classList.contains('category-select')) {
                 filterProductsInRow(row);
-            } else if (e.target.classList.contains('product-select')) {
-                handleProductChange(row);
             }
         });
 
@@ -523,7 +732,12 @@
             if (e.target.closest('.remove-row-btn')) {
                 const rows = document.querySelectorAll('.item-row');
                 if (rows.length > 1) {
-                    e.target.closest('.item-row').remove();
+                    const rowToRemove = e.target.closest('.item-row');
+                    const prodSelect = rowToRemove.querySelector('.product-select');
+                    if (prodSelect && prodSelect.tomselect) {
+                        prodSelect.tomselect.destroy();
+                    }
+                    rowToRemove.remove();
                     calculateTotals();
                 }
             }
@@ -579,13 +793,46 @@
             document.getElementById('displayGrandTotal').innerText = '₹' + grandTotal.toFixed(2);
         }
 
-        // Initial auto-fill for old input rows if redirected back with error
+        // Initialize TomSelect on initial rows
         document.querySelectorAll('.item-row').forEach(row => {
             const prodSelect = row.querySelector('.product-select');
-            if (prodSelect && prodSelect.value) {
-                handleProductChange(row);
+            if (prodSelect) {
+                initProductTomSelect(prodSelect);
+                if (prodSelect.value) {
+                    handleProductChange(row, prodSelect.value, false);
+                }
             }
         });
+
+        const returnForm = document.getElementById('returnForm');
+        if (returnForm) {
+            returnForm.addEventListener('submit', function(e) {
+                const rows = document.querySelectorAll('.item-row');
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const prodSelect = row.querySelector('.product-select');
+                    if (!prodSelect) continue;
+
+                    const ts = prodSelect.tomselect;
+                    const chosenVal = ts ? ts.getValue() : prodSelect.value;
+
+                    if (!chosenVal) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('Please select a Product Item for all line items.');
+                        if (ts) {
+                            ts.focus();
+                        } else {
+                            prodSelect.focus();
+                        }
+                        return false;
+                    }
+
+                    const prodObj = productsMap[chosenVal];
+                    syncSelectOption(prodSelect, chosenVal, prodObj ? prodObj.text : chosenVal);
+                }
+            });
+        }
 
         calculateTotals();
     });

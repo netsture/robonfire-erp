@@ -128,7 +128,8 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">
+                    <th class="ps-4" style="width: 50px;">#</th>
+                    <th>
                         <a href="{{ route('users.index', array_merge(request()->query(), ['sort_by' => 'name', 'sort_order' => request('sort_by') === 'name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
                             User
                             @if(request('sort_by') === 'name')
@@ -192,9 +193,10 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($users as $user)
+                @forelse($users as $index => $user)
                     <tr>
-                        <td class="ps-4">
+                        <td class="ps-4 fw-bold text-muted">{{ $users->firstItem() + $index }}</td>
+                        <td>
                             @php
                                 $rStr = strtolower(trim($user->role ?? ($user->roles->first()->name ?? 'User')));
                                 $avatarStyle = 'background-color: rgba(187, 59, 159, 0.15); color: #bb3b9f;';
@@ -304,7 +306,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="8" class="text-center py-5 text-muted">
                             <i class="bi bi-people fs-1 d-block mb-2 text-secondary"></i>
                             No users found. Try searching with different keywords.
                         </td>

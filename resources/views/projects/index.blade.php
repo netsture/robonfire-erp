@@ -146,9 +146,10 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">
+                    <th class="ps-4" style="width: 50px;">#</th>
+                    <th>
                         <a href="{{ route('projects.index', array_merge(request()->query(), ['sort_by' => 'project_name', 'sort_order' => request('sort_by') === 'project_name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
-                            Project Name
+                            <i class="bi bi-briefcase me-1 text-primary"></i> Project Name
                             @if(request('sort_by') === 'project_name')
                                 <i class="bi bi-arrow-{{ request('sort_order', 'asc') === 'asc' ? 'up' : 'down' }} text-primary ms-1"></i>
                             @else
@@ -223,11 +224,12 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($projects as $project)
+                @forelse($projects as $index => $project)
                     <tr>
-                        <td class="ps-4">
+                        <td class="ps-4 fw-bold text-muted">{{ $projects->firstItem() + $index }}</td>
+                        <td>
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary fw-bold" style="width: 40px; height: 40px;">
+                                <div class="rounded-circle dark-symbol-avatar dark-symbol-project" style="width: 40px; height: 40px;">
                                     <i class="bi bi-briefcase fs-5"></i>
                                 </div>
                                 <div>
@@ -318,7 +320,10 @@
 
                                                         <div class="mb-3">
                                                             <label for="edit_project_name_{{ $project->id }}" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
-                                                            <input type="text" class="form-control" id="edit_project_name_{{ $project->id }}" name="project_name" value="{{ old('project_name', $project->project_name) }}" required placeholder="e.g. Metro Line 3 Fire Safety Installation">
+                                                            <div class="input-group">
+                                                                <span class="input-group-text bg-light"><i class="bi bi-briefcase text-muted"></i></span>
+                                                                <input type="text" class="form-control" id="edit_project_name_{{ $project->id }}" name="project_name" value="{{ old('project_name', $project->project_name) }}" required placeholder="e.g. Metro Line 3 Fire Safety Installation">
+                                                            </div>
                                                         </div>
 
                                                         <div class="row g-2 mb-3">
@@ -384,7 +389,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 9 : 8 }}" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 10 : 9 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-folder-x fs-1 d-block mb-2 text-secondary"></i>
                             No project entries found.
                         </td>
@@ -429,7 +434,10 @@
 
                         <div class="mb-3">
                             <label for="project_name" class="form-label fw-semibold text-dark">Project Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="project_name" name="project_name" value="{{ old('project_name') }}" required placeholder="e.g. Metro Line 3 Fire Safety Installation">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-briefcase text-muted"></i></span>
+                                <input type="text" class="form-control" id="project_name" name="project_name" value="{{ old('project_name') }}" required placeholder="e.g. Metro Line 3 Fire Safety Installation">
+                            </div>
                         </div>
 
                         <div class="row g-2 mb-3">
@@ -454,7 +462,6 @@
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="bi bi-currency-rupee text-muted"></i></span>
                                 <input type="number" step="any" min="0" class="form-control" id="po_amount" name="po_amount" value="{{ old('po_amount') }}" required placeholder="e.g. 150000.00">
-                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-top">

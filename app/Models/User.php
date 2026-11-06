@@ -67,6 +67,16 @@ class User extends Authenticatable
         return $this->hasMany(StockAdjustment::class);
     }
 
+    public function productLogs(): HasMany
+    {
+        return $this->hasMany(ProductLog::class);
+    }
+
+    public function transactionAuditLogs(): HasMany
+    {
+        return $this->hasMany(TransactionAuditLog::class);
+    }
+
     /**
      * Get counts of existing child records associated with this user.
      *

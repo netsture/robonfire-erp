@@ -15,6 +15,8 @@ class SaleItem extends Model
         'unit_price',
         'quantity',
         'subtotal',
+        'tax_percent',
+        'tax_amount',
     ];
 
     public function sale()

@@ -20,7 +20,7 @@
 <!-- Search & Filter Bar -->
 <div class="card card-custom border-0 p-3 mb-4">
     <form method="GET" action="{{ route('products.index') }}" class="row g-2 align-items-center">
-        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-3' : 'col-md-3' }}">
+        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-2' : 'col-md-3' }}">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
                 <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search Product Name, Unique ID, HSN Code..." value="{{ request('search') }}">
@@ -52,13 +52,21 @@
                 @endforeach
             </select>
         </div>
-        <div class="col-12 {{ auth()->user()->isSuperAdmin() ? 'col-md-1' : 'col-md-1' }}">
+        <div class="col-6 col-md-1">
             <div class="form-check pt-1">
                 <input class="form-check-input" type="checkbox" name="low_stock" value="1" id="low_stock" {{ request('low_stock') ? 'checked' : '' }}>
                 <label class="form-check-label small text-dark fw-medium" for="low_stock">
                     Low Stock
                 </label>
             </div>
+        </div>
+        <div class="col-6 {{ auth()->user()->isSuperAdmin() ? 'col-md-1' : 'col-md-2' }}">
+            <select name="per_page" class="form-select bg-light" title="Items per page" onchange="this.form.submit()">
+                <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 / page</option>
+                <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 / page</option>
+                <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 / page</option>
+                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 / page</option>
+            </select>
         </div>
         <div class="col-12 col-md-2 d-flex gap-2">
             <button type="submit" class="btn btn-dark w-100 rounded-3">Filter</button>
@@ -73,7 +81,8 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">
+                    <th class="ps-4" style="width: 50px;">#</th>
+                    <th>
                         <a href="{{ route('products.index', array_merge(request()->query(), ['sort_by' => 'name', 'sort_order' => request('sort_by') === 'name' && request('sort_order', 'asc') === 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none d-inline-flex align-items-center">
                             Product Name /<br> Unique ID
                             @if(request('sort_by') === 'name')
@@ -209,9 +218,10 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($products as $product)
+                @forelse($products as $index => $product)
                     <tr>
-                        <td class="ps-4">
+                        <td class="ps-4 fw-bold text-muted">{{ $products->firstItem() + $index }}</td>
+                        <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle dark-symbol-avatar dark-symbol-product" style="width: 40px; height: 40px;">
                                     @if(!empty($product->image) && file_exists(public_path('storage/' . $product->image)))
@@ -312,7 +322,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 14 : 13 }}" class="text-center py-5 text-muted">
+                        <td colspan="{{ auth()->user()->isSuperAdmin() ? 15 : 14 }}" class="text-center py-5 text-muted">
                             <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary"></i>
                             No products found. Click "Add Product" to add stock items.
                         </td>
@@ -324,6 +334,10 @@
     @if($products->hasPages())
         <div class="p-3 border-top">
             {{ $products->links() }}
+        </div>
+    @elseif($products->total() > 0)
+        <div class="p-3 border-top text-muted small font-outfit">
+            Showing all <span class="fw-bold text-dark">{{ $products->total() }}</span> products
         </div>
     @endif
 </div>

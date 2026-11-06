@@ -119,6 +119,12 @@
             border: 1px solid rgba(251, 191, 36, 0.3) !important;
         }
 
+        .dark-symbol-project {
+            background: linear-gradient(135deg, #0f172a 0%, #0369a1 100%) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        }
+
         /* Sidebar Styling */
         #sidebar {
             width: var(--sidebar-width);
@@ -314,6 +320,50 @@
             #topbar, #main-content {
                 margin-left: 0 !important;
             }
+        }
+
+        /* Pagination Styling & SVG Guard */
+        .pagination {
+            margin-bottom: 0;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+        .pagination .page-item .page-link {
+            border-radius: 0.5rem !important;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            padding: 0.38rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+        }
+        .pagination .page-item .page-link:hover {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+            border-color: #4f46e5 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #94a3b8;
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+        }
+        nav svg, .pagination svg {
+            width: 1rem !important;
+            height: 1rem !important;
+            max-width: 1rem !important;
+            max-height: 1rem !important;
+            display: inline-block !important;
         }
     </style>
     @stack('styles')

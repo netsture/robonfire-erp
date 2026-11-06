@@ -83,19 +83,19 @@
 
                     <div class="col-12 col-md-4">
                         <label for="cost_price" class="form-label fw-semibold text-dark">Purchase Cost (₹)</label>
-                        <input type="number" class="form-control @error('cost_price') is-invalid @enderror" id="cost_price" name="cost_price" value="{{ old('cost_price', $product->cost_price) }}">
+                        <input type="number" step="any" min="0" class="form-control @error('cost_price') is-invalid @enderror" id="cost_price" name="cost_price" value="{{ old('cost_price', $product->cost_price) }}" placeholder="0.00">
                         @error('cost_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
                         <label for="selling_price" class="form-label fw-semibold text-dark">Selling Retail Price (₹)</label>
-                        <input type="number" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}">
+                        <input type="number" step="any" min="0" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}" placeholder="0.00">
                         @error('selling_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
                         <label for="tax_percent" class="form-label fw-semibold text-dark">Tax Rate (%) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control @error('tax_percent') is-invalid @enderror" id="tax_percent" name="tax_percent" value="{{ old('tax_percent', $product->tax_percent) }}" required>
+                        <input type="number" step="any" min="0" max="100" class="form-control @error('tax_percent') is-invalid @enderror" id="tax_percent" name="tax_percent" value="{{ old('tax_percent', $product->tax_percent) }}" required>
                         @error('tax_percent') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 

@@ -15,6 +15,8 @@ class PurchaseItem extends Model
         'unit_cost',
         'quantity',
         'subtotal',
+        'tax_percent',
+        'tax_amount',
     ];
 
     public function purchase()

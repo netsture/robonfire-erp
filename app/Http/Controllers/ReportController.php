@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Sale;
 use App\Models\Purchase;
 use App\Models\Product;
+use App\Models\ProductLog;
+use App\Models\TransactionAuditLog;
 use App\Models\Customer;
 use App\Models\Supplier;
 use App\Models\ReturnableMaterial;
@@ -1507,6 +1509,336 @@ class ReportController extends Controller
         $entriesLedger = $entriesLedger->sortByDesc(fn($item) => \Carbon\Carbon::parse($item['raw_date'])->timestamp)->values();
 
         return view('reports.user_activity_print', compact('users', 'selectedUser', 'summary', 'entriesLedger'));
+    }
+
+    public function productLogsReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = ProductLog::with(['user', 'firm']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('product_identifier', 'like', "%{$search}%")
+                  ->orWhere('hsn_code', 'like', "%{$search}%")
+                  ->orWhere('category_name', 'like', "%{$search}%")
+                  ->orWhere('brand_name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('created_at', '>=', $startDate);
+            }
+        }
+
+        if ($request->filled('end_date')) {
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('created_at', '<=', $endDate);
+            }
+        }
+
+        // Summary KPI Metrics calculation based on filtered scope
+        $metricsQuery = clone $query;
+        $totalLogs = (clone $metricsQuery)->count();
+        $totalCreated = (clone $metricsQuery)->where('action', 'create')->count();
+        $totalUpdated = (clone $metricsQuery)->where('action', 'update')->count();
+        $totalDeleted = (clone $metricsQuery)->where('action', 'delete')->count();
+        $activeUsersCount = (clone $metricsQuery)->whereNotNull('user_id')->distinct('user_id')->count('user_id');
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = strtolower($request->get('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if (in_array($sortBy, ['created_at', 'action', 'product_name', 'product_identifier', 'category_name', 'brand_name'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest('created_at');
+        }
+
+        $logs = $query->paginate(15)->withQueryString();
+
+        // Dropdown data
+        $usersQuery = \App\Models\User::query();
+        if (!$user->isSuperAdmin()) {
+            $usersQuery->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $usersQuery->where('firm_id', $request->firm_id);
+        }
+        $users = $usersQuery->orderBy('name')->get();
+
+        $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
+
+        return view('reports.product_logs', compact(
+            'logs',
+            'users',
+            'firms',
+            'totalLogs',
+            'totalCreated',
+            'totalUpdated',
+            'totalDeleted',
+            'activeUsersCount'
+        ));
+    }
+
+    public function printProductLogsReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = ProductLog::with(['user', 'firm']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('product_identifier', 'like', "%{$search}%")
+                  ->orWhere('hsn_code', 'like', "%{$search}%")
+                  ->orWhere('category_name', 'like', "%{$search}%")
+                  ->orWhere('brand_name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('created_at', '>=', $startDate);
+            }
+        }
+
+        if ($request->filled('end_date')) {
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('created_at', '<=', $endDate);
+            }
+        }
+
+        $totalLogs = (clone $query)->count();
+        $totalCreated = (clone $query)->where('action', 'create')->count();
+        $totalUpdated = (clone $query)->where('action', 'update')->count();
+        $totalDeleted = (clone $query)->where('action', 'delete')->count();
+
+        $logs = $query->latest('created_at')->limit(500)->get();
+
+        $selectedUser = $request->filled('user_id') ? \App\Models\User::find($request->user_id) : null;
+
+        return view('reports.product_logs_print', compact(
+            'logs',
+            'totalLogs',
+            'totalCreated',
+            'totalUpdated',
+            'totalDeleted',
+            'selectedUser'
+        ));
+    }
+
+    public function transactionLogsReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = TransactionAuditLog::with(['user', 'firm']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('module')) {
+            $query->where('module', $request->module);
+        }
+
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('reference_no', 'like', "%{$search}%")
+                  ->orWhere('project_name', 'like', "%{$search}%")
+                  ->orWhere('party_name', 'like', "%{$search}%")
+                  ->orWhere('products_summary', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('created_at', '>=', $startDate);
+            }
+        }
+
+        if ($request->filled('end_date')) {
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('created_at', '<=', $endDate);
+            }
+        }
+
+        // Summary KPI Metrics
+        $metricsQuery = clone $query;
+        $totalLogs = (clone $metricsQuery)->count();
+        $totalPurchases = (clone $metricsQuery)->where('module', 'purchase')->count();
+        $totalSales = (clone $metricsQuery)->where('module', 'sale')->count();
+        $totalReturns = (clone $metricsQuery)->where('module', 'returnable')->count();
+        $totalCreated = (clone $metricsQuery)->where('action', 'create')->count();
+        $totalUpdated = (clone $metricsQuery)->where('action', 'update')->count();
+        $totalDeleted = (clone $metricsQuery)->where('action', 'delete')->count();
+        $totalAmount = (clone $metricsQuery)->sum('grand_total');
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = strtolower($request->get('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if (in_array($sortBy, ['created_at', 'module', 'action', 'reference_no', 'project_name', 'party_name', 'grand_total'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest('created_at');
+        }
+
+        $logs = $query->paginate(15)->withQueryString();
+
+        // Dropdown data
+        $usersQuery = \App\Models\User::query();
+        if (!$user->isSuperAdmin()) {
+            $usersQuery->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $usersQuery->where('firm_id', $request->firm_id);
+        }
+        $users = $usersQuery->orderBy('name')->get();
+
+        $firms = $user->isSuperAdmin() ? \App\Models\Firm::all() : collect();
+
+        return view('reports.transaction_logs', compact(
+            'logs',
+            'users',
+            'firms',
+            'totalLogs',
+            'totalPurchases',
+            'totalSales',
+            'totalReturns',
+            'totalCreated',
+            'totalUpdated',
+            'totalDeleted',
+            'totalAmount'
+        ));
+    }
+
+    public function printTransactionLogsReport(Request $request)
+    {
+        $user = auth()->user();
+        $query = TransactionAuditLog::with(['user', 'firm']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('firm_id', $user->firm_id);
+        } elseif ($request->filled('firm_id')) {
+            $query->where('firm_id', $request->firm_id);
+        }
+
+        if ($request->filled('module')) {
+            $query->where('module', $request->module);
+        }
+
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('reference_no', 'like', "%{$search}%")
+                  ->orWhere('project_name', 'like', "%{$search}%")
+                  ->orWhere('party_name', 'like', "%{$search}%")
+                  ->orWhere('products_summary', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $startDate = $this->parseDateInput($request->start_date);
+            if ($startDate) {
+                $query->whereDate('created_at', '>=', $startDate);
+            }
+        }
+
+        if ($request->filled('end_date')) {
+            $endDate = $this->parseDateInput($request->end_date);
+            if ($endDate) {
+                $query->whereDate('created_at', '<=', $endDate);
+            }
+        }
+
+        $totalLogs = (clone $query)->count();
+        $totalCreated = (clone $query)->where('action', 'create')->count();
+        $totalUpdated = (clone $query)->where('action', 'update')->count();
+        $totalDeleted = (clone $query)->where('action', 'delete')->count();
+        $totalAmount = (clone $query)->sum('grand_total');
+
+        $logs = $query->latest('created_at')->limit(500)->get();
+
+        $selectedUser = $request->filled('user_id') ? \App\Models\User::find($request->user_id) : null;
+
+        return view('reports.transaction_logs_print', compact(
+            'logs',
+            'totalLogs',
+            'totalCreated',
+            'totalUpdated',
+            'totalDeleted',
+            'totalAmount',
+            'selectedUser'
+        ));
     }
 }
 
